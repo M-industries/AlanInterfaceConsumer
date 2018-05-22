@@ -1,0 +1,4 @@
+/build/
+/node_modules/
+/test/index.js
+/test/node_modules

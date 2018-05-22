@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+		"module": "commonjs",
+		"sourceMap": false,
+		"noImplicitAny": false,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitUseStrict": true,
+		"noImplicitReturns": true,
+		"target": "es5",
+		"rootDir": ".",
+		"outDir": "../build/js"
+	},
+	"exclude": []
+}

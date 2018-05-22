@@ -1,19 +1,10 @@
 {
-  "name": "@m-industries/alan-interface-consumer",
-  "version": "9.0.0",
-  "description": "Node module for the consuming end of an interface on alan.",
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/M-industries/AlanInterfaceConsumer.git"
-  },
-  "license": "MIT",
-  "dependencies": {
-    "yauzl": "^2.9.1"
-  },
-  "bugs": {
-    "url": "https://github.com/M-industries/AlanInterfaceConsumer/issues"
-  },
-  "homepage": "https://github.com/M-industries/AlanInterfaceConsumer#readme",
-  "main": "index.js",
-  "author": "M-industries"
+  "description": "ONLY TO PREVENT NPM WARN",
+  "repository": "ONLY TO PREVENT NPM WARN",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@types/node": "^10.0.4",
+    "tslint": "^4.2.0",
+    "typescript": "2.2.*"
+  }
 }
