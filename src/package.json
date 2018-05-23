@@ -1,6 +1,6 @@
 {
   "name": "@m-industries/alan-interface-consumer",
-  "version": "9.0.0",
+  "version": "9.0.1",
   "description": "Node module for the consuming end of an interface on alan.",
   "repository": {
     "type": "git",
