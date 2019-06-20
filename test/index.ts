@@ -3,9 +3,9 @@ var path = require("path");
 
 //Error.stackTraceLimit = Infinity;
 
-import {consumeInterface} from "@m-industries/alan-interface-consumer";
+import {consumeInterface} from "@alan-platform/interface-consumer";
 //import {consumeInterface, api_configuration} from "../src/";
-import {create as stream_handler_create} from "./node_modules/@m-industries/alan-interface-consumer/lib/stream_handler";
+import {create as stream_handler_create} from "./node_modules/@alan-platform/interface-consumer/lib/stream_handler";
 
 var providing = {
 	host: "127.0.0.1",
