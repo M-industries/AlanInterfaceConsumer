@@ -10,7 +10,8 @@ script: |
   ./build.sh
 
 before_deploy: |
-  export TRAVIS_TAG="published/$(jq -j '.version' < ./src/package.json)"
+  export VERSION="$(jq -j '.version' < ./src/package.json)"
+  export TRAVIS_TAG="published/${VERSION}"
 
 deploy:
   - provider: script
@@ -21,6 +22,6 @@ deploy:
   - provider: releases
     api_key: ${GITHUB_TOKEN}
     skip_cleanup: true
-    name: "Alan Interface Consumer v${TRAVIS_TAG}"
+    name: "Alan Interface Consumer v${VERSION}"
     on:
       branch: release
