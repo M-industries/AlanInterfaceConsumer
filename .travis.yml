@@ -2,25 +2,25 @@ language: node_js
 
 node_js: 10
 
+branches:
+  except:
+  - /^published\/.*$/
+
 script: |
   ./build.sh
 
 before_deploy: |
-  export TRAVIS_TAG="$(jq -j '.version' < ./src/package.json)"
+  export TRAVIS_TAG="published/$(jq -j '.version' < ./src/package.json)"
 
 deploy:
-  provider: script
-  skip_cleanup: true
-  on:
-    branch: release
-  script: |
-    cd build/npm
-    echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
-    npm publish --access public
-
-    # tag commit
-    git tag "${TRAVIS_TAG}"
-
-    # push tag
-    git remote add origin-tagging https://${GITHUB_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git
-    git push origin-tagging "${TRAVIS_TAG}"
+  - provider: script
+    skip_cleanup: true
+    script: bash ./deploy.sh
+    on:
+      branch: release
+  - provider: releases
+    api_key: ${GITHUB_TOKEN}
+    skip_cleanup: true
+    name: "Alan Interface Consumer v${TRAVIS_TAG}"
+    on:
+      branch: release
