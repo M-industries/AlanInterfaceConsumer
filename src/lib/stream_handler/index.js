@@ -13,7 +13,6 @@ function indexOfByteInBuffer(buffer, byteValue) {
 function create_handler(callback) {
 	var buffers = [];
 	var buffers_length = 0;
-	var waiting_for_header = true;
 
 	var cb_data = function (chunk) {
 		buffers.push(chunk);
@@ -33,27 +32,13 @@ function create_handler(callback) {
 		while (true) {
 			var i = indexOfByteInBuffer(data, 0);
 
-			if (waiting_for_header) {
-				if (i === -1) {
-					cb_data(data);
-					waiting_for_header = false;
-					break;
-				} else {
-					cb_data(data.slice(0, i));
-					cb_end();
-					data = data.slice(i + 1);
-				}
+			if (i === -1) {
+				cb_data(data);
+				break;
 			} else {
-				if (i === -1) {
-					cb_data(data);
-					break;
-				} else {
-					cb_data(data.slice(0, i));
-					cb_end();
-					data = data.slice(i + 1);
-
-					waiting_for_header = true;
-				}
+				cb_data(data.slice(0, i));
+				cb_end();
+				data = data.slice(i + 1);
 			}
 
 			if (0 === data.length) {
