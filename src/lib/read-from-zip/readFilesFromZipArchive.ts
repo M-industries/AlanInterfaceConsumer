@@ -1,24 +1,24 @@
-declare var Buffer;
-declare var require;
-let yauzl = require("yauzl");
-export default function(archive_path, onDone) {
+const yauzl = require("yauzl");
+
+export default function(archive_path: string, onDone: (result: any) => void) {
 	let result = {};
 	yauzl.open(archive_path, {lazyEntries: true} , function(err, zipfile) {
 		if (err) { throw err; }
 		zipfile.readEntry();
 		zipfile.on("entry", function(entry) {
 			if (/\/$/.test(entry.fileName)) {
+				zipfile.readEntry();
 			} else {
 				zipfile.openReadStream(entry, function(readerr, readstream) {
 					if (readerr) { throw readerr; }
-					let chunks:string[] = [];
+					let chunks = [];
 					let chunks_length = 0;
 					readstream.on("data", function(chunk) {
 						chunks.push(chunk);
 						chunks_length += chunk.length;
 					});
 					readstream.on("end", function() {
-						let path_items = entry.fileName.split("/");
+						const path_items: string[] = entry.fileName.split("/");
 						let length = path_items.length;
 						let result_object = result;
 						path_items.map(function(path_item, index) {
