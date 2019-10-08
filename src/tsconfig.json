@@ -8,7 +8,8 @@
 		"noImplicitReturns": true,
 		"target": "es5",
 		"rootDir": ".",
-		"outDir": "../build/js"
+		"outDir": "../build/js",
+		"declaration": true
 	},
 	"exclude": []
 }

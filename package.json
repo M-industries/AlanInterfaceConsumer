@@ -3,8 +3,7 @@
   "repository": "ONLY TO PREVENT NPM WARN",
   "license": "UNLICENSED",
   "devDependencies": {
-    "@types/node": "^10.0.4",
-    "tslint": "^4.2.0",
-    "typescript": "2.2.*"
+    "@types/node": "^10.14.20",
+    "typescript": "3.*"
   }
 }

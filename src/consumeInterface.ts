@@ -23,7 +23,7 @@ var OPEN = 1, CLOSED = 2;
 
 export function consumeInterface(
 	application_host:string,
-	application_port:string,
+	application_port:number,
 	custom_project_package_path:string,
 	onInterfaceLoaded:(consuming_interface:{
 		createSubscriptionConnection:(
@@ -56,9 +56,9 @@ export function consumeInterface(
 
 	var consumeInterface;
 
-	readFiles(custom_project_package_path, function (package) {
-		$interface = decorator_interface.decorate(JSON.parse(package["package"]["interface.alan.json"].toString("utf8")), {}, function (error) { throw new Error(error); });
-		interface_hash = decorator_manifest.decorate(JSON.parse(package[".manifest"].toString("utf8")), {}, function (error) { throw new Error(error); }).properties.root
+	readFiles(custom_project_package_path, function (pkg) {
+		$interface = decorator_interface.decorate(JSON.parse(pkg["package"]["interface.alan.json"].toString("utf8")), {}, function (error) { throw new Error(error); });
+		interface_hash = decorator_manifest.decorate(JSON.parse(pkg[".manifest"].toString("utf8")), {}, function (error) { throw new Error(error); }).properties.root
 			.properties.type.cast("directory").properties.children.getEntry("interface.alan").properties.inode.properties.type.cast("file").properties.hash;
 		onInterfaceLoaded({
 			createSubscriptionConnection: function (subscription_request_jso, notifyHandler, onError:(error_message:string) => void) {
