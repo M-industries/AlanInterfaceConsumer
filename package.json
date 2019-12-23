@@ -1,9 +1,6 @@
 {
-  "description": "ONLY TO PREVENT NPM WARN",
-  "repository": "ONLY TO PREVENT NPM WARN",
-  "license": "UNLICENSED",
   "devDependencies": {
-    "@types/node": "^10.14.20",
-    "typescript": "3.*"
+    "@types/node": "10.x",
+    "typescript": "3.x"
   }
 }
