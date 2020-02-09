@@ -1,5 +1,5 @@
 /*global module, require, console, Buffer */
-var net = require("net");
+import * as net from "net";
 
 import * as decorator_manifest from "./lib/api_configuration-manifest/types/manifest/decorator";
 import * as decorator_interface from "./lib/api_configuration/types/interface/decorator";
@@ -100,74 +100,73 @@ export function consumeInterface(
 		var connection_receive_state = INIT;
 		var connection_send_state = OPEN;
 
-		var client = net.createConnection(application_port, application_host, function () {
-			var sh = stream_handler_create(function (raw_msg) {
-				//console.log("-> consumer: " + raw_msg.toString());
-				switch (connection_receive_state) {
-					case INIT:
-						throw new Error("Receiving data when no hand sent yet");
-					case EXPECT_SHAKE:
-						decorator_application_protocol_shake.decorate(JSON.parse(raw_msg.toString("utf8")), {}, function (error) { throw new Error(error); });
-						if (subscription_request_jso === null) {
-							connection_receive_state = EXPECT_NOTHING;
-						} else {
-							connection_receive_state = EXPECT_NOTIFY;
-						}
-						break;
-					case EXPECT_NOTIFY:
-						var notify_reply = decorator_application_protocol_notify.decorate(JSON.parse(raw_msg.toString("utf8")), {}, function (error) { throw new Error(error); });
-						notifyHandler(
-							validate_subscription_requests_replies === true
-								?  decorator_interface_reply.decorate(
-									JSON.parse(notify_reply.properties.notification),
-									{
-										"interface": $interface,
-										"request": subscription_request_decorated
-									},
-									function (error) { throw new Error(error); }
-								)
-								: notify_reply.properties.notification
-						);
-						break;
-					case EXPECT_NOTHING:
-						throw new Error("Error in js_application_runtime: Unexpected received data from server. Expected no data, because no subscription data requested.");
-					default:
-						throw new Error("Hmm");
-				}
-			});
+		var client = net.createConnection(application_port, application_host);
 
-			client.on("data", function (buffer) {
-				sh(buffer);
-			});
-			client.on("end", function () {
-				switch (connection_send_state) {
-					case OPEN:
-						var reply_type;
-						switch (connection_receive_state) {
-							case INIT:
-								reply_type = "INIT";
-								break;
-							case EXPECT_SHAKE:
-								reply_type = "EXPECT_SHAKE";
-								break;
-							case EXPECT_NOTIFY:
-								reply_type = "EXPECT_NOTIFY";
-								break;
-							case EXPECT_NOTHING:
-								reply_type = "EXPECT_NOTHING";
-								break;
-							default:
-								throw new Error("Hmm");
-						}
-						onError("Error in js_application_runtime: Unexpected server socket close, expected OPEN with reply type " + reply_type);
-						break;
-					case CLOSED:
-						break;
-				}
-			});
+		var sh = stream_handler_create(function (raw_msg) {
+			//console.log("-> consumer: " + raw_msg.toString());
+			switch (connection_receive_state) {
+				case INIT:
+					throw new Error("Receiving data when no hand sent yet");
+				case EXPECT_SHAKE:
+					decorator_application_protocol_shake.decorate(JSON.parse(raw_msg.toString("utf8")), {}, function (error) { throw new Error(error); });
+					if (subscription_request_jso === null) {
+						connection_receive_state = EXPECT_NOTHING;
+					} else {
+						connection_receive_state = EXPECT_NOTIFY;
+					}
+					break;
+				case EXPECT_NOTIFY:
+					var notify_reply = decorator_application_protocol_notify.decorate(JSON.parse(raw_msg.toString("utf8")), {}, function (error) { throw new Error(error); });
+					notifyHandler(
+						validate_subscription_requests_replies === true
+							?  decorator_interface_reply.decorate(
+								JSON.parse(notify_reply.properties.notification),
+								{
+									"interface": $interface,
+									"request": subscription_request_decorated
+								},
+								function (error) { throw new Error(error); }
+							)
+							: notify_reply.properties.notification
+					);
+					break;
+				case EXPECT_NOTHING:
+					throw new Error("Error in js_application_runtime: Unexpected received data from server. Expected no data, because no subscription data requested.");
+				default:
+					throw new Error("Hmm");
+			}
+		});
+		client.on("data", function (buffer) {
+			sh(buffer);
+		});
+		client.on("end", function () {
+			switch (connection_send_state) {
+				case OPEN:
+					var reply_type;
+					switch (connection_receive_state) {
+						case INIT:
+							reply_type = "INIT";
+							break;
+						case EXPECT_SHAKE:
+							reply_type = "EXPECT_SHAKE";
+							break;
+						case EXPECT_NOTIFY:
+							reply_type = "EXPECT_NOTIFY";
+							break;
+						case EXPECT_NOTHING:
+							reply_type = "EXPECT_NOTHING";
+							break;
+						default:
+							throw new Error("Hmm");
+					}
+					onError("Error in js_application_runtime: Unexpected server socket close, expected OPEN with reply type " + reply_type);
+					break;
+				case CLOSED:
+					break;
+			}
 		});
 		client.on("error", function (error) {
-			onError(error);
+			onError(error.toString());
 		});
 		client.write(new Buffer(JSON.stringify(serializer_application_protocol_hand.serialize(decorator_application_protocol_hand.decorate({
 			"interface version": interface_hash,
