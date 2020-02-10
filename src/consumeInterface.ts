@@ -1,19 +1,19 @@
 /*global module, require, console, Buffer */
-import * as net from "net";
+import * as child_process from "child_process";
 
 import * as decorator_manifest from "./lib/api_configuration-manifest/types/manifest/decorator";
 import * as decorator_interface from "./lib/api_configuration/types/interface/decorator";
 import * as decorator_interface_request from "./lib/api_configuration/types/interface_request/decorator";
 import * as api_interface_reply from "./lib/api_configuration/types/interface_reply/read_api";
 import * as api_interface from "./lib/api_configuration/types/interface/read_api";
-var serializer_interface_request = require("./lib/api_configuration/types/interface_request/serializer");
+import * as serializer_interface_request from "./lib/api_configuration/types/interface_request/serializer";
 import * as decorator_interface_reply from "./lib/api_configuration/types/interface_reply/decorator";
 import * as decorator_application_protocol_shake from "./lib/api_configuration/types/application_protocol_shake/decorator";
 import * as decorator_application_protocol_notify from "./lib/api_configuration/types/application_protocol_notify/decorator";
 import * as decorator_application_protocol_hand from "./lib/api_configuration/types/application_protocol_hand/decorator";
-var serializer_application_protocol_hand = require("./lib/api_configuration/types/application_protocol_hand/serializer");
+import * as serializer_application_protocol_hand from "./lib/api_configuration/types/application_protocol_hand/serializer";
 import * as decorator_application_protocol_invoke from "./lib/api_configuration/types/application_protocol_invoke/decorator";
-var serializer_application_protocol_invoke = require("./lib/api_configuration/types/application_protocol_invoke/serializer");
+import * as serializer_application_protocol_invoke from "./lib/api_configuration/types/application_protocol_invoke/serializer";
 
 import {default as readFiles} from "./lib/read-from-zip/readFilesFromZipArchive";
 import {create as stream_handler_create} from "./lib/stream_handler";
@@ -24,6 +24,8 @@ var OPEN = 1, CLOSED = 2;
 export function consumeInterface(
 	application_host:string,
 	application_port:number,
+	container_name: string,
+	route_name: string,
 	custom_project_package_path:string,
 	onInterfaceLoaded:(consuming_interface:{
 		createSubscriptionConnection:(
@@ -100,7 +102,23 @@ export function consumeInterface(
 		var connection_receive_state = INIT;
 		var connection_send_state = OPEN;
 
-		var client = net.createConnection(application_port, application_host);
+		var child = child_process.spawn(
+			"./socket-bridge",
+			[
+				application_host,
+				application_port.toString(),
+				"--appsrv",
+				container_name,
+				route_name,
+				"default"
+			],
+			{
+				"stdio": ["pipe", "pipe", process.stderr],
+				"env": {
+					"PATH": "."
+				}
+			}
+		);
 
 		var sh = stream_handler_create(function (raw_msg) {
 			//console.log("-> consumer: " + raw_msg.toString());
@@ -136,10 +154,10 @@ export function consumeInterface(
 					throw new Error("Hmm");
 			}
 		});
-		client.on("data", function (buffer) {
+		child.stdout.on("data", function (buffer) {
 			sh(buffer);
 		});
-		client.on("end", function () {
+		child.stdout.on("end", function () {
 			switch (connection_send_state) {
 				case OPEN:
 					var reply_type;
@@ -165,10 +183,10 @@ export function consumeInterface(
 					break;
 			}
 		});
-		client.on("error", function (error) {
+		child.stdout.on("error", function (error) {
 			onError(error.toString());
 		});
-		client.write(new Buffer(JSON.stringify(serializer_application_protocol_hand.serialize(decorator_application_protocol_hand.decorate({
+		child.stdin.write(Buffer.from(JSON.stringify(serializer_application_protocol_hand.serialize(decorator_application_protocol_hand.decorate({
 			"interface version": interface_hash,
 			"subscribe": subscription_request_jso === null
 				? ["no", {}]
@@ -178,20 +196,20 @@ export function consumeInterface(
 							: subscription_request_raw
 				) }]
 		}, {}, function (error) { throw new Error(error); }))), "utf8"));
-		client.write(new Buffer([ 0 ]));
+		child.stdin.write(Buffer.from([ 0 ]));
 		connection_receive_state = EXPECT_SHAKE;
 
 		return {
 			invokeCommand: function (command_jso) {
 				switch (connection_send_state) {
 					case OPEN:
-						client.write(new Buffer(JSON.stringify(serializer_application_protocol_invoke.serialize(decorator_application_protocol_invoke.decorate({
+						child.stdin.write(Buffer.from(JSON.stringify(serializer_application_protocol_invoke.serialize(decorator_application_protocol_invoke.decorate({
 							"command": JSON.stringify(serializer_interface_request.serialize(decorator_interface_request.decorate(
 								{ "type": ["command execution", command_jso] },
 								{ "interface": $interface }
 							)))
 						}, {}, function (error) { throw new Error(error); }))), "utf8"));
-						client.write(new Buffer([ 0 ]));
+						child.stdin.write(Buffer.from([ 0 ]));
 						break;
 					case CLOSED:
 						throw new Error("Invoking a command on a closed consuming connection");
@@ -202,7 +220,7 @@ export function consumeInterface(
 			close: function () { // Warning: Due to a misdesign in fabric_server, closing the connection may result in not invoking the command in the fabric_server. Hack/Work around: Open another subscription after invoking the commands and close both connections after having an connection will ensure invoking all commands
 				switch (connection_send_state) {
 					case OPEN:
-						client.end();
+						child.stdin.end();
 						connection_send_state = CLOSED;
 						break;
 					case CLOSED:
