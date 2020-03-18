@@ -113,12 +113,21 @@ export function consumeInterface(
 				"default"
 			],
 			{
-				"stdio": ["pipe", "pipe", process.stderr],
+				"stdio": ["pipe", "pipe", "pipe"],
 				"env": {
 					"PATH": "."
 				}
 			}
 		);
+
+		var child_status = {
+			error_buffers: [],
+			error_length: 0 as number,
+			exited: false as boolean,
+			exit_code: null as number,
+			exit_signal: null as string,
+			closed: false as boolean
+		};
 
 		var sh = stream_handler_create(function (raw_msg) {
 			//console.log("-> consumer: " + raw_msg.toString());
@@ -157,34 +166,57 @@ export function consumeInterface(
 		child.stdout.on("data", function (buffer) {
 			sh(buffer);
 		});
-		child.stdout.on("end", function () {
-			switch (connection_send_state) {
-				case OPEN:
-					var reply_type;
-					switch (connection_receive_state) {
-						case INIT:
-							reply_type = "INIT";
-							break;
-						case EXPECT_SHAKE:
-							reply_type = "EXPECT_SHAKE";
-							break;
-						case EXPECT_NOTIFY:
-							reply_type = "EXPECT_NOTIFY";
-							break;
-						case EXPECT_NOTHING:
-							reply_type = "EXPECT_NOTHING";
-							break;
-						default:
-							throw new Error("Hmm");
-					}
-					onError("Error in js_application_runtime: Unexpected server socket close, expected OPEN with reply type " + reply_type);
-					break;
-				case CLOSED:
-					break;
-			}
+		child.stderr.on("data", function (buffer) {
+			child_status.error_buffers.push(buffer);
+			child_status.error_length += buffer.length;
 		});
-		child.stdout.on("error", function (error) {
-			onError(error.toString());
+		var cleanup = function () {
+			var details: string = "";
+			if (child_status.closed && child_status.exited) {
+				if (child_status.exit_signal !== null) {
+					onError("Child terminated with signal " + child_status.exit_signal);
+				} else if (child_status.exit_code !== 0) {
+					if (child_status.error_length > 0) {
+						details = ": " + Buffer.concat(child_status.error_buffers, child_status.error_length).toString("utf8").trim();
+					}
+					onError("Child exited with status " + child_status.exit_code.toString() + details);
+				} else if (child_status.exit_code === 0) {
+					switch (connection_send_state) {
+						case OPEN:
+							var reply_type;
+							switch (connection_receive_state) {
+								case INIT:
+									reply_type = "INIT";
+									break;
+								case EXPECT_SHAKE:
+									reply_type = "EXPECT_SHAKE";
+									break;
+								case EXPECT_NOTIFY:
+									reply_type = "EXPECT_NOTIFY";
+									break;
+								case EXPECT_NOTHING:
+									reply_type = "EXPECT_NOTHING";
+									break;
+								default:
+									throw new Error("Hmm");
+							}
+							onError("Error in js_application_runtime: Unexpected server socket close, expected OPEN with reply type " + reply_type);
+							break;
+						case CLOSED:
+							break;
+					}
+				}
+			}
+		};
+		child.on("close", function () {
+			child_status.closed = true;
+			cleanup();
+		});
+		child.on("exit", function (code, signal) {
+			child_status.exited = true;
+			child_status.exit_code = code;
+			child_status.exit_signal = signal;
+			cleanup();
 		});
 		child.stdin.write(Buffer.from(JSON.stringify(serializer_application_protocol_hand.serialize(decorator_application_protocol_hand.decorate({
 			"interface version": interface_hash,
