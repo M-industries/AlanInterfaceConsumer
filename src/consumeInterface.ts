@@ -103,7 +103,7 @@ export function consumeInterface(
 		var connection_send_state = OPEN;
 
 		var child = child_process.spawn(
-			"./socket-bridge",
+			"socket-bridge",
 			[
 				application_host,
 				application_port.toString(),
@@ -111,13 +111,7 @@ export function consumeInterface(
 				container_name,
 				route_name,
 				"default"
-			],
-			{
-				"stdio": ["pipe", "pipe", "pipe"],
-				"env": {
-					"PATH": "."
-				}
-			}
+			]
 		);
 
 		var child_status = {
