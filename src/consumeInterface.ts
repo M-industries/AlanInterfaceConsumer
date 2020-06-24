@@ -249,7 +249,7 @@ export function consumeInterface(
 						throw new Error("Hmm");
 				}
 			},
-			close: function () { // Warning: Due to a misdesign in fabric_server, closing the connection may result in not invoking the command in the fabric_server. Hack/Work around: Open another subscription after invoking the commands and close both connections after having an connection will ensure invoking all commands
+			close: function () {
 				switch (connection_send_state) {
 					case OPEN:
 						child.stdin.end();
