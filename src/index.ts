@@ -1,4 +1,4 @@
-import * as decorator from "./lib/api_configuration/types/interface_request/decorator";
+import * as decorator from "./lib/api_configuration/types/interface_request/alan_api";
 import {consumeInterface} from "./consumeInterface";
 
 export const api_configuration = {

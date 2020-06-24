@@ -1,22 +1,20 @@
 /*global module, require, console, Buffer */
 import * as child_process from "child_process";
 
-import * as decorator_manifest from "./lib/api_configuration-manifest/types/manifest/decorator";
-import * as decorator_interface from "./lib/api_configuration/types/interface/decorator";
-import * as decorator_interface_request from "./lib/api_configuration/types/interface_request/decorator";
-import * as api_interface_reply from "./lib/api_configuration/types/interface_reply/read_api";
-import * as api_interface from "./lib/api_configuration/types/interface/read_api";
-import * as serializer_interface_request from "./lib/api_configuration/types/interface_request/serializer";
-import * as decorator_interface_reply from "./lib/api_configuration/types/interface_reply/decorator";
-import * as decorator_application_protocol_shake from "./lib/api_configuration/types/application_protocol_shake/decorator";
-import * as decorator_application_protocol_notify from "./lib/api_configuration/types/application_protocol_notify/decorator";
-import * as decorator_application_protocol_hand from "./lib/api_configuration/types/application_protocol_hand/decorator";
-import * as serializer_application_protocol_hand from "./lib/api_configuration/types/application_protocol_hand/serializer";
-import * as decorator_application_protocol_invoke from "./lib/api_configuration/types/application_protocol_invoke/decorator";
-import * as serializer_application_protocol_invoke from "./lib/api_configuration/types/application_protocol_invoke/serializer";
+import * as api_application_protocol_hand from "./lib/api_configuration/types/application_protocol_hand/alan_api";
+import * as api_application_protocol_invoke from "./lib/api_configuration/types/application_protocol_invoke/alan_api";
+import * as api_application_protocol_notify from "./lib/api_configuration/types/application_protocol_notify/alan_api";
+import * as api_application_protocol_shake from "./lib/api_configuration/types/application_protocol_shake/alan_api";
+import * as api_interface from "./lib/api_configuration/types/interface/alan_api";
+import * as api_interface_reply from "./lib/api_configuration/types/interface_reply/alan_api";
+import * as api_interface_request from "./lib/api_configuration/types/interface_request/alan_api";
+import * as api_manifest from "./lib/api_configuration-manifest/types/manifest/alan_api";
+import * as serializer_application_protocol_hand from "./lib/api_configuration/types/application_protocol_hand/serializer_json";
+import * as serializer_application_protocol_invoke from "./lib/api_configuration/types/application_protocol_invoke/serializer_json";
+import * as serializer_interface_request from "./lib/api_configuration/types/interface_request/serializer_json";
 
 import {default as readFiles} from "./lib/read-from-zip/readFilesFromZipArchive";
-import {create as stream_handler_create} from "./lib/stream_handler";
+import {default as stream_handler_create} from "./lib/stream_handler";
 
 var INIT = 1, EXPECT_SHAKE = 2, EXPECT_NOTIFY = 3, EXPECT_NOTHING = 4;
 var OPEN = 1, CLOSED = 2;
@@ -53,15 +51,15 @@ export function consumeInterface(
 		$interface:api_interface.Cinterface
 	}) => void
 ):void {
-	var $interface,
-		interface_hash;
+	var $interface: api_interface.Cinterface,
+		interface_hash: string;
 
-	var consumeInterface;
+	var consumeInterface: any;
 
 	readFiles(custom_project_package_path, function (pkg) {
-		$interface = decorator_interface.decorate(JSON.parse(pkg["package"]["interface.alan.json"].toString("utf8")), {}, function (error) { throw new Error(error); });
-		interface_hash = decorator_manifest.decorate(JSON.parse(pkg[".manifest"].toString("utf8")), {}, function (error) { throw new Error(error); }).properties.root
-			.properties.type.cast("directory").properties.children.getEntry("interface.alan").properties.inode.properties.type.cast("file").properties.hash;
+		$interface = new api_interface.Cinterface(JSON.parse(pkg["package"]["interface.alan.json"].toString("utf8")), false);
+		interface_hash = new api_manifest.Cmanifest(JSON.parse(pkg[".manifest"].toString("utf8")), false).properties.root
+			.properties.type.cast("directory").properties.children.get("interface.alan")?.properties.inode.properties.type.cast("file").properties.hash || "";
 		onInterfaceLoaded({
 			createSubscriptionConnection: function (subscription_request_jso, notifyHandler, onError:(error_message:string) => void) {
 				return consumeInterface(subscription_request_jso, true, notifyHandler, onError);
@@ -85,14 +83,14 @@ export function consumeInterface(
 		invokeCommand(command_jso:any):void,
 		close():void
 	} {
-		var subscription_request_decorated,
-			subscription_request_raw;
+		var subscription_request_decorated: api_interface_request.Cinterface_request | undefined,
+			subscription_request_raw: any;
 		if (subscription_request_jso !== null) {
 			if (validate_subscription_requests_replies === true) {
-				subscription_request_decorated = decorator_interface_request.decorate(
+				subscription_request_decorated = new api_interface_request.Cinterface_request(
 					{ "type": ["subscribe", subscription_request_jso] },
 					{ "interface": $interface },
-					function (error) { throw new Error(error); }
+					false
 				);
 			} else {
 				subscription_request_raw = { "type": ["subscribe", subscription_request_jso] };
@@ -115,21 +113,21 @@ export function consumeInterface(
 		);
 
 		var child_status = {
-			error_buffers: [],
+			error_buffers: [] as Buffer[],
 			error_length: 0 as number,
 			exited: false as boolean,
-			exit_code: null as number,
-			exit_signal: null as string,
+			exit_code: null as null | number,
+			exit_signal: null as null | string,
 			closed: false as boolean
 		};
 
-		var sh = stream_handler_create(function (raw_msg) {
+		var sh = stream_handler_create(function (raw_msg: Buffer) {
 			//console.log("-> consumer: " + raw_msg.toString());
 			switch (connection_receive_state) {
 				case INIT:
 					throw new Error("Receiving data when no hand sent yet");
 				case EXPECT_SHAKE:
-					decorator_application_protocol_shake.decorate(JSON.parse(raw_msg.toString("utf8")), {}, function (error) { throw new Error(error); });
+					new api_application_protocol_shake.Capplication_protocol_shake(JSON.parse(raw_msg.toString("utf8")), false);
 					if (subscription_request_jso === null) {
 						connection_receive_state = EXPECT_NOTHING;
 					} else {
@@ -137,16 +135,16 @@ export function consumeInterface(
 					}
 					break;
 				case EXPECT_NOTIFY:
-					var notify_reply = decorator_application_protocol_notify.decorate(JSON.parse(raw_msg.toString("utf8")), {}, function (error) { throw new Error(error); });
+					var notify_reply = new api_application_protocol_notify.Capplication_protocol_notify(JSON.parse(raw_msg.toString("utf8")), false);
 					notifyHandler(
-						validate_subscription_requests_replies === true
-							?  decorator_interface_reply.decorate(
+						subscription_request_decorated !== undefined
+							?  new api_interface_reply.Cinterface_reply(
 								JSON.parse(notify_reply.properties.notification),
 								{
 									"interface": $interface,
 									"request": subscription_request_decorated
 								},
-								function (error) { throw new Error(error); }
+								false
 							)
 							: notify_reply.properties.notification
 					);
@@ -169,7 +167,7 @@ export function consumeInterface(
 			if (child_status.closed && child_status.exited) {
 				if (child_status.exit_signal !== null) {
 					onError("Child terminated with signal " + child_status.exit_signal);
-				} else if (child_status.exit_code !== 0) {
+				} else if (child_status.exit_code !== null) {
 					if (child_status.error_length > 0) {
 						details = ": " + Buffer.concat(child_status.error_buffers, child_status.error_length).toString("utf8").trim();
 					}
@@ -212,16 +210,23 @@ export function consumeInterface(
 			child_status.exit_signal = signal;
 			cleanup();
 		});
-		child.stdin.write(Buffer.from(JSON.stringify(serializer_application_protocol_hand.serialize(decorator_application_protocol_hand.decorate({
+		if (subscription_request_jso !== null) {
+			if (subscription_request_decorated !== undefined) {
+				subscription_request_decorated.path;
+			} else {
+				subscription_request_raw = { "type": ["subscribe", subscription_request_jso] };
+			}
+		}
+		child.stdin.write(Buffer.from(JSON.stringify(serializer_application_protocol_hand.serialize(new api_application_protocol_hand.Capplication_protocol_hand({
 			"interface version": interface_hash,
 			"subscribe": subscription_request_jso === null
 				? ["no", {}]
 				: ["yes", { "subscription": JSON.stringify(
-						validate_subscription_requests_replies === true
+					subscription_request_decorated !== undefined
 							? serializer_interface_request.serialize(subscription_request_decorated)
 							: subscription_request_raw
 				) }]
-		}, {}, function (error) { throw new Error(error); }))), "utf8"));
+		}, false))), "utf8"));
 		child.stdin.write(Buffer.from([ 0 ]));
 		connection_receive_state = EXPECT_SHAKE;
 
@@ -229,12 +234,13 @@ export function consumeInterface(
 			invokeCommand: function (command_jso) {
 				switch (connection_send_state) {
 					case OPEN:
-						child.stdin.write(Buffer.from(JSON.stringify(serializer_application_protocol_invoke.serialize(decorator_application_protocol_invoke.decorate({
-							"command": JSON.stringify(serializer_interface_request.serialize(decorator_interface_request.decorate(
+						child.stdin.write(Buffer.from(JSON.stringify(serializer_application_protocol_invoke.serialize(new api_application_protocol_invoke.Capplication_protocol_invoke({
+							"command": JSON.stringify(serializer_interface_request.serialize(new api_interface_request.Cinterface_request(
 								{ "type": ["command execution", command_jso] },
-								{ "interface": $interface }
+								{ "interface": $interface },
+								false
 							)))
-						}, {}, function (error) { throw new Error(error); }))), "utf8"));
+						}, false))), "utf8"));
 						child.stdin.write(Buffer.from([ 0 ]));
 						break;
 					case CLOSED:

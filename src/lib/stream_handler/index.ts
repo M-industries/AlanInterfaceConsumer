@@ -1,4 +1,4 @@
-function indexOfByteInBuffer(buffer, byteValue) {
+function indexOfByteInBuffer(buffer: Buffer, byteValue: number) {
 	var i;
 
 	for (i = 0; i < buffer.length; i += 1) {
@@ -10,11 +10,11 @@ function indexOfByteInBuffer(buffer, byteValue) {
 	return -1;
 }
 
-function create_handler(callback) {
-	var buffers = [];
+export default function create_handler(callback: (result: Buffer) => void) {
+	var buffers: Buffer[] = [];
 	var buffers_length = 0;
 
-	var cb_data = function (chunk) {
+	var cb_data = function (chunk: Buffer) {
 		buffers.push(chunk);
 		buffers_length += chunk.length;
 	};
@@ -26,8 +26,8 @@ function create_handler(callback) {
 		buffers_length = 0;
 	};
 
-	return function (raw_data) {
-		var data = raw_data;
+	return function (raw_data: Buffer) {
+		var data: Buffer = raw_data;
 
 		while (true) {
 			var i = indexOfByteInBuffer(data, 0);
@@ -47,7 +47,3 @@ function create_handler(callback) {
 		}
 	};
 }
-
-module.exports = {
-	"create": create_handler
-};

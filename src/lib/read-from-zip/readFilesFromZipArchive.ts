@@ -1,23 +1,23 @@
-const yauzl = require("yauzl");
+import * as yauzl from "yauzl";
 
 export default function(archive_path: string, onDone: (result: any) => void) {
-	let result = {};
+	let result: any = {};
 	yauzl.open(archive_path, {lazyEntries: true} , function(err, zipfile) {
 		if (err) { throw err; }
-		zipfile.readEntry();
-		zipfile.on("entry", function(entry) {
+		zipfile?.readEntry();
+		zipfile?.on("entry", function(entry) {
 			if (/\/$/.test(entry.fileName)) {
 				zipfile.readEntry();
 			} else {
 				zipfile.openReadStream(entry, function(readerr, readstream) {
 					if (readerr) { throw readerr; }
-					let chunks = [];
+					let chunks: Buffer[] = [];
 					let chunks_length = 0;
-					readstream.on("data", function(chunk) {
+					readstream?.on("data", function(chunk) {
 						chunks.push(chunk);
 						chunks_length += chunk.length;
 					});
-					readstream.on("end", function() {
+					readstream?.on("end", function() {
 						const path_items: string[] = entry.fileName.split("/");
 						let length = path_items.length;
 						let result_object = result;
@@ -35,7 +35,7 @@ export default function(archive_path: string, onDone: (result: any) => void) {
 				});
 			}
 		});
-		zipfile.on("end", function() {
+		zipfile?.on("end", function() {
 			onDone(result);
 		});
 	});

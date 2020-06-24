@@ -2,14 +2,13 @@
 	"compilerOptions": {
 		"module": "commonjs",
 		"sourceMap": false,
-		"noImplicitAny": false,
+		"strictNullChecks": true,
+		"noImplicitAny": true,
 		"noFallthroughCasesInSwitch": true,
-		"noImplicitUseStrict": true,
 		"noImplicitReturns": true,
-		"target": "es5",
+		"target": "es6",
 		"rootDir": ".",
 		"outDir": "../build/js",
 		"declaration": true
-	},
-	"exclude": []
+	}
 }
