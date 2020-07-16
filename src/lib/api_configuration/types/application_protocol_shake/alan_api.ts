@@ -24,6 +24,7 @@ function cache<T extends AlanObject>(callback:() => T, update_ref_count = false)
 		}
 		if (detach && update_ref_count && cached_value !== undefined) {
 			--cached_value.reference_count;
+			(cached_value as any) = undefined;
 		} else if (cached_value === undefined) {
 			resolving = true;
 			cached_value = callback();
@@ -253,22 +254,85 @@ export abstract class AlanNode extends AlanObject {
 /* alan objects */
 
 export type Tapplication_protocol_shake = {
+	'result':'failure'|['failure', {}]|'success'|['success', {}];
 };
 export class Capplication_protocol_shake extends AlanNode {
 	public key?:string;
 	public get root() { return this; }
+	public readonly properties:{
+		readonly result:Capplication_protocol_shake.Dresult<
+			{ name: 'failure', node:Cfailure, init:Tfailure}|
+			{ name: 'success', node:Csuccess, init:Tsuccess}>
+	};
 	constructor(init:Tapplication_protocol_shake, public lazy_eval:boolean) {
 		super();
+		const $this = this;
+		this.properties = {
+			result: new Capplication_protocol_shake.Dresult(init['result'], $this)
+		};
 	}
 	public get path() { return ``; }
 }
+export type Tfailure = {
+};
+export class Cfailure extends AlanNode {
+	constructor(init:Tfailure, public parent:Capplication_protocol_shake) {
+		super();
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/result?failure`; }
+}
+export type Tsuccess = {
+};
+export class Csuccess extends AlanNode {
+	constructor(init:Tsuccess, public parent:Capplication_protocol_shake) {
+		super();
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/result?success`; }
+}
 
-/* property classes *//* de(resolution) */
+/* property classes */export namespace Capplication_protocol_shake {
+	export class Dresult<T extends
+		{ name: 'failure', node:Cfailure, init:Tfailure}|
+		{ name: 'success', node:Csuccess, init:Tsuccess}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'failure': return (init:Tfailure, parent:Capplication_protocol_shake) => new Cfailure(init, parent);
+				case 'success': return (init:Tsuccess, parent:Capplication_protocol_shake) => new Csuccess(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected resolver(state:T['name']) {
+			switch (state) {
+				case 'failure': return resolve_failure;
+				case 'success': return resolve_success;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Tapplication_protocol_shake['result'], parent:Capplication_protocol_shake) {
+			super(data, parent);
+		}
+	}
+}
+/* de(resolution) */
 function auto_defer<T extends (...args:any) => void>(root:Capplication_protocol_shake, callback:T):T {
 	return callback;
 }
+function resolve_failure(obj:Cfailure, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+}
+function resolve_success(obj:Csuccess, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+}
 function resolve_application_protocol_shake(obj:Capplication_protocol_shake, detach:boolean = false) {
 	if (obj.destroyed) { return; };
+	obj.properties.result.switch({
+		'failure': node => resolve_failure(node, detach),
+		'success': node => resolve_success(node, detach)
+	});
 }
 
 export namespace Capplication_protocol_shake {

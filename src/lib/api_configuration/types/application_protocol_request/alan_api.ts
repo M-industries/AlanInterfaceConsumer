@@ -1,4 +1,4 @@
-import * as application_protocol_invoke from './alan_api';
+import * as application_protocol_request from './alan_api';
 
 function isFunction<T>(p:T): p is T & Function {
 	return (typeof p === 'function');
@@ -24,6 +24,7 @@ function cache<T extends AlanObject>(callback:() => T, update_ref_count = false)
 		}
 		if (detach && update_ref_count && cached_value !== undefined) {
 			--cached_value.reference_count;
+			(cached_value as any) = undefined;
 		} else if (cached_value === undefined) {
 			resolving = true;
 			cached_value = callback();
@@ -244,7 +245,7 @@ export abstract class AlanCombinator extends AlanObject {public is(other:AlanCom
 	}
 }
 export abstract class AlanNode extends AlanObject {
-	public abstract get root():Capplication_protocol_invoke;
+	public abstract get root():Capplication_protocol_request;
 	public is(other:AlanNode):boolean {
 		return this === other;
 	}
@@ -252,39 +253,143 @@ export abstract class AlanNode extends AlanObject {
 
 /* alan objects */
 
-export type Tapplication_protocol_invoke = {
-	'command':string;
+export type Tapplication_protocol_request = {
+	'type':['invoke', Tinvoke]|['subscribe', Tsubscribe]|['unsubscribe', Tunsubscribe];
 };
-export class Capplication_protocol_invoke extends AlanNode {
+export class Capplication_protocol_request extends AlanNode {
 	public key?:string;
 	public get root() { return this; }
 	public readonly properties:{
+		readonly type:Capplication_protocol_request.Dtype<
+			{ name: 'invoke', node:Cinvoke, init:Tinvoke}|
+			{ name: 'subscribe', node:Csubscribe, init:Tsubscribe}|
+			{ name: 'unsubscribe', node:Cunsubscribe, init:Tunsubscribe}>
+	};
+	constructor(init:Tapplication_protocol_request, public lazy_eval:boolean) {
+		super();
+		const $this = this;
+		this.properties = {
+			type: new Capplication_protocol_request.Dtype(init['type'], $this)
+		};
+	}
+	public get path() { return ``; }
+}
+export type Tinvoke = {
+	'command':string;
+};
+export class Cinvoke extends AlanNode {
+	public readonly properties:{
 		readonly command:string
 	};
-	constructor(init:Tapplication_protocol_invoke, public lazy_eval:boolean) {
+	constructor(init:Tinvoke, public parent:Capplication_protocol_request) {
 		super();
 		const $this = this;
 		this.properties = {
 			command: init['command']
 		};
 	}
-	public get path() { return ``; }
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/type?invoke`; }
+}
+export type Tsubscribe = {
+	'id':string;
+	'subscription':string;
+};
+export class Csubscribe extends AlanNode {
+	public readonly properties:{
+		readonly id:string,
+		readonly subscription:string
+	};
+	constructor(init:Tsubscribe, public parent:Capplication_protocol_request) {
+		super();
+		const $this = this;
+		this.properties = {
+			id: init['id'],
+			subscription: init['subscription']
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/type?subscribe`; }
+}
+export type Tunsubscribe = {
+	'id':string;
+};
+export class Cunsubscribe extends AlanNode {
+	public readonly properties:{
+		readonly id:string
+	};
+	constructor(init:Tunsubscribe, public parent:Capplication_protocol_request) {
+		super();
+		const $this = this;
+		this.properties = {
+			id: init['id']
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/type?unsubscribe`; }
 }
 
-/* property classes */export namespace Capplication_protocol_invoke {
+/* property classes */export namespace Capplication_protocol_request {
+	export class Dtype<T extends
+		{ name: 'invoke', node:Cinvoke, init:Tinvoke}|
+		{ name: 'subscribe', node:Csubscribe, init:Tsubscribe}|
+		{ name: 'unsubscribe', node:Cunsubscribe, init:Tunsubscribe}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'invoke': return (init:Tinvoke, parent:Capplication_protocol_request) => new Cinvoke(init, parent);
+				case 'subscribe': return (init:Tsubscribe, parent:Capplication_protocol_request) => new Csubscribe(init, parent);
+				case 'unsubscribe': return (init:Tunsubscribe, parent:Capplication_protocol_request) => new Cunsubscribe(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected resolver(state:T['name']) {
+			switch (state) {
+				case 'invoke': return resolve_invoke;
+				case 'subscribe': return resolve_subscribe;
+				case 'unsubscribe': return resolve_unsubscribe;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Tapplication_protocol_request['type'], parent:Capplication_protocol_request) {
+			super(data, parent);
+		}
+	}
+}
+export namespace Cinvoke {
+}
+export namespace Csubscribe {
+}
+export namespace Cunsubscribe {
 }
 /* de(resolution) */
-function auto_defer<T extends (...args:any) => void>(root:Capplication_protocol_invoke, callback:T):T {
+function auto_defer<T extends (...args:any) => void>(root:Capplication_protocol_request, callback:T):T {
 	return callback;
 }
-function resolve_application_protocol_invoke(obj:Capplication_protocol_invoke, detach:boolean = false) {
+function resolve_invoke(obj:Cinvoke, detach:boolean = false) {
 	if (obj.destroyed) { return; };
 }
+function resolve_subscribe(obj:Csubscribe, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+}
+function resolve_unsubscribe(obj:Cunsubscribe, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+}
+function resolve_application_protocol_request(obj:Capplication_protocol_request, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	obj.properties.type.switch({
+		'invoke': node => resolve_invoke(node, detach),
+		'subscribe': node => resolve_subscribe(node, detach),
+		'unsubscribe': node => resolve_unsubscribe(node, detach)
+	});
+}
 
-export namespace Capplication_protocol_invoke {
-	export function create(init:Tapplication_protocol_invoke, lazy_eval:boolean = false):Capplication_protocol_invoke {
-		const instance = new Capplication_protocol_invoke(init, lazy_eval);
-		if (!lazy_eval) resolve_application_protocol_invoke(instance);
+export namespace Capplication_protocol_request {
+	export function create(init:Tapplication_protocol_request, lazy_eval:boolean = false):Capplication_protocol_request {
+		const instance = new Capplication_protocol_request(init, lazy_eval);
+		if (!lazy_eval) resolve_application_protocol_request(instance);
 		return instance;
 	};
 }

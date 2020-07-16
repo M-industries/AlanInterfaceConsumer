@@ -1,4 +1,4 @@
-import * as interface_request from './alan_api';
+import * as interface_command from './alan_api';
 import * as interface_ from '../interface/alan_api';
 
 function isFunction<T>(p:T): p is T & Function {
@@ -25,6 +25,7 @@ function cache<T extends AlanObject>(callback:() => T, update_ref_count = false)
 		}
 		if (detach && update_ref_count && cached_value !== undefined) {
 			--cached_value.reference_count;
+			(cached_value as any) = undefined;
 		} else if (cached_value === undefined) {
 			resolving = true;
 			cached_value = callback();
@@ -245,7 +246,7 @@ export abstract class AlanCombinator extends AlanObject {public is(other:AlanCom
 	}
 }
 export abstract class AlanNode extends AlanObject {
-	public abstract get root():Cinterface_request;
+	public abstract get root():Cinterface_command;
 	public is(other:AlanNode):boolean {
 		return this === other;
 	}
@@ -260,8 +261,7 @@ export class Ccommand_arguments extends AlanNode {
 		readonly properties:Ccommand_arguments.Dproperties
 	};
 	constructor(init:Tcommand_arguments, public location:AlanNode, public input: {
-		command_parameters: () => interface_.Ccommand_parameters,
-		context_node: () => interface_.Cnode
+		parameter_definition: () => interface_.Cparameter_definition__interface
 	}) {
 		super();
 		const $this = this;
@@ -275,22 +275,22 @@ export class Ccommand_arguments extends AlanNode {
 }
 export class Kproperties extends Reference<interface_.Cproperties, string> {
 	constructor(key:string, $this:Cproperties) {
-		super(key, cache(() => resolve($this.parent).then(() => $this.parent).then(context => context?.component_root.input.command_parameters())
+		super(key, cache(() => resolve($this.parent).then(() => $this.parent).then(context => context?.component_root.input.parameter_definition())
 			.then(context => context?.properties.properties.get(this.entry))
 			.result!, true))
 	}
 }
 export type Tproperties = {
-	'type':['file', Tfile]|['matrix', Tmatrix]|['number', Tnumber]|['reference', Treference]|['state group', Tstate_group]|['text', Ttext];
+	'type':['collection', Tcollection]|['file', Tfile]|['group', Tgroup__type__properties]|['number', Tnumber]|['state group', Tstate_group]|['text', Ttext];
 };
 export class Cproperties extends AlanNode {
 	public key:Kproperties;
 	public readonly properties:{
 		readonly type:Cproperties.Dtype<
+			{ name: 'collection', node:Ccollection, init:Tcollection}|
 			{ name: 'file', node:Cfile, init:Tfile}|
-			{ name: 'matrix', node:Cmatrix, init:Tmatrix}|
+			{ name: 'group', node:Cgroup__type__properties, init:Tgroup__type__properties}|
 			{ name: 'number', node:Cnumber, init:Tnumber}|
-			{ name: 'reference', node:Creference, init:Treference}|
 			{ name: 'state group', node:Cstate_group, init:Tstate_group}|
 			{ name: 'text', node:Ctext, init:Ttext}>
 	};
@@ -305,6 +305,49 @@ export class Cproperties extends AlanNode {
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent; }
 	public get path() { return `${this.parent.path}/properties[${this.key.entry}]`; }
+}
+export type Tcollection = {
+	'entries':Tentries[];
+};
+export class Ccollection extends AlanNode {
+	public readonly properties:{
+		readonly entries:Ccollection.Dentries
+	};
+	public readonly inferences:{
+		collection: () => interface_.Ccollection__type__properties
+	} = {
+		collection: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.key.ref)
+			.then(context => context?.properties.type.cast('collection'))
+			.result!, true)
+	}
+	constructor(init:Tcollection, public parent:Cproperties) {
+		super();
+		const $this = this;
+		this.properties = {
+			entries: new Ccollection.Dentries(init['entries'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent; }
+	public get path() { return `${this.parent.path}/type?collection`; }
+}
+export type Tentries = {
+	'arguments':Tcommand_arguments;
+};
+export class Centries extends AlanNode {
+	public readonly properties:{
+		readonly arguments:Ccommand_arguments
+	};
+	constructor(init:Tentries, public parent:Ccollection) {
+		super();
+		const $this = this;
+		this.properties = {
+			arguments: new Centries.Darguments(init['arguments'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent.parent; }
+	public get path() { return `${this.parent.path}/entries`; }
 }
 export type Tfile = {
 	'extension':string;
@@ -334,57 +377,39 @@ export class Cfile extends AlanNode {
 	public get component_root() { return this.parent.parent; }
 	public get path() { return `${this.parent.path}/type?file`; }
 }
-export type Tmatrix = {
-	'entries':Record<string, Tentries>;
+export type Tgroup__type__properties = {
+	'arguments':Tcommand_arguments;
 };
-export class Cmatrix extends AlanNode {
+export class Cgroup__type__properties extends AlanNode {
 	public readonly properties:{
-		readonly entries:Cmatrix.Dentries
+		readonly arguments:Ccommand_arguments
 	};
 	public readonly inferences:{
-		matrix: () => interface_.Cmatrix__type__properties
+		group: () => interface_.Cgroup__type__properties
 	} = {
-		matrix: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.key.ref)
-			.then(context => context?.properties.type.cast('matrix'))
+		group: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.key.ref)
+			.then(context => context?.properties.type.cast('group'))
 			.result!, true)
 	}
-	constructor(init:Tmatrix, public parent:Cproperties) {
+	constructor(init:Tgroup__type__properties, public parent:Cproperties) {
 		super();
 		const $this = this;
 		this.properties = {
-			entries: new Cmatrix.Dentries(init['entries'], $this)
+			arguments: new Cgroup__type__properties.Darguments(init['arguments'], $this)
 		};
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/type?matrix`; }
-}
-export type Tentries = {
-	'arguments':Tcommand_arguments;
-};
-export class Centries extends AlanNode {
-	public key:string;
-	public readonly properties:{
-		readonly arguments:Ccommand_arguments
-	};
-	constructor(key:string, init:Tentries, public parent:Cmatrix) {
-		super();
-		const $this = this;
-		this.key = key;
-		this.properties = {
-			arguments: new Centries.Darguments(init['arguments'], $this)
-		};
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent.parent; }
-	public get path() { return `${this.parent.path}/entries[${this.key}]`; }
+	public get path() { return `${this.parent.path}/type?group`; }
 }
 export type Tnumber = {
-	'number':number;
+	'type':['integer', Tinteger]|['natural', Tnatural];
 };
 export class Cnumber extends AlanNode {
 	public readonly properties:{
-		readonly number:number
+		readonly type:Cnumber.Dtype<
+			{ name: 'integer', node:Cinteger, init:Tinteger}|
+			{ name: 'natural', node:Cnatural, init:Tnatural}>
 	};
 	public readonly inferences:{
 		number: () => interface_.Cnumber__type__properties
@@ -397,37 +422,62 @@ export class Cnumber extends AlanNode {
 		super();
 		const $this = this;
 		this.properties = {
-			number: init['number']
+			type: new Cnumber.Dtype(init['type'], $this)
 		};
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent.parent; }
 	public get path() { return `${this.parent.path}/type?number`; }
 }
-export type Treference = {
-	'entry':string;
+export type Tinteger = {
+	'value':number;
 };
-export class Creference extends AlanNode {
+export class Cinteger extends AlanNode {
 	public readonly properties:{
-		readonly entry:string
+		readonly value:number
 	};
 	public readonly inferences:{
-		reference: () => interface_.Creference__type__properties
+		integer_type: () => interface_.Cinteger
 	} = {
-		reference: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.key.ref)
-			.then(context => context?.properties.type.cast('reference'))
+		integer_type: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.inferences.number()).then(context => context?.properties.type)
+			.then(context => context?.properties.set.cast('integer'))
 			.result!, true)
 	}
-	constructor(init:Treference, public parent:Cproperties) {
+	constructor(init:Tinteger, public parent:Cnumber) {
 		super();
 		const $this = this;
 		this.properties = {
-			entry: init['entry']
+			value: init['value']
 		};
 	}
 	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/type?reference`; }
+	public get component_root() { return this.parent.parent.parent; }
+	public get path() { return `${this.parent.path}/type?integer`; }
+}
+export type Tnatural = {
+	'value':number;
+};
+export class Cnatural extends AlanNode {
+	public readonly properties:{
+		readonly value:number
+	};
+	public readonly inferences:{
+		natural_type: () => interface_.Cnatural
+	} = {
+		natural_type: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.inferences.number()).then(context => context?.properties.type)
+			.then(context => context?.properties.set.cast('natural'))
+			.result!, true)
+	}
+	constructor(init:Tnatural, public parent:Cnumber) {
+		super();
+		const $this = this;
+		this.properties = {
+			value: init['value']
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent.parent; }
+	public get path() { return `${this.parent.path}/type?natural`; }
 }
 export type Tstate_group = {
 	'arguments':Tcommand_arguments;
@@ -458,11 +508,11 @@ export class Cstate_group extends AlanNode {
 	public get path() { return `${this.parent.path}/type?state group`; }
 }
 export type Ttext = {
-	'text':string;
+	'value':string;
 };
 export class Ctext extends AlanNode {
 	public readonly properties:{
-		readonly text:string
+		readonly value:string
 	};
 	public readonly inferences:{
 		text: () => interface_.Ctext__type__properties
@@ -475,27 +525,25 @@ export class Ctext extends AlanNode {
 		super();
 		const $this = this;
 		this.properties = {
-			text: init['text']
+			value: init['value']
 		};
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent.parent; }
 	public get path() { return `${this.parent.path}/type?text`; }
 }
-export type Tcontext_keys__interface_request = {
+export type Tcontext_keys__interface_command = {
 	'context keys':Record<string, Tcontext_keys__context_keys>;
 };
-export class Ccontext_keys__interface_request extends AlanNode {
+export class Ccontext_keys__interface_command extends AlanNode {
 	public readonly properties:{
-		readonly context_keys:Ccontext_keys__interface_request.Dcontext_keys
+		readonly context_keys:Ccontext_keys__interface_command.Dcontext_keys
 	};
-	constructor(init:Tcontext_keys__interface_request, public location:AlanNode, public input: {
-		interface: () => interface_.Cinterface
-	}) {
+	constructor(init:Tcontext_keys__interface_command, public location:AlanNode) {
 		super();
 		const $this = this;
 		this.properties = {
-			context_keys: new Ccontext_keys__interface_request.Dcontext_keys(init['context keys'], $this)
+			context_keys: new Ccontext_keys__interface_command.Dcontext_keys(init['context keys'], $this)
 		};
 	}
 	public get root() { return this.location.root; }
@@ -504,7 +552,7 @@ export class Ccontext_keys__interface_request extends AlanNode {
 }
 export class Kcontext_keys__context_keys extends Reference<interface_.Ccontext_keys, string> {
 	constructor(key:string, $this:Ccontext_keys__context_keys) {
-		super(key, cache(() => resolve($this.parent).then(() => $this.parent).then(context => context?.component_root.input.interface())
+		super(key, cache(() => resolve($this.parent).then(() => $this.parent).then(context => context?.root.input.interface)
 			.then(context => context?.properties.context_keys.get(this.entry))
 			.result!, true))
 	}
@@ -517,7 +565,7 @@ export class Ccontext_keys__context_keys extends AlanNode {
 	public readonly properties:{
 		readonly value:string
 	};
-	constructor(key:string, init:Tcontext_keys__context_keys, public parent:Ccontext_keys__interface_request) {
+	constructor(key:string, init:Tcontext_keys__context_keys, public parent:Ccontext_keys__interface_command) {
 		super();
 		const $this = this;
 		this.key = new Kcontext_keys__context_keys(key, $this);
@@ -530,13 +578,13 @@ export class Ccontext_keys__context_keys extends AlanNode {
 	public get path() { return `${this.parent.path}/context keys[${this.key.entry}]`; }
 }
 export type Tid_path = {
-	'has steps':'no'|['no', {}]|['yes', Tyes__has_steps];
+	'has steps':'no'|['no', {}]|['yes', Tyes];
 };
 export class Cid_path extends AlanNode {
 	public readonly properties:{
 		readonly has_steps:Cid_path.Dhas_steps<
-			{ name: 'no', node:Cno__has_steps, init:Tno__has_steps}|
-			{ name: 'yes', node:Cyes__has_steps, init:Tyes__has_steps}>
+			{ name: 'no', node:Cno, init:Tno}|
+			{ name: 'yes', node:Cyes, init:Tyes}>
 	};
 	public readonly output:{
 		result_node: () => interface_.Cnode;
@@ -560,9 +608,9 @@ export class Cid_path extends AlanNode {
 	public get component_root() { return this; }
 	public get path() { return `${this.location.path}/id path`; }
 }
-export type Tno__has_steps = {
+export type Tno = {
 };
-export class Cno__has_steps extends AlanNode {
+export class Cno extends AlanNode {
 	public readonly output:{
 		result_node: () => interface_.Cnode;
 	} = {
@@ -571,23 +619,23 @@ export class Cno__has_steps extends AlanNode {
 				.result!
 			).result!, false)
 	}
-	constructor(init:Tno__has_steps, public parent:Cid_path) {
+	constructor(init:Tno, public parent:Cid_path) {
 		super();
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent; }
 	public get path() { return `${this.parent.path}/has steps?no`; }
 }
-export type Tyes__has_steps = {
+export type Tyes = {
 	'tail':Tid_path;
-	'type':['collection entry', Tcollection_entry]|['group', Tgroup]|['state', Tstate];
+	'type':['collection entry', Tcollection_entry]|['group', Tgroup__type__yes]|['state', Tstate];
 };
-export class Cyes__has_steps extends AlanNode {
+export class Cyes extends AlanNode {
 	public readonly properties:{
 		readonly tail:Cid_path,
-		readonly type:Cyes__has_steps.Dtype<
+		readonly type:Cyes.Dtype<
 			{ name: 'collection entry', node:Ccollection_entry, init:Tcollection_entry}|
-			{ name: 'group', node:Cgroup, init:Tgroup}|
+			{ name: 'group', node:Cgroup__type__yes, init:Tgroup__type__yes}|
 			{ name: 'state', node:Cstate, init:Tstate}>
 	};
 	public readonly output:{
@@ -599,12 +647,12 @@ export class Cyes__has_steps extends AlanNode {
 				.result!
 			).result!, false)
 	}
-	constructor(init:Tyes__has_steps, public parent:Cid_path) {
+	constructor(init:Tyes, public parent:Cid_path) {
 		super();
 		const $this = this;
 		this.properties = {
-			tail: new Cyes__has_steps.Dtail(init['tail'], $this),
-			type: new Cyes__has_steps.Dtype(init['type'], $this)
+			tail: new Cyes.Dtail(init['tail'], $this),
+			type: new Cyes.Dtype(init['type'], $this)
 		};
 	}
 	public get root() { return this.component_root.root; }
@@ -629,7 +677,7 @@ export class Ccollection_entry extends AlanNode {
 				.result!
 			).result!, false)
 	}
-	constructor(init:Tcollection_entry, public parent:Cyes__has_steps) {
+	constructor(init:Tcollection_entry, public parent:Cyes) {
 		super();
 		const $this = this;
 		this.properties = {
@@ -641,12 +689,12 @@ export class Ccollection_entry extends AlanNode {
 	public get component_root() { return this.parent.parent; }
 	public get path() { return `${this.parent.path}/type?collection entry`; }
 }
-export type Tgroup = {
+export type Tgroup__type__yes = {
 	'group':string;
 };
-export class Cgroup extends AlanNode {
+export class Cgroup__type__yes extends AlanNode {
 	public readonly properties:{
-		readonly group:Cgroup.Dgroup
+		readonly group:Cgroup__type__yes.Dgroup
 	};
 	public readonly output:{
 		result_node: () => interface_.Cnode;
@@ -657,11 +705,11 @@ export class Cgroup extends AlanNode {
 				.result!
 			).result!, false)
 	}
-	constructor(init:Tgroup, public parent:Cyes__has_steps) {
+	constructor(init:Tgroup__type__yes, public parent:Cyes) {
 		super();
 		const $this = this;
 		this.properties = {
-			group: new Cgroup.Dgroup(init['group'], $this)
+			group: new Cgroup__type__yes.Dgroup(init['group'], $this)
 		};
 	}
 	public get root() { return this.component_root.root; }
@@ -686,7 +734,7 @@ export class Cstate extends AlanNode {
 				.result!
 			).result!, false)
 	}
-	constructor(init:Tstate, public parent:Cyes__has_steps) {
+	constructor(init:Tstate, public parent:Cyes) {
 		super();
 		const $this = this;
 		this.properties = {
@@ -699,107 +747,33 @@ export class Cstate extends AlanNode {
 	public get path() { return `${this.parent.path}/type?state`; }
 }
 
-export type Tinterface_request = {
-	'type':['command execution', Tcommand_execution]|['subscribe', Tsubscribe]|'unsubscribe'|['unsubscribe', {}];
+export type Tinterface_command = {
+	'arguments':Tcommand_arguments;
+	'command':string;
+	'context keys':Tcontext_keys__interface_command;
+	'context node':Tid_path;
 };
-export class Cinterface_request extends AlanNode {
+export class Cinterface_command extends AlanNode {
 	public key?:string;
 	public get root() { return this; }
 	public readonly properties:{
-		readonly type:Cinterface_request.Dtype<
-			{ name: 'command execution', node:Ccommand_execution, init:Tcommand_execution}|
-			{ name: 'subscribe', node:Csubscribe, init:Tsubscribe}|
-			{ name: 'unsubscribe', node:Cunsubscribe, init:Tunsubscribe}>
+		readonly arguments:Ccommand_arguments,
+		readonly command:Cinterface_command.Dcommand,
+		readonly context_keys:Ccontext_keys__interface_command,
+		readonly context_node:Cid_path
 	};
-	constructor(init:Tinterface_request, public readonly input: {
+	constructor(init:Tinterface_command, public readonly input: {
 	'interface':interface_.Cinterface}, public lazy_eval:boolean) {
 		super();
 		const $this = this;
 		this.properties = {
-			type: new Cinterface_request.Dtype(init['type'], $this)
+			arguments: new Cinterface_command.Darguments(init['arguments'], $this),
+			command: new Cinterface_command.Dcommand(init['command'], $this),
+			context_keys: new Cinterface_command.Dcontext_keys(init['context keys'], $this),
+			context_node: new Cinterface_command.Dcontext_node(init['context node'], $this)
 		};
 	}
 	public get path() { return ``; }
-}
-export type Tcommand_execution = {
-	'arguments':Tcommand_arguments;
-	'command':string;
-	'context keys':Tcontext_keys__interface_request;
-	'context node':Tid_path;
-};
-export class Ccommand_execution extends AlanNode {
-	public readonly properties:{
-		readonly arguments:Ccommand_arguments,
-		readonly command:Ccommand_execution.Dcommand,
-		readonly context_keys:Ccontext_keys__interface_request,
-		readonly context_node:Cid_path
-	};
-	constructor(init:Tcommand_execution, public parent:Cinterface_request) {
-		super();
-		const $this = this;
-		this.properties = {
-			arguments: new Ccommand_execution.Darguments(init['arguments'], $this),
-			command: new Ccommand_execution.Dcommand(init['command'], $this),
-			context_keys: new Ccommand_execution.Dcontext_keys(init['context keys'], $this),
-			context_node: new Ccommand_execution.Dcontext_node(init['context node'], $this)
-		};
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent; }
-	public get path() { return `${this.parent.path}/type?command execution`; }
-}
-export type Tsubscribe = {
-	'context keys':Tcontext_keys__interface_request;
-	'initialization data requested':'no'|['no', {}]|'yes'|['yes', {}];
-};
-export class Csubscribe extends AlanNode {
-	public readonly properties:{
-		readonly context_keys:Ccontext_keys__interface_request,
-		readonly initialization_data_requested:Csubscribe.Dinitialization_data_requested<
-			{ name: 'no', node:Cno__initialization_data_requested, init:Tno__initialization_data_requested}|
-			{ name: 'yes', node:Cyes__initialization_data_requested, init:Tyes__initialization_data_requested}>
-	};
-	constructor(init:Tsubscribe, public parent:Cinterface_request) {
-		super();
-		const $this = this;
-		this.properties = {
-			context_keys: new Csubscribe.Dcontext_keys(init['context keys'], $this),
-			initialization_data_requested: new Csubscribe.Dinitialization_data_requested(init['initialization data requested'], $this)
-		};
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent; }
-	public get path() { return `${this.parent.path}/type?subscribe`; }
-}
-export type Tno__initialization_data_requested = {
-};
-export class Cno__initialization_data_requested extends AlanNode {
-	constructor(init:Tno__initialization_data_requested, public parent:Csubscribe) {
-		super();
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/initialization data requested?no`; }
-}
-export type Tyes__initialization_data_requested = {
-};
-export class Cyes__initialization_data_requested extends AlanNode {
-	constructor(init:Tyes__initialization_data_requested, public parent:Csubscribe) {
-		super();
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/initialization data requested?yes`; }
-}
-export type Tunsubscribe = {
-};
-export class Cunsubscribe extends AlanNode {
-	constructor(init:Tunsubscribe, public parent:Cinterface_request) {
-		super();
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent; }
-	public get path() { return `${this.parent.path}/type?unsubscribe`; }
 }
 
 /* property classes */export namespace Ccommand_arguments {
@@ -815,18 +789,18 @@ export class Cunsubscribe extends AlanNode {
 }
 export namespace Cproperties {
 	export class Dtype<T extends
+		{ name: 'collection', node:Ccollection, init:Tcollection}|
 		{ name: 'file', node:Cfile, init:Tfile}|
-		{ name: 'matrix', node:Cmatrix, init:Tmatrix}|
+		{ name: 'group', node:Cgroup__type__properties, init:Tgroup__type__properties}|
 		{ name: 'number', node:Cnumber, init:Tnumber}|
-		{ name: 'reference', node:Creference, init:Treference}|
 		{ name: 'state group', node:Cstate_group, init:Tstate_group}|
 		{ name: 'text', node:Ctext, init:Ttext}> extends StateGroup<T> {
 		protected initializer(state:T['name']) {
 			switch (state) {
+				case 'collection': return (init:Tcollection, parent:Cproperties) => new Ccollection(init, parent);
 				case 'file': return (init:Tfile, parent:Cproperties) => new Cfile(init, parent);
-				case 'matrix': return (init:Tmatrix, parent:Cproperties) => new Cmatrix(init, parent);
+				case 'group': return (init:Tgroup__type__properties, parent:Cproperties) => new Cgroup__type__properties(init, parent);
 				case 'number': return (init:Tnumber, parent:Cproperties) => new Cnumber(init, parent);
-				case 'reference': return (init:Treference, parent:Cproperties) => new Creference(init, parent);
 				case 'state group': return (init:Tstate_group, parent:Cproperties) => new Cstate_group(init, parent);
 				case 'text': return (init:Ttext, parent:Cproperties) => new Ctext(init, parent);
 				default: throw new Error(`Unexpected state ${state}.`);
@@ -834,10 +808,10 @@ export namespace Cproperties {
 		}
 		protected resolver(state:T['name']) {
 			switch (state) {
+				case 'collection': return resolve_collection;
 				case 'file': return resolve_file;
-				case 'matrix': return resolve_matrix;
+				case 'group': return resolve_group__type__properties;
 				case 'number': return resolve_number;
-				case 'reference': return resolve_reference;
 				case 'state group': return resolve_state_group;
 				case 'text': return resolve_text;
 				default: throw new Error(`Unexpected state ${state}.`);
@@ -848,15 +822,12 @@ export namespace Cproperties {
 		}
 	}
 }
-export namespace Cfile {
-}
-export namespace Cmatrix {
-	export class Dentries extends AlanDictionary<{ node:Centries, init:Tentries},Cmatrix> {
-		protected graph_iterator(graph:string):(node:Centries) => Centries { throw new Error(`Dictionary has no graph iterators.`); }
-		protected initialize(parent:Cmatrix, key:string, entry_init:Tentries) { return new Centries(key, entry_init, parent); }
+export namespace Ccollection {
+	export class Dentries extends AlanSet<{ node:Centries, init:Tentries},Ccollection> {
+		protected initialize(parent:Ccollection, entry_init:Tentries) { return new Centries(entry_init, parent); }
 		protected resolve = resolve_entries
 		protected get path() { return `${this.parent.path}/entries`; }
-		constructor(data:Tmatrix['entries'], parent:Cmatrix) {
+		constructor(data:Tcollection['entries'], parent:Ccollection) {
 			super(data, parent);
 		}
 	}
@@ -865,13 +836,23 @@ export namespace Centries {
 	export class Darguments extends Ccommand_arguments {
 		constructor(data:Tentries['arguments'], parent:Centries) {
 			super(data, parent, {
-				command_parameters: cache(() => resolve(parent).then(this_context => resolve(this_context)
+				parameter_definition: cache(() => resolve(parent).then(this_context => resolve(this_context)
 						.then(context => context?.parent)
-						.then(context => context?.inferences.matrix()).then(context => context?.properties.parameters)
+						.then(context => context?.inferences.collection()).then(context => context?.properties.parameters)
 						.result!
-					).result!, false),
-				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.component_root.input.context_node())
+					).result!, false)
+			})
+		}
+	}
+}
+export namespace Cfile {
+}
+export namespace Cgroup__type__properties {
+	export class Darguments extends Ccommand_arguments {
+		constructor(data:Tgroup__type__properties['arguments'], parent:Cgroup__type__properties) {
+			super(data, parent, {
+				parameter_definition: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.inferences.group()).then(context => context?.properties.parameters)
 						.result!
 					).result!, false)
 			})
@@ -879,20 +860,39 @@ export namespace Centries {
 	}
 }
 export namespace Cnumber {
+	export class Dtype<T extends
+		{ name: 'integer', node:Cinteger, init:Tinteger}|
+		{ name: 'natural', node:Cnatural, init:Tnatural}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'integer': return (init:Tinteger, parent:Cnumber) => new Cinteger(init, parent);
+				case 'natural': return (init:Tnatural, parent:Cnumber) => new Cnatural(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected resolver(state:T['name']) {
+			switch (state) {
+				case 'integer': return resolve_integer;
+				case 'natural': return resolve_natural;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Tnumber['type'], parent:Cnumber) {
+			super(data, parent);
+		}
+	}
 }
-export namespace Creference {
+export namespace Cinteger {
+}
+export namespace Cnatural {
 }
 export namespace Cstate_group {
 	export class Darguments extends Ccommand_arguments {
 		constructor(data:Tstate_group['arguments'], parent:Cstate_group) {
 			super(data, parent, {
-				command_parameters: cache(() => resolve(parent).then(this_context => resolve(this_context)
+				parameter_definition: cache(() => resolve(parent).then(this_context => resolve(this_context)
 						.then(context => context?.properties.state.ref)
 						.then(context => context?.properties.parameters)
-						.result!
-					).result!, false),
-				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.component_root.input.context_node())
 						.result!
 					).result!, false)
 			})
@@ -908,13 +908,13 @@ export namespace Cstate_group {
 }
 export namespace Ctext {
 }
-export namespace Ccontext_keys__interface_request {
-	export class Dcontext_keys extends AlanDictionary<{ node:Ccontext_keys__context_keys, init:Tcontext_keys__context_keys},Ccontext_keys__interface_request> {
+export namespace Ccontext_keys__interface_command {
+	export class Dcontext_keys extends AlanDictionary<{ node:Ccontext_keys__context_keys, init:Tcontext_keys__context_keys},Ccontext_keys__interface_command> {
 		protected graph_iterator(graph:string):(node:Ccontext_keys__context_keys) => Ccontext_keys__context_keys { throw new Error(`Dictionary has no graph iterators.`); }
-		protected initialize(parent:Ccontext_keys__interface_request, key:string, entry_init:Tcontext_keys__context_keys) { return new Ccontext_keys__context_keys(key, entry_init, parent); }
+		protected initialize(parent:Ccontext_keys__interface_command, key:string, entry_init:Tcontext_keys__context_keys) { return new Ccontext_keys__context_keys(key, entry_init, parent); }
 		protected resolve = resolve_context_keys__context_keys
 		protected get path() { return `${this.parent.path}/context keys`; }
-		constructor(data:Tcontext_keys__interface_request['context keys'], parent:Ccontext_keys__interface_request) {
+		constructor(data:Tcontext_keys__interface_command['context keys'], parent:Ccontext_keys__interface_command) {
 			super(data, parent);
 		}
 	}
@@ -923,19 +923,19 @@ export namespace Ccontext_keys__context_keys {
 }
 export namespace Cid_path {
 	export class Dhas_steps<T extends
-		{ name: 'no', node:Cno__has_steps, init:Tno__has_steps}|
-		{ name: 'yes', node:Cyes__has_steps, init:Tyes__has_steps}> extends StateGroup<T> {
+		{ name: 'no', node:Cno, init:Tno}|
+		{ name: 'yes', node:Cyes, init:Tyes}> extends StateGroup<T> {
 		protected initializer(state:T['name']) {
 			switch (state) {
-				case 'no': return (init:Tno__has_steps, parent:Cid_path) => new Cno__has_steps(init, parent);
-				case 'yes': return (init:Tyes__has_steps, parent:Cid_path) => new Cyes__has_steps(init, parent);
+				case 'no': return (init:Tno, parent:Cid_path) => new Cno(init, parent);
+				case 'yes': return (init:Tyes, parent:Cid_path) => new Cyes(init, parent);
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
 		protected resolver(state:T['name']) {
 			switch (state) {
-				case 'no': return resolve_no__has_steps;
-				case 'yes': return resolve_yes__has_steps;
+				case 'no': return resolve_no;
+				case 'yes': return resolve_yes;
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
@@ -944,9 +944,9 @@ export namespace Cid_path {
 		}
 	}
 }
-export namespace Cyes__has_steps {
+export namespace Cyes {
 	export class Dtail extends Cid_path {
-		constructor(data:Tyes__has_steps['tail'], parent:Cyes__has_steps) {
+		constructor(data:Tyes['tail'], parent:Cyes) {
 			super(data, parent, {
 				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
 						.then(context => context?.properties.type.state.node.output.result_node())
@@ -957,25 +957,25 @@ export namespace Cyes__has_steps {
 	}
 	export class Dtype<T extends
 		{ name: 'collection entry', node:Ccollection_entry, init:Tcollection_entry}|
-		{ name: 'group', node:Cgroup, init:Tgroup}|
+		{ name: 'group', node:Cgroup__type__yes, init:Tgroup__type__yes}|
 		{ name: 'state', node:Cstate, init:Tstate}> extends StateGroup<T> {
 		protected initializer(state:T['name']) {
 			switch (state) {
-				case 'collection entry': return (init:Tcollection_entry, parent:Cyes__has_steps) => new Ccollection_entry(init, parent);
-				case 'group': return (init:Tgroup, parent:Cyes__has_steps) => new Cgroup(init, parent);
-				case 'state': return (init:Tstate, parent:Cyes__has_steps) => new Cstate(init, parent);
+				case 'collection entry': return (init:Tcollection_entry, parent:Cyes) => new Ccollection_entry(init, parent);
+				case 'group': return (init:Tgroup__type__yes, parent:Cyes) => new Cgroup__type__yes(init, parent);
+				case 'state': return (init:Tstate, parent:Cyes) => new Cstate(init, parent);
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
 		protected resolver(state:T['name']) {
 			switch (state) {
 				case 'collection entry': return resolve_collection_entry;
-				case 'group': return resolve_group;
+				case 'group': return resolve_group__type__yes;
 				case 'state': return resolve_state;
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		constructor(data:Tyes__has_steps['type'], parent:Cyes__has_steps) {
+		constructor(data:Tyes['type'], parent:Cyes) {
 			super(data, parent);
 		}
 	}
@@ -991,10 +991,10 @@ export namespace Ccollection_entry {
 		}
 	}
 }
-export namespace Cgroup {
+export namespace Cgroup__type__yes {
 	export class Dgroup extends Reference<interface_.Cgroup__type__property,string> {
 
-		constructor(data:string, $this:Cgroup) {
+		constructor(data:string, $this:Cgroup__type__yes) {
 			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.component_root.input.context_node())
 				.then(context => context?.properties.attributes.get(this.entry))
 
@@ -1021,44 +1021,13 @@ export namespace Cstate {
 		}
 	}
 }
-export namespace Cinterface_request {
-	export class Dtype<T extends
-		{ name: 'command execution', node:Ccommand_execution, init:Tcommand_execution}|
-		{ name: 'subscribe', node:Csubscribe, init:Tsubscribe}|
-		{ name: 'unsubscribe', node:Cunsubscribe, init:Tunsubscribe}> extends StateGroup<T> {
-		protected initializer(state:T['name']) {
-			switch (state) {
-				case 'command execution': return (init:Tcommand_execution, parent:Cinterface_request) => new Ccommand_execution(init, parent);
-				case 'subscribe': return (init:Tsubscribe, parent:Cinterface_request) => new Csubscribe(init, parent);
-				case 'unsubscribe': return (init:Tunsubscribe, parent:Cinterface_request) => new Cunsubscribe(init, parent);
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		protected resolver(state:T['name']) {
-			switch (state) {
-				case 'command execution': return resolve_command_execution;
-				case 'subscribe': return resolve_subscribe;
-				case 'unsubscribe': return resolve_unsubscribe;
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		constructor(data:Tinterface_request['type'], parent:Cinterface_request) {
-			super(data, parent);
-		}
-	}
-}
-export namespace Ccommand_execution {
+export namespace Cinterface_command {
 	export class Darguments extends Ccommand_arguments {
-		constructor(data:Tcommand_execution['arguments'], parent:Ccommand_execution) {
+		constructor(data:Tinterface_command['arguments'], parent:Cinterface_command) {
 			super(data, parent, {
-				command_parameters: cache(() => resolve(parent).then(this_context => resolve(this_context)
+				parameter_definition: cache(() => resolve(parent).then(this_context => resolve(this_context)
 						.then(context => context?.properties.command.ref)
 						.then(context => context?.properties.parameters)
-						.result!
-					).result!, false),
-				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.properties.context_node)
-						.then(context => context?.component_root.output.result_node())
 						.result!
 					).result!, false)
 			})
@@ -1066,7 +1035,7 @@ export namespace Ccommand_execution {
 	}
 	export class Dcommand extends Reference<interface_.Ccommand,string> {
 
-		constructor(data:string, $this:Ccommand_execution) {
+		constructor(data:string, $this:Cinterface_command) {
 			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.properties.context_node)
 				.then(context => context?.component_root.output.result_node())
 				.then(context => context?.properties.attributes.get(this.entry))
@@ -1074,18 +1043,13 @@ export namespace Ccommand_execution {
 				.then(context => context?.properties.type.cast('command')).result!, true))
 		}
 	}
-	export class Dcontext_keys extends Ccontext_keys__interface_request {
-		constructor(data:Tcommand_execution['context keys'], parent:Ccommand_execution) {
-			super(data, parent, {
-				interface: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.root.input.interface)
-						.result!
-					).result!, false)
-			})
+	export class Dcontext_keys extends Ccontext_keys__interface_command {
+		constructor(data:Tinterface_command['context keys'], parent:Cinterface_command) {
+			super(data, parent)
 		}
 	}
 	export class Dcontext_node extends Cid_path {
-		constructor(data:Tcommand_execution['context node'], parent:Ccommand_execution) {
+		constructor(data:Tinterface_command['context node'], parent:Cinterface_command) {
 			super(data, parent, {
 				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
 						.then(context => context?.root.input.interface)
@@ -1096,63 +1060,43 @@ export namespace Ccommand_execution {
 		}
 	}
 }
-export namespace Csubscribe {
-	export class Dcontext_keys extends Ccontext_keys__interface_request {
-		constructor(data:Tsubscribe['context keys'], parent:Csubscribe) {
-			super(data, parent, {
-				interface: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.root.input.interface)
-						.result!
-					).result!, false)
-			})
-		}
-	}
-	export class Dinitialization_data_requested<T extends
-		{ name: 'no', node:Cno__initialization_data_requested, init:Tno__initialization_data_requested}|
-		{ name: 'yes', node:Cyes__initialization_data_requested, init:Tyes__initialization_data_requested}> extends StateGroup<T> {
-		protected initializer(state:T['name']) {
-			switch (state) {
-				case 'no': return (init:Tno__initialization_data_requested, parent:Csubscribe) => new Cno__initialization_data_requested(init, parent);
-				case 'yes': return (init:Tyes__initialization_data_requested, parent:Csubscribe) => new Cyes__initialization_data_requested(init, parent);
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		protected resolver(state:T['name']) {
-			switch (state) {
-				case 'no': return resolve_no__initialization_data_requested;
-				case 'yes': return resolve_yes__initialization_data_requested;
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		constructor(data:Tsubscribe['initialization data requested'], parent:Csubscribe) {
-			super(data, parent);
-		}
-	}
-}
 /* de(resolution) */
-function auto_defer<T extends (...args:any) => void>(root:Cinterface_request, callback:T):T {
+function auto_defer<T extends (...args:any) => void>(root:Cinterface_command, callback:T):T {
 	return callback;
-}
-function resolve_file(obj:Cfile, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	assert((<(detach?:boolean) => interface_.Cfile__type__properties>obj.inferences.file)(detach) !== undefined || detach);
 }
 function resolve_entries(obj:Centries, detach:boolean = false) {
 	if (obj.destroyed) { return; };
 	resolve_command_arguments(obj.properties.arguments, detach);
 }
-function resolve_matrix(obj:Cmatrix, detach:boolean = false) {
+function resolve_collection(obj:Ccollection, detach:boolean = false) {
 	if (obj.destroyed) { return; };
-	assert((<(detach?:boolean) => interface_.Cmatrix__type__properties>obj.inferences.matrix)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Ccollection__type__properties>obj.inferences.collection)(detach) !== undefined || detach);
 	obj.properties.entries.forEach(entry => resolve_entries(entry, detach));
+}
+function resolve_file(obj:Cfile, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Cfile__type__properties>obj.inferences.file)(detach) !== undefined || detach);
+}
+function resolve_group__type__properties(obj:Cgroup__type__properties, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Cgroup__type__properties>obj.inferences.group)(detach) !== undefined || detach);
+	resolve_command_arguments(obj.properties.arguments, detach);
+}
+function resolve_integer(obj:Cinteger, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Cinteger>obj.inferences.integer_type)(detach) !== undefined || detach);
+}
+function resolve_natural(obj:Cnatural, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Cnatural>obj.inferences.natural_type)(detach) !== undefined || detach);
 }
 function resolve_number(obj:Cnumber, detach:boolean = false) {
 	if (obj.destroyed) { return; };
 	assert((<(detach?:boolean) => interface_.Cnumber__type__properties>obj.inferences.number)(detach) !== undefined || detach);
-}
-function resolve_reference(obj:Creference, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	assert((<(detach?:boolean) => interface_.Creference__type__properties>obj.inferences.reference)(detach) !== undefined || detach);
+	obj.properties.type.switch({
+		'integer': node => resolve_integer(node, detach),
+		'natural': node => resolve_natural(node, detach)
+	});
 }
 function resolve_state_group(obj:Cstate_group, detach:boolean = false) {
 	if (obj.destroyed) { return; };
@@ -1168,10 +1112,10 @@ function resolve_properties(obj:Cproperties, detach:boolean = false) {
 	if (obj.destroyed) { return; };
 	assert((<(detach?:boolean) => interface_.Cproperties>(obj.key as any).resolve)(detach) !== undefined || detach);
 	obj.properties.type.switch({
+		'collection': node => resolve_collection(node, detach),
 		'file': node => resolve_file(node, detach),
-		'matrix': node => resolve_matrix(node, detach),
+		'group': node => resolve_group__type__properties(node, detach),
 		'number': node => resolve_number(node, detach),
-		'reference': node => resolve_reference(node, detach),
 		'state group': node => resolve_state_group(node, detach),
 		'text': node => resolve_text(node, detach)
 	});
@@ -1184,18 +1128,18 @@ function resolve_context_keys__context_keys(obj:Ccontext_keys__context_keys, det
 	if (obj.destroyed) { return; };
 	assert((<(detach?:boolean) => interface_.Ccontext_keys>(obj.key as any).resolve)(detach) !== undefined || detach);
 }
-function resolve_context_keys__interface_request(obj:Ccontext_keys__interface_request, detach:boolean = false) {
+function resolve_context_keys__interface_command(obj:Ccontext_keys__interface_command, detach:boolean = false) {
 	if (obj.destroyed) { return; };
 	obj.properties.context_keys.forEach(entry => resolve_context_keys__context_keys(entry, detach));
 }
-function resolve_no__has_steps(obj:Cno__has_steps, detach:boolean = false) {
+function resolve_no(obj:Cno, detach:boolean = false) {
 	if (obj.destroyed) { return; };
 }
 function resolve_collection_entry(obj:Ccollection_entry, detach:boolean = false) {
 	if (obj.destroyed) { return; };
 	assert((<(detach?:boolean) => interface_.Ccollection__type__property>(obj.properties.collection as any).resolve)(detach) !== undefined || detach);
 }
-function resolve_group(obj:Cgroup, detach:boolean = false) {
+function resolve_group__type__yes(obj:Cgroup__type__yes, detach:boolean = false) {
 	if (obj.destroyed) { return; };
 	assert((<(detach?:boolean) => interface_.Cgroup__type__property>(obj.properties.group as any).resolve)(detach) !== undefined || detach);
 }
@@ -1204,61 +1148,36 @@ function resolve_state(obj:Cstate, detach:boolean = false) {
 	assert((<(detach?:boolean) => interface_.Cstates__state_group__type__property>(obj.properties.state as any).resolve)(detach) !== undefined || detach);
 	assert((<(detach?:boolean) => interface_.Cstate_group__type__property>(obj.properties.state_group as any).resolve)(detach) !== undefined || detach);
 }
-function resolve_yes__has_steps(obj:Cyes__has_steps, detach:boolean = false) {
+function resolve_yes(obj:Cyes, detach:boolean = false) {
 	if (obj.destroyed) { return; };
 	resolve_id_path(obj.properties.tail, detach);
 	obj.properties.type.switch({
 		'collection entry': node => resolve_collection_entry(node, detach),
-		'group': node => resolve_group(node, detach),
+		'group': node => resolve_group__type__yes(node, detach),
 		'state': node => resolve_state(node, detach)
 	});
 }
 function resolve_id_path(obj:Cid_path, detach:boolean = false) {
 	if (obj.destroyed) { return; };
 	obj.properties.has_steps.switch({
-		'no': node => resolve_no__has_steps(node, detach),
-		'yes': node => resolve_yes__has_steps(node, detach)
+		'no': node => resolve_no(node, detach),
+		'yes': node => resolve_yes(node, detach)
 	});
 }
-function resolve_command_execution(obj:Ccommand_execution, detach:boolean = false) {
+function resolve_interface_command(obj:Cinterface_command, detach:boolean = false) {
 	if (obj.destroyed) { return; };
 	resolve_command_arguments(obj.properties.arguments, detach);
 	assert((<(detach?:boolean) => interface_.Ccommand>(obj.properties.command as any).resolve)(detach) !== undefined || detach);
-	resolve_context_keys__interface_request(obj.properties.context_keys, detach);
+	resolve_context_keys__interface_command(obj.properties.context_keys, detach);
 	resolve_id_path(obj.properties.context_node, detach);
 }
-function resolve_no__initialization_data_requested(obj:Cno__initialization_data_requested, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-}
-function resolve_yes__initialization_data_requested(obj:Cyes__initialization_data_requested, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-}
-function resolve_subscribe(obj:Csubscribe, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	resolve_context_keys__interface_request(obj.properties.context_keys, detach);
-	obj.properties.initialization_data_requested.switch({
-		'no': node => resolve_no__initialization_data_requested(node, detach),
-		'yes': node => resolve_yes__initialization_data_requested(node, detach)
-	});
-}
-function resolve_unsubscribe(obj:Cunsubscribe, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-}
-function resolve_interface_request(obj:Cinterface_request, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	obj.properties.type.switch({
-		'command execution': node => resolve_command_execution(node, detach),
-		'subscribe': node => resolve_subscribe(node, detach),
-		'unsubscribe': node => resolve_unsubscribe(node, detach)
-	});
-}
 
-export namespace Cinterface_request {
-	export function create(init:Tinterface_request, input: {
+export namespace Cinterface_command {
+	export function create(init:Tinterface_command, input: {
 		'interface':interface_.Cinterface
-	}, lazy_eval:boolean = false):Cinterface_request {
-		const instance = new Cinterface_request(init, input as any, lazy_eval);
-		if (!lazy_eval) resolve_interface_request(instance);
+	}, lazy_eval:boolean = false):Cinterface_command {
+		const instance = new Cinterface_command(init, input as any, lazy_eval);
+		if (!lazy_eval) resolve_interface_command(instance);
 		return instance;
 	};
 }

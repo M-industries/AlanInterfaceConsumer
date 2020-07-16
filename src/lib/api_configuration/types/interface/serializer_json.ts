@@ -1,239 +1,160 @@
 import * as read_api from "./alan_api";
-let serialize_ancestor_parameters_selection = (
-	function ($:read_api.Cancestor_parameters_selection) { 
-		let $_ancestor_parameters_selection= $;
+let serialize_context_node_path = (
+	function ($:read_api.Ccontext_node_path) { 
+		let $_context_node_path= $;
 		var raw_data:{[key:string]:any} = {};
-		switch ($_ancestor_parameters_selection.properties.has_steps.state.name) {
-			case 'no':
-				raw_data["has steps"] = [$_ancestor_parameters_selection.properties.has_steps.state.name, (
-					function ($:read_api.Cno__has_steps__ancestor_parameters_selection) { 
-						let $_no__has_steps__ancestor_parameters_selection= $;
-						var raw_data:{[key:string]:any} = {};
-						return raw_data;
-					}
-				(<any>$_ancestor_parameters_selection.properties.has_steps.state.node))];
-				break;
-			case 'yes':
-				raw_data["has steps"] = [$_ancestor_parameters_selection.properties.has_steps.state.name, (
-					function ($:read_api.Cyes__has_steps__ancestor_parameters_selection) { 
-						let $_yes__has_steps__ancestor_parameters_selection= $;
-						var raw_data:{[key:string]:any} = {};
-						raw_data["tail"] = serialize_ancestor_parameters_selection($_yes__has_steps__ancestor_parameters_selection.properties.tail);
-						switch ($_yes__has_steps__ancestor_parameters_selection.properties.type.state.name) {
-							case 'matrix parent':
-								raw_data["type"] = [$_yes__has_steps__ancestor_parameters_selection.properties.type.state.name, (
-									function ($:read_api.Cmatrix_parent) { 
-										let $_matrix_parent= $;
-										var raw_data:{[key:string]:any} = {};
-										return raw_data;
-									}
-								(<any>$_yes__has_steps__ancestor_parameters_selection.properties.type.state.node))];
-								break;
-							case 'state parent':
-								raw_data["type"] = [$_yes__has_steps__ancestor_parameters_selection.properties.type.state.name, (
-									function ($:read_api.Cstate_parent__type__yes__has_steps__ancestor_parameters_selection) { 
-										let $_state_parent__type__yes__has_steps__ancestor_parameters_selection= $;
-										var raw_data:{[key:string]:any} = {};
-										return raw_data;
-									}
-								(<any>$_yes__has_steps__ancestor_parameters_selection.properties.type.state.node))];
-								break;
-							default:
-								throw new Error('Hmmm');
-						}
-						return raw_data;
-					}
-				(<any>$_ancestor_parameters_selection.properties.has_steps.state.node))];
-				break;
-			default:
-				throw new Error('Hmmm');
-		}
-		return raw_data;
-	}
-);
-let serialize_command_parameter_referencer = (
-	function ($:read_api.Ccommand_parameter_referencer) { 
-		let $_command_parameter_referencer= $;
-		var raw_data:{[key:string]:any} = {};
-		raw_data["collection"] = $_command_parameter_referencer.properties.collection.entry;
-		switch ($_command_parameter_referencer.properties.context_type.state.name) {
-			case 'command parameter':
-				raw_data["context type"] = [$_command_parameter_referencer.properties.context_type.state.name, (
-					function ($:read_api.Ccommand_parameter) { 
-						let $_command_parameter= $;
-						var raw_data:{[key:string]:any} = {};
-						raw_data["ancestor selection"] = serialize_ancestor_parameters_selection($_command_parameter.properties.ancestor_selection);
-						switch ($_command_parameter.properties.type.state.name) {
-							case 'key':
-								raw_data["type"] = [$_command_parameter.properties.type.state.name, (
-									function ($:read_api.Ckey) { 
-										let $_key= $;
-										var raw_data:{[key:string]:any} = {};
-										return raw_data;
-									}
-								(<any>$_command_parameter.properties.type.state.node))];
-								break;
-							case 'reference':
-								raw_data["type"] = [$_command_parameter.properties.type.state.name, (
-									function ($:read_api.Creference__type__command_parameter) { 
-										let $_reference__type__command_parameter= $;
-										var raw_data:{[key:string]:any} = {};
-										raw_data["reference"] = $_reference__type__command_parameter.properties.reference.entry;
-										return raw_data;
-									}
-								(<any>$_command_parameter.properties.type.state.node))];
-								break;
-							default:
-								throw new Error('Hmmm');
-						}
-						return raw_data;
-					}
-				(<any>$_command_parameter_referencer.properties.context_type.state.node))];
-				break;
+		switch ($_context_node_path.properties.context.state.name) {
 			case 'context node':
-				raw_data["context type"] = [$_command_parameter_referencer.properties.context_type.state.name, (
+				raw_data["context"] = [$_context_node_path.properties.context.state.name, (
 					function ($:read_api.Ccontext_node) { 
 						let $_context_node= $;
 						var raw_data:{[key:string]:any} = {};
 						return raw_data;
 					}
-				(<any>$_command_parameter_referencer.properties.context_type.state.node))];
+				(<any>$_context_node_path.properties.context.state.node))];
+				break;
+			case 'parameter definition':
+				raw_data["context"] = [$_context_node_path.properties.context.state.name, (
+					function ($:read_api.Cparameter_definition__context) { 
+						let $_parameter_definition__context= $;
+						var raw_data:{[key:string]:any} = {};
+						raw_data["head"] = serialize_context_parameter_path($_parameter_definition__context.properties.head);
+						switch ($_parameter_definition__context.properties.type.state.name) {
+							case 'reference':
+								raw_data["type"] = [$_parameter_definition__context.properties.type.state.name, (
+									function ($:read_api.Creference__type__parameter_definition) { 
+										let $_reference__type__parameter_definition= $;
+										var raw_data:{[key:string]:any} = {};
+										raw_data["reference"] = $_reference__type__parameter_definition.properties.reference.entry;
+										return raw_data;
+									}
+								(<any>$_parameter_definition__context.properties.type.state.node))];
+								break;
+							case 'state context rule':
+								raw_data["type"] = [$_parameter_definition__context.properties.type.state.name, (
+									function ($:read_api.Cstate_context_rule__type__parameter_definition) { 
+										let $_state_context_rule__type__parameter_definition= $;
+										var raw_data:{[key:string]:any} = {};
+										raw_data["rule"] = $_state_context_rule__type__parameter_definition.properties.rule.entry;
+										return raw_data;
+									}
+								(<any>$_parameter_definition__context.properties.type.state.node))];
+								break;
+							default:
+								throw new Error('Hmmm');
+						}
+						return raw_data;
+					}
+				(<any>$_context_node_path.properties.context.state.node))];
+				break;
+			case 'root':
+				raw_data["context"] = [$_context_node_path.properties.context.state.name, (
+					function ($:read_api.Croot) { 
+						let $_root= $;
+						var raw_data:{[key:string]:any} = {};
+						return raw_data;
+					}
+				(<any>$_context_node_path.properties.context.state.node))];
+				break;
+			case 'this node':
+				raw_data["context"] = [$_context_node_path.properties.context.state.name, (
+					function ($:read_api.Cthis_node) { 
+						let $_this_node= $;
+						var raw_data:{[key:string]:any} = {};
+						return raw_data;
+					}
+				(<any>$_context_node_path.properties.context.state.node))];
 				break;
 			default:
 				throw new Error('Hmmm');
 		}
-		raw_data["head"] = serialize_node_selection_path($_command_parameter_referencer.properties.head);
-		raw_data["tail"] = serialize_node_content_path($_command_parameter_referencer.properties.tail);
 		return raw_data;
 	}
 );
-let serialize_command_parameters = (
-	function ($:read_api.Ccommand_parameters) { 
-		let $_command_parameters= $;
+let serialize_context_parameter_path = (
+	function ($:read_api.Ccontext_parameter_path) { 
+		let $_context_parameter_path= $;
 		var raw_data:{[key:string]:any} = {};
-		raw_data["properties"] = (function ($) {
-			var object:{[key:string]:any} = {};
-			for (let [k,v] of $_command_parameters.properties.properties) {
-				object[k] = (
-					function ($:read_api.Cproperties) { 
-						let $_properties= $;
+		switch ($_context_parameter_path.properties.has_steps.state.name) {
+			case 'no':
+				raw_data["has steps"] = [$_context_parameter_path.properties.has_steps.state.name, (
+					function ($:read_api.Cno__has_steps__context_parameter_path) { 
+						let $_no__has_steps__context_parameter_path= $;
 						var raw_data:{[key:string]:any} = {};
-						switch ($_properties.properties.type.state.name) {
-							case 'file':
-								raw_data["type"] = [$_properties.properties.type.state.name, (
-									function ($:read_api.Cfile__type__properties) { 
-										let $_file__type__properties= $;
+						return raw_data;
+					}
+				(<any>$_context_parameter_path.properties.has_steps.state.node))];
+				break;
+			case 'yes':
+				raw_data["has steps"] = [$_context_parameter_path.properties.has_steps.state.name, (
+					function ($:read_api.Cyes__has_steps__context_parameter_path) { 
+						let $_yes__has_steps__context_parameter_path= $;
+						var raw_data:{[key:string]:any} = {};
+						raw_data["tail"] = serialize_context_parameter_path($_yes__has_steps__context_parameter_path.properties.tail);
+						switch ($_yes__has_steps__context_parameter_path.properties.type.state.name) {
+							case 'group':
+								raw_data["type"] = [$_yes__has_steps__context_parameter_path.properties.type.state.name, (
+									function ($:read_api.Cgroup__type__yes__has_steps__context_parameter_path) { 
+										let $_group__type__yes__has_steps__context_parameter_path= $;
 										var raw_data:{[key:string]:any} = {};
+										raw_data["group"] = $_group__type__yes__has_steps__context_parameter_path.properties.group.entry;
 										return raw_data;
 									}
-								(<any>$_properties.properties.type.state.node))];
+								(<any>$_yes__has_steps__context_parameter_path.properties.type.state.node))];
 								break;
-							case 'matrix':
-								raw_data["type"] = [$_properties.properties.type.state.name, (
-									function ($:read_api.Cmatrix__type__properties) { 
-										let $_matrix__type__properties= $;
+							case 'parent':
+								raw_data["type"] = [$_yes__has_steps__context_parameter_path.properties.type.state.name, (
+									function ($:read_api.Cparent__type__yes__has_steps__context_parameter_path) { 
+										let $_parent__type__yes__has_steps__context_parameter_path= $;
 										var raw_data:{[key:string]:any} = {};
-										raw_data["parameters"] = serialize_command_parameters($_matrix__type__properties.properties.parameters);
-										raw_data["referencer"] = serialize_command_parameter_referencer($_matrix__type__properties.properties.referencer);
-										switch ($_matrix__type__properties.properties.type.state.name) {
-											case 'dense':
-												raw_data["type"] = [$_matrix__type__properties.properties.type.state.name, (
-													function ($:read_api.Cdense) { 
-														let $_dense= $;
-														var raw_data:{[key:string]:any} = {};
-														return raw_data;
-													}
-												(<any>$_matrix__type__properties.properties.type.state.node))];
-												break;
-											case 'sparse':
-												raw_data["type"] = [$_matrix__type__properties.properties.type.state.name, (
-													function ($:read_api.Csparse) { 
-														let $_sparse= $;
-														var raw_data:{[key:string]:any} = {};
-														return raw_data;
-													}
-												(<any>$_matrix__type__properties.properties.type.state.node))];
-												break;
-											default:
-												throw new Error('Hmmm');
-										}
 										return raw_data;
 									}
-								(<any>$_properties.properties.type.state.node))];
+								(<any>$_yes__has_steps__context_parameter_path.properties.type.state.node))];
 								break;
-							case 'number':
-								raw_data["type"] = [$_properties.properties.type.state.name, (
-									function ($:read_api.Cnumber__type__properties) { 
-										let $_number__type__properties= $;
+							default:
+								throw new Error('Hmmm');
+						}
+						return raw_data;
+					}
+				(<any>$_context_parameter_path.properties.has_steps.state.node))];
+				break;
+			default:
+				throw new Error('Hmmm');
+		}
+		return raw_data;
+	}
+);
+let serialize_graphs_definition = (
+	function ($:read_api.Cgraphs_definition) { 
+		let $_graphs_definition= $;
+		var raw_data:{[key:string]:any} = {};
+		raw_data["graphs"] = (function ($) {
+			var object:{[key:string]:any} = {};
+			for (let [k,v] of $_graphs_definition.properties.graphs) {
+				object[k] = (
+					function ($:read_api.Cgraphs__graphs_definition) { 
+						let $_graphs__graphs_definition= $;
+						var raw_data:{[key:string]:any} = {};
+						switch ($_graphs__graphs_definition.properties.type.state.name) {
+							case 'acyclic':
+								raw_data["type"] = [$_graphs__graphs_definition.properties.type.state.name, (
+									function ($:read_api.Cacyclic) { 
+										let $_acyclic= $;
 										var raw_data:{[key:string]:any} = {};
-										raw_data["numerical type"] = $_number__type__properties.properties.numerical_type.entry;
-										switch ($_number__type__properties.properties.set.state.name) {
-											case 'integer':
-												raw_data["set"] = [$_number__type__properties.properties.set.state.name, (
-													function ($:read_api.Cinteger__set__number__type__properties) { 
-														let $_integer__set__number__type__properties= $;
-														var raw_data:{[key:string]:any} = {};
-														return raw_data;
-													}
-												(<any>$_number__type__properties.properties.set.state.node))];
-												break;
-											case 'natural':
-												raw_data["set"] = [$_number__type__properties.properties.set.state.name, (
-													function ($:read_api.Cnatural__set__number__type__properties) { 
-														let $_natural__set__number__type__properties= $;
-														var raw_data:{[key:string]:any} = {};
-														return raw_data;
-													}
-												(<any>$_number__type__properties.properties.set.state.node))];
-												break;
-											default:
-												throw new Error('Hmmm');
-										}
 										return raw_data;
 									}
-								(<any>$_properties.properties.type.state.node))];
+								(<any>$_graphs__graphs_definition.properties.type.state.node))];
 								break;
-							case 'reference':
-								raw_data["type"] = [$_properties.properties.type.state.name, (
-									function ($:read_api.Creference__type__properties) { 
-										let $_reference__type__properties= $;
+							case 'ordered':
+								raw_data["type"] = [$_graphs__graphs_definition.properties.type.state.name, (
+									function ($:read_api.Cordered) { 
+										let $_ordered= $;
 										var raw_data:{[key:string]:any} = {};
-										raw_data["referencer"] = serialize_command_parameter_referencer($_reference__type__properties.properties.referencer);
+										raw_data["ordering property"] = $_ordered.properties.ordering_property.entry;
+										raw_data["path"] = serialize_node_path_tail($_ordered.properties.path);
 										return raw_data;
 									}
-								(<any>$_properties.properties.type.state.node))];
-								break;
-							case 'state group':
-								raw_data["type"] = [$_properties.properties.type.state.name, (
-									function ($:read_api.Cstate_group__type__properties) { 
-										let $_state_group__type__properties= $;
-										var raw_data:{[key:string]:any} = {};
-										raw_data["states"] = (function ($) {
-											var object:{[key:string]:any} = {};
-											for (let [k,v] of $_state_group__type__properties.properties.states) {
-												object[k] = (
-													function ($:read_api.Cstates__state_group__type__properties) { 
-														let $_states__state_group__type__properties= $;
-														var raw_data:{[key:string]:any} = {};
-														raw_data["parameters"] = serialize_command_parameters($_states__state_group__type__properties.properties.parameters);
-														return raw_data;
-													}
-												(v));
-											}
-											return object;
-										}($));
-										return raw_data;
-									}
-								(<any>$_properties.properties.type.state.node))];
-								break;
-							case 'text':
-								raw_data["type"] = [$_properties.properties.type.state.name, (
-									function ($:read_api.Ctext__type__properties) { 
-										let $_text__type__properties= $;
-										var raw_data:{[key:string]:any} = {};
-										return raw_data;
-									}
-								(<any>$_properties.properties.type.state.node))];
+								(<any>$_graphs__graphs_definition.properties.type.state.node))];
 								break;
 							default:
 								throw new Error('Hmmm');
@@ -264,7 +185,7 @@ let serialize_node = (
 									function ($:read_api.Ccommand) { 
 										let $_command= $;
 										var raw_data:{[key:string]:any} = {};
-										raw_data["parameters"] = serialize_command_parameters($_command.properties.parameters);
+										raw_data["parameters"] = serialize_parameter_definition($_command.properties.parameters);
 										return raw_data;
 									}
 								(<any>$_attributes.properties.type.state.node))];
@@ -280,30 +201,9 @@ let serialize_node = (
 													function ($:read_api.Ccollection__type__property) { 
 														let $_collection__type__property= $;
 														var raw_data:{[key:string]:any} = {};
+														raw_data["graphs"] = serialize_graphs_definition($_collection__type__property.properties.graphs);
+														raw_data["key property"] = $_collection__type__property.properties.key_property.entry;
 														raw_data["node"] = serialize_node($_collection__type__property.properties.node);
-														switch ($_collection__type__property.properties.type.state.name) {
-															case 'dictionary':
-																raw_data["type"] = [$_collection__type__property.properties.type.state.name, (
-																	function ($:read_api.Cdictionary) { 
-																		let $_dictionary= $;
-																		var raw_data:{[key:string]:any} = {};
-																		return raw_data;
-																	}
-																(<any>$_collection__type__property.properties.type.state.node))];
-																break;
-															case 'matrix':
-																raw_data["type"] = [$_collection__type__property.properties.type.state.name, (
-																	function ($:read_api.Cmatrix__type__collection) { 
-																		let $_matrix__type__collection= $;
-																		var raw_data:{[key:string]:any} = {};
-																		raw_data["referencer"] = serialize_referencer($_matrix__type__collection.properties.referencer);
-																		return raw_data;
-																	}
-																(<any>$_collection__type__property.properties.type.state.node))];
-																break;
-															default:
-																throw new Error('Hmmm');
-														}
 														return raw_data;
 													}
 												(<any>$_property.properties.type.state.node))];
@@ -332,39 +232,7 @@ let serialize_node = (
 													function ($:read_api.Cnumber__type__property) { 
 														let $_number__type__property= $;
 														var raw_data:{[key:string]:any} = {};
-														switch ($_number__type__property.properties.set.state.name) {
-															case 'integer':
-																raw_data["set"] = [$_number__type__property.properties.set.state.name, (
-																	function ($:read_api.Cinteger__set__number__type__property) { 
-																		let $_integer__set__number__type__property= $;
-																		var raw_data:{[key:string]:any} = {};
-																		return raw_data;
-																	}
-																(<any>$_number__type__property.properties.set.state.node))];
-																break;
-															case 'natural':
-																raw_data["set"] = [$_number__type__property.properties.set.state.name, (
-																	function ($:read_api.Cnatural__set__number__type__property) { 
-																		let $_natural__set__number__type__property= $;
-																		var raw_data:{[key:string]:any} = {};
-																		return raw_data;
-																	}
-																(<any>$_number__type__property.properties.set.state.node))];
-																break;
-															default:
-																throw new Error('Hmmm');
-														}
-														raw_data["type"] = $_number__type__property.properties.type.entry;
-														return raw_data;
-													}
-												(<any>$_property.properties.type.state.node))];
-												break;
-											case 'reference':
-												raw_data["type"] = [$_property.properties.type.state.name, (
-													function ($:read_api.Creference__type__property) { 
-														let $_reference__type__property= $;
-														var raw_data:{[key:string]:any} = {};
-														raw_data["referencer"] = serialize_referencer($_reference__type__property.properties.referencer);
+														raw_data["type"] = serialize_number_type($_number__type__property.properties.type);
 														return raw_data;
 													}
 												(<any>$_property.properties.type.state.node))];
@@ -374,20 +242,7 @@ let serialize_node = (
 													function ($:read_api.Cstate_group__type__property) { 
 														let $_state_group__type__property= $;
 														var raw_data:{[key:string]:any} = {};
-														raw_data["output parameters"] = (function ($) {
-															var object:{[key:string]:any} = {};
-															for (let [k,v] of $_state_group__type__property.properties.output_parameters) {
-																object[k] = (
-																	function ($:read_api.Coutput_parameters) { 
-																		let $_output_parameters= $;
-																		var raw_data:{[key:string]:any} = {};
-																		raw_data["node selection"] = serialize_node_type_path($_output_parameters.properties.node_selection);
-																		return raw_data;
-																	}
-																(v));
-															}
-															return object;
-														}($));
+														raw_data["first state"] = $_state_group__type__property.properties.first_state.entry;
 														raw_data["states"] = (function ($) {
 															var object:{[key:string]:any} = {};
 															for (let [k,v] of $_state_group__type__property.properties.states) {
@@ -395,21 +250,31 @@ let serialize_node = (
 																	function ($:read_api.Cstates__state_group__type__property) { 
 																		let $_states__state_group__type__property= $;
 																		var raw_data:{[key:string]:any} = {};
-																		raw_data["node"] = serialize_node($_states__state_group__type__property.properties.node);
-																		raw_data["output arguments"] = (function ($) {
-																			var object:{[key:string]:any} = {};
-																			for (let [k,v] of $_states__state_group__type__property.properties.output_arguments) {
-																				object[k] = (
-																					function ($:read_api.Coutput_arguments) { 
-																						let $_output_arguments= $;
+																		raw_data["context rules"] = serialize_where_clause($_states__state_group__type__property.properties.context_rules);
+																		switch ($_states__state_group__type__property.properties.has_successor.state.name) {
+																			case 'no':
+																				raw_data["has successor"] = [$_states__state_group__type__property.properties.has_successor.state.name, (
+																					function ($:read_api.Cno__has_successor__states__state_group__type__property) { 
+																						let $_no__has_successor__states__state_group__type__property= $;
 																						var raw_data:{[key:string]:any} = {};
-																						raw_data["path"] = serialize_node_selection_path($_output_arguments.properties.path);
 																						return raw_data;
 																					}
-																				(v));
-																			}
-																			return object;
-																		}($));
+																				(<any>$_states__state_group__type__property.properties.has_successor.state.node))];
+																				break;
+																			case 'yes':
+																				raw_data["has successor"] = [$_states__state_group__type__property.properties.has_successor.state.name, (
+																					function ($:read_api.Cyes__has_successor__states__state_group__type__property) { 
+																						let $_yes__has_successor__states__state_group__type__property= $;
+																						var raw_data:{[key:string]:any} = {};
+																						raw_data["successor"] = $_yes__has_successor__states__state_group__type__property.properties.successor.entry;
+																						return raw_data;
+																					}
+																				(<any>$_states__state_group__type__property.properties.has_successor.state.node))];
+																				break;
+																			default:
+																				throw new Error('Hmmm');
+																		}
+																		raw_data["node"] = serialize_node($_states__state_group__type__property.properties.node);
 																		return raw_data;
 																	}
 																(v));
@@ -425,6 +290,29 @@ let serialize_node = (
 													function ($:read_api.Ctext__type__property) { 
 														let $_text__type__property= $;
 														var raw_data:{[key:string]:any} = {};
+														switch ($_text__type__property.properties.has_constraint.state.name) {
+															case 'no':
+																raw_data["has constraint"] = [$_text__type__property.properties.has_constraint.state.name, (
+																	function ($:read_api.Cno__has_constraint__text__type__property) { 
+																		let $_no__has_constraint__text__type__property= $;
+																		var raw_data:{[key:string]:any} = {};
+																		return raw_data;
+																	}
+																(<any>$_text__type__property.properties.has_constraint.state.node))];
+																break;
+															case 'yes':
+																raw_data["has constraint"] = [$_text__type__property.properties.has_constraint.state.name, (
+																	function ($:read_api.Cyes__has_constraint__text__type__property) { 
+																		let $_yes__has_constraint__text__type__property= $;
+																		var raw_data:{[key:string]:any} = {};
+																		raw_data["referencer"] = serialize_referencer($_yes__has_constraint__text__type__property.properties.referencer);
+																		return raw_data;
+																	}
+																(<any>$_text__type__property.properties.has_constraint.state.node))];
+																break;
+															default:
+																throw new Error('Hmmm');
+														}
 														return raw_data;
 													}
 												(<any>$_property.properties.type.state.node))];
@@ -448,232 +336,348 @@ let serialize_node = (
 		return raw_data;
 	}
 );
-let serialize_node_content_path = (
-	function ($:read_api.Cnode_content_path) { 
-		let $_node_content_path= $;
+let serialize_node_path = (
+	function ($:read_api.Cnode_path) { 
+		let $_node_path= $;
 		var raw_data:{[key:string]:any} = {};
-		switch ($_node_content_path.properties.has_steps.state.name) {
-			case 'no':
-				raw_data["has steps"] = [$_node_content_path.properties.has_steps.state.name, (
-					function ($:read_api.Cno__has_steps__node_content_path) { 
-						let $_no__has_steps__node_content_path= $;
-						var raw_data:{[key:string]:any} = {};
-						return raw_data;
-					}
-				(<any>$_node_content_path.properties.has_steps.state.node))];
-				break;
-			case 'yes':
-				raw_data["has steps"] = [$_node_content_path.properties.has_steps.state.name, (
-					function ($:read_api.Cyes__has_steps__node_content_path) { 
-						let $_yes__has_steps__node_content_path= $;
-						var raw_data:{[key:string]:any} = {};
-						raw_data["tail"] = serialize_node_content_path($_yes__has_steps__node_content_path.properties.tail);
-						switch ($_yes__has_steps__node_content_path.properties.type.state.name) {
-							case 'group':
-								raw_data["type"] = [$_yes__has_steps__node_content_path.properties.type.state.name, (
-									function ($:read_api.Cgroup__type__yes__has_steps__node_content_path) { 
-										let $_group__type__yes__has_steps__node_content_path= $;
-										var raw_data:{[key:string]:any} = {};
-										raw_data["group"] = $_group__type__yes__has_steps__node_content_path.properties.group.entry;
-										return raw_data;
-									}
-								(<any>$_yes__has_steps__node_content_path.properties.type.state.node))];
-								break;
-							case 'state':
-								raw_data["type"] = [$_yes__has_steps__node_content_path.properties.type.state.name, (
-									function ($:read_api.Cstate__type__yes__has_steps__node_content_path) { 
-										let $_state__type__yes__has_steps__node_content_path= $;
-										var raw_data:{[key:string]:any} = {};
-										raw_data["state"] = $_state__type__yes__has_steps__node_content_path.properties.state.entry;
-										raw_data["state group"] = $_state__type__yes__has_steps__node_content_path.properties.state_group.entry;
-										return raw_data;
-									}
-								(<any>$_yes__has_steps__node_content_path.properties.type.state.node))];
-								break;
-							default:
-								throw new Error('Hmmm');
-						}
-						return raw_data;
-					}
-				(<any>$_node_content_path.properties.has_steps.state.node))];
-				break;
-			default:
-				throw new Error('Hmmm');
-		}
+		raw_data["head"] = serialize_context_node_path($_node_path.properties.head);
+		raw_data["tail"] = serialize_node_path_tail($_node_path.properties.tail);
 		return raw_data;
 	}
 );
-let serialize_node_selection_path = (
-	function ($:read_api.Cnode_selection_path) { 
-		let $_node_selection_path= $;
+let serialize_node_path_tail = (
+	function ($:read_api.Cnode_path_tail) { 
+		let $_node_path_tail= $;
 		var raw_data:{[key:string]:any} = {};
-		switch ($_node_selection_path.properties.has_steps.state.name) {
+		switch ($_node_path_tail.properties.has_steps.state.name) {
 			case 'no':
-				raw_data["has steps"] = [$_node_selection_path.properties.has_steps.state.name, (
-					function ($:read_api.Cno__has_steps__node_selection_path) { 
-						let $_no__has_steps__node_selection_path= $;
+				raw_data["has steps"] = [$_node_path_tail.properties.has_steps.state.name, (
+					function ($:read_api.Cno__has_steps__node_path_tail) { 
+						let $_no__has_steps__node_path_tail= $;
 						var raw_data:{[key:string]:any} = {};
 						return raw_data;
 					}
-				(<any>$_node_selection_path.properties.has_steps.state.node))];
+				(<any>$_node_path_tail.properties.has_steps.state.node))];
 				break;
 			case 'yes':
-				raw_data["has steps"] = [$_node_selection_path.properties.has_steps.state.name, (
-					function ($:read_api.Cyes__has_steps__node_selection_path) { 
-						let $_yes__has_steps__node_selection_path= $;
+				raw_data["has steps"] = [$_node_path_tail.properties.has_steps.state.name, (
+					function ($:read_api.Cyes__has_steps__node_path_tail) { 
+						let $_yes__has_steps__node_path_tail= $;
 						var raw_data:{[key:string]:any} = {};
-						raw_data["tail"] = serialize_node_selection_path($_yes__has_steps__node_selection_path.properties.tail);
-						switch ($_yes__has_steps__node_selection_path.properties.type.state.name) {
-							case 'collection parent':
-								raw_data["type"] = [$_yes__has_steps__node_selection_path.properties.type.state.name, (
-									function ($:read_api.Ccollection_parent) { 
-										let $_collection_parent= $;
-										var raw_data:{[key:string]:any} = {};
-										return raw_data;
-									}
-								(<any>$_yes__has_steps__node_selection_path.properties.type.state.node))];
-								break;
+						raw_data["tail"] = serialize_node_path_tail($_yes__has_steps__node_path_tail.properties.tail);
+						switch ($_yes__has_steps__node_path_tail.properties.type.state.name) {
 							case 'group':
-								raw_data["type"] = [$_yes__has_steps__node_selection_path.properties.type.state.name, (
-									function ($:read_api.Cgroup__type__yes__has_steps__node_selection_path) { 
-										let $_group__type__yes__has_steps__node_selection_path= $;
+								raw_data["type"] = [$_yes__has_steps__node_path_tail.properties.type.state.name, (
+									function ($:read_api.Cgroup__type__yes__has_steps__node_path_tail) { 
+										let $_group__type__yes__has_steps__node_path_tail= $;
 										var raw_data:{[key:string]:any} = {};
-										raw_data["group"] = $_group__type__yes__has_steps__node_selection_path.properties.group.entry;
+										raw_data["group"] = $_group__type__yes__has_steps__node_path_tail.properties.group.entry;
 										return raw_data;
 									}
-								(<any>$_yes__has_steps__node_selection_path.properties.type.state.node))];
+								(<any>$_yes__has_steps__node_path_tail.properties.type.state.node))];
 								break;
-							case 'group parent':
-								raw_data["type"] = [$_yes__has_steps__node_selection_path.properties.type.state.name, (
-									function ($:read_api.Cgroup_parent) { 
-										let $_group_parent= $;
+							case 'parent':
+								raw_data["type"] = [$_yes__has_steps__node_path_tail.properties.type.state.name, (
+									function ($:read_api.Cparent__type__yes__has_steps__node_path_tail) { 
+										let $_parent__type__yes__has_steps__node_path_tail= $;
 										var raw_data:{[key:string]:any} = {};
 										return raw_data;
 									}
-								(<any>$_yes__has_steps__node_selection_path.properties.type.state.node))];
-								break;
-							case 'matrix key':
-								raw_data["type"] = [$_yes__has_steps__node_selection_path.properties.type.state.name, (
-									function ($:read_api.Cmatrix_key) { 
-										let $_matrix_key= $;
-										var raw_data:{[key:string]:any} = {};
-										return raw_data;
-									}
-								(<any>$_yes__has_steps__node_selection_path.properties.type.state.node))];
+								(<any>$_yes__has_steps__node_path_tail.properties.type.state.node))];
 								break;
 							case 'reference':
-								raw_data["type"] = [$_yes__has_steps__node_selection_path.properties.type.state.name, (
+								raw_data["type"] = [$_yes__has_steps__node_path_tail.properties.type.state.name, (
 									function ($:read_api.Creference__type__yes) { 
 										let $_reference__type__yes= $;
 										var raw_data:{[key:string]:any} = {};
 										raw_data["reference"] = $_reference__type__yes.properties.reference.entry;
 										return raw_data;
 									}
-								(<any>$_yes__has_steps__node_selection_path.properties.type.state.node))];
+								(<any>$_yes__has_steps__node_path_tail.properties.type.state.node))];
 								break;
-							case 'state group output parameter':
-								raw_data["type"] = [$_yes__has_steps__node_selection_path.properties.type.state.name, (
-									function ($:read_api.Cstate_group_output_parameter) { 
-										let $_state_group_output_parameter= $;
+							case 'reference rule':
+								raw_data["type"] = [$_yes__has_steps__node_path_tail.properties.type.state.name, (
+									function ($:read_api.Creference_rule) { 
+										let $_reference_rule= $;
 										var raw_data:{[key:string]:any} = {};
-										raw_data["output parameter"] = $_state_group_output_parameter.properties.output_parameter.entry;
-										raw_data["state group"] = $_state_group_output_parameter.properties.state_group.entry;
+										raw_data["reference"] = $_reference_rule.properties.reference.entry;
+										raw_data["rule"] = $_reference_rule.properties.rule.entry;
 										return raw_data;
 									}
-								(<any>$_yes__has_steps__node_selection_path.properties.type.state.node))];
-								break;
-							case 'state parent':
-								raw_data["type"] = [$_yes__has_steps__node_selection_path.properties.type.state.name, (
-									function ($:read_api.Cstate_parent__type__yes__has_steps__node_selection_path) { 
-										let $_state_parent__type__yes__has_steps__node_selection_path= $;
-										var raw_data:{[key:string]:any} = {};
-										return raw_data;
-									}
-								(<any>$_yes__has_steps__node_selection_path.properties.type.state.node))];
-								break;
-							default:
-								throw new Error('Hmmm');
-						}
-						return raw_data;
-					}
-				(<any>$_node_selection_path.properties.has_steps.state.node))];
-				break;
-			default:
-				throw new Error('Hmmm');
-		}
-		return raw_data;
-	}
-);
-let serialize_node_type_path = (
-	function ($:read_api.Cnode_type_path) { 
-		let $_node_type_path= $;
-		var raw_data:{[key:string]:any} = {};
-		raw_data["steps"] = serialize_node_type_path_step($_node_type_path.properties.steps);
-		return raw_data;
-	}
-);
-let serialize_node_type_path_step = (
-	function ($:read_api.Cnode_type_path_step) { 
-		let $_node_type_path_step= $;
-		var raw_data:{[key:string]:any} = {};
-		switch ($_node_type_path_step.properties.has_steps.state.name) {
-			case 'no':
-				raw_data["has steps"] = [$_node_type_path_step.properties.has_steps.state.name, (
-					function ($:read_api.Cno__has_steps__node_type_path_step) { 
-						let $_no__has_steps__node_type_path_step= $;
-						var raw_data:{[key:string]:any} = {};
-						return raw_data;
-					}
-				(<any>$_node_type_path_step.properties.has_steps.state.node))];
-				break;
-			case 'yes':
-				raw_data["has steps"] = [$_node_type_path_step.properties.has_steps.state.name, (
-					function ($:read_api.Cyes__has_steps__node_type_path_step) { 
-						let $_yes__has_steps__node_type_path_step= $;
-						var raw_data:{[key:string]:any} = {};
-						raw_data["tail"] = serialize_node_type_path_step($_yes__has_steps__node_type_path_step.properties.tail);
-						switch ($_yes__has_steps__node_type_path_step.properties.type.state.name) {
-							case 'collection':
-								raw_data["type"] = [$_yes__has_steps__node_type_path_step.properties.type.state.name, (
-									function ($:read_api.Ccollection__type__yes) { 
-										let $_collection__type__yes= $;
-										var raw_data:{[key:string]:any} = {};
-										raw_data["collection"] = $_collection__type__yes.properties.collection.entry;
-										return raw_data;
-									}
-								(<any>$_yes__has_steps__node_type_path_step.properties.type.state.node))];
-								break;
-							case 'group':
-								raw_data["type"] = [$_yes__has_steps__node_type_path_step.properties.type.state.name, (
-									function ($:read_api.Cgroup__type__yes__has_steps__node_type_path_step) { 
-										let $_group__type__yes__has_steps__node_type_path_step= $;
-										var raw_data:{[key:string]:any} = {};
-										raw_data["group"] = $_group__type__yes__has_steps__node_type_path_step.properties.group.entry;
-										return raw_data;
-									}
-								(<any>$_yes__has_steps__node_type_path_step.properties.type.state.node))];
+								(<any>$_yes__has_steps__node_path_tail.properties.type.state.node))];
 								break;
 							case 'state':
-								raw_data["type"] = [$_yes__has_steps__node_type_path_step.properties.type.state.name, (
-									function ($:read_api.Cstate__type__yes__has_steps__node_type_path_step) { 
-										let $_state__type__yes__has_steps__node_type_path_step= $;
+								raw_data["type"] = [$_yes__has_steps__node_path_tail.properties.type.state.name, (
+									function ($:read_api.Cstate__type) { 
+										let $_state__type= $;
 										var raw_data:{[key:string]:any} = {};
-										raw_data["state"] = $_state__type__yes__has_steps__node_type_path_step.properties.state.entry;
-										raw_data["state group"] = $_state__type__yes__has_steps__node_type_path_step.properties.state_group.entry;
+										raw_data["state"] = $_state__type.properties.state.entry;
+										raw_data["state group"] = $_state__type.properties.state_group.entry;
 										return raw_data;
 									}
-								(<any>$_yes__has_steps__node_type_path_step.properties.type.state.node))];
+								(<any>$_yes__has_steps__node_path_tail.properties.type.state.node))];
+								break;
+							case 'state context rule':
+								raw_data["type"] = [$_yes__has_steps__node_path_tail.properties.type.state.name, (
+									function ($:read_api.Cstate_context_rule__type__yes) { 
+										let $_state_context_rule__type__yes= $;
+										var raw_data:{[key:string]:any} = {};
+										raw_data["context rule"] = $_state_context_rule__type__yes.properties.context_rule.entry;
+										return raw_data;
+									}
+								(<any>$_yes__has_steps__node_path_tail.properties.type.state.node))];
 								break;
 							default:
 								throw new Error('Hmmm');
 						}
 						return raw_data;
 					}
-				(<any>$_node_type_path_step.properties.has_steps.state.node))];
+				(<any>$_node_path_tail.properties.has_steps.state.node))];
 				break;
 			default:
 				throw new Error('Hmmm');
 		}
+		return raw_data;
+	}
+);
+let serialize_number_type = (
+	function ($:read_api.Cnumber_type) { 
+		let $_number_type= $;
+		var raw_data:{[key:string]:any} = {};
+		switch ($_number_type.properties.decimal_places.state.name) {
+			case 'no':
+				raw_data["decimal places"] = [$_number_type.properties.decimal_places.state.name, (
+					function ($:read_api.Cno__decimal_places) { 
+						let $_no__decimal_places= $;
+						var raw_data:{[key:string]:any} = {};
+						return raw_data;
+					}
+				(<any>$_number_type.properties.decimal_places.state.node))];
+				break;
+			case 'yes':
+				raw_data["decimal places"] = [$_number_type.properties.decimal_places.state.name, (
+					function ($:read_api.Cyes__decimal_places) { 
+						let $_yes__decimal_places= $;
+						var raw_data:{[key:string]:any} = {};
+						raw_data["places"] = $_yes__decimal_places.properties.places;
+						return raw_data;
+					}
+				(<any>$_number_type.properties.decimal_places.state.node))];
+				break;
+			default:
+				throw new Error('Hmmm');
+		}
+		switch ($_number_type.properties.set.state.name) {
+			case 'integer':
+				raw_data["set"] = [$_number_type.properties.set.state.name, (
+					function ($:read_api.Cinteger) { 
+						let $_integer= $;
+						var raw_data:{[key:string]:any} = {};
+						return raw_data;
+					}
+				(<any>$_number_type.properties.set.state.node))];
+				break;
+			case 'natural':
+				raw_data["set"] = [$_number_type.properties.set.state.name, (
+					function ($:read_api.Cnatural) { 
+						let $_natural= $;
+						var raw_data:{[key:string]:any} = {};
+						return raw_data;
+					}
+				(<any>$_number_type.properties.set.state.node))];
+				break;
+			default:
+				throw new Error('Hmmm');
+		}
+		raw_data["type"] = $_number_type.properties.type.entry;
+		return raw_data;
+	}
+);
+let serialize_parameter_definition = (
+	function ($:read_api.Cparameter_definition__interface) { 
+		let $_parameter_definition__interface= $;
+		var raw_data:{[key:string]:any} = {};
+		raw_data["properties"] = (function ($) {
+			var object:{[key:string]:any} = {};
+			for (let [k,v] of $_parameter_definition__interface.properties.properties) {
+				object[k] = (
+					function ($:read_api.Cproperties) { 
+						let $_properties= $;
+						var raw_data:{[key:string]:any} = {};
+						switch ($_properties.properties.type.state.name) {
+							case 'collection':
+								raw_data["type"] = [$_properties.properties.type.state.name, (
+									function ($:read_api.Ccollection__type__properties) { 
+										let $_collection__type__properties= $;
+										var raw_data:{[key:string]:any} = {};
+										raw_data["key property"] = $_collection__type__properties.properties.key_property.entry;
+										raw_data["parameters"] = serialize_parameter_definition($_collection__type__properties.properties.parameters);
+										switch ($_collection__type__properties.properties.type.state.name) {
+											case 'dense map':
+												raw_data["type"] = [$_collection__type__properties.properties.type.state.name, (
+													function ($:read_api.Cdense_map) { 
+														let $_dense_map= $;
+														var raw_data:{[key:string]:any} = {};
+														return raw_data;
+													}
+												(<any>$_collection__type__properties.properties.type.state.node))];
+												break;
+											case 'simple':
+												raw_data["type"] = [$_collection__type__properties.properties.type.state.name, (
+													function ($:read_api.Csimple) { 
+														let $_simple= $;
+														var raw_data:{[key:string]:any} = {};
+														return raw_data;
+													}
+												(<any>$_collection__type__properties.properties.type.state.node))];
+												break;
+											default:
+												throw new Error('Hmmm');
+										}
+										return raw_data;
+									}
+								(<any>$_properties.properties.type.state.node))];
+								break;
+							case 'file':
+								raw_data["type"] = [$_properties.properties.type.state.name, (
+									function ($:read_api.Cfile__type__properties) { 
+										let $_file__type__properties= $;
+										var raw_data:{[key:string]:any} = {};
+										return raw_data;
+									}
+								(<any>$_properties.properties.type.state.node))];
+								break;
+							case 'group':
+								raw_data["type"] = [$_properties.properties.type.state.name, (
+									function ($:read_api.Cgroup__type__properties) { 
+										let $_group__type__properties= $;
+										var raw_data:{[key:string]:any} = {};
+										raw_data["parameters"] = serialize_parameter_definition($_group__type__properties.properties.parameters);
+										return raw_data;
+									}
+								(<any>$_properties.properties.type.state.node))];
+								break;
+							case 'number':
+								raw_data["type"] = [$_properties.properties.type.state.name, (
+									function ($:read_api.Cnumber__type__properties) { 
+										let $_number__type__properties= $;
+										var raw_data:{[key:string]:any} = {};
+										raw_data["type"] = serialize_number_type($_number__type__properties.properties.type);
+										return raw_data;
+									}
+								(<any>$_properties.properties.type.state.node))];
+								break;
+							case 'state group':
+								raw_data["type"] = [$_properties.properties.type.state.name, (
+									function ($:read_api.Cstate_group__type__properties) { 
+										let $_state_group__type__properties= $;
+										var raw_data:{[key:string]:any} = {};
+										raw_data["first state"] = $_state_group__type__properties.properties.first_state.entry;
+										raw_data["states"] = (function ($) {
+											var object:{[key:string]:any} = {};
+											for (let [k,v] of $_state_group__type__properties.properties.states) {
+												object[k] = (
+													function ($:read_api.Cstates__state_group__type__properties) { 
+														let $_states__state_group__type__properties= $;
+														var raw_data:{[key:string]:any} = {};
+														raw_data["context rules"] = serialize_where_clause($_states__state_group__type__properties.properties.context_rules);
+														switch ($_states__state_group__type__properties.properties.has_successor.state.name) {
+															case 'no':
+																raw_data["has successor"] = [$_states__state_group__type__properties.properties.has_successor.state.name, (
+																	function ($:read_api.Cno__has_successor__states__state_group__type__properties) { 
+																		let $_no__has_successor__states__state_group__type__properties= $;
+																		var raw_data:{[key:string]:any} = {};
+																		return raw_data;
+																	}
+																(<any>$_states__state_group__type__properties.properties.has_successor.state.node))];
+																break;
+															case 'yes':
+																raw_data["has successor"] = [$_states__state_group__type__properties.properties.has_successor.state.name, (
+																	function ($:read_api.Cyes__has_successor__states__state_group__type__properties) { 
+																		let $_yes__has_successor__states__state_group__type__properties= $;
+																		var raw_data:{[key:string]:any} = {};
+																		raw_data["successor"] = $_yes__has_successor__states__state_group__type__properties.properties.successor.entry;
+																		return raw_data;
+																	}
+																(<any>$_states__state_group__type__properties.properties.has_successor.state.node))];
+																break;
+															default:
+																throw new Error('Hmmm');
+														}
+														raw_data["parameters"] = serialize_parameter_definition($_states__state_group__type__properties.properties.parameters);
+														return raw_data;
+													}
+												(v));
+											}
+											return object;
+										}($));
+										return raw_data;
+									}
+								(<any>$_properties.properties.type.state.node))];
+								break;
+							case 'text':
+								raw_data["type"] = [$_properties.properties.type.state.name, (
+									function ($:read_api.Ctext__type__properties) { 
+										let $_text__type__properties= $;
+										var raw_data:{[key:string]:any} = {};
+										switch ($_text__type__properties.properties.has_constraint.state.name) {
+											case 'no':
+												raw_data["has constraint"] = [$_text__type__properties.properties.has_constraint.state.name, (
+													function ($:read_api.Cno__has_constraint__text__type__properties) { 
+														let $_no__has_constraint__text__type__properties= $;
+														var raw_data:{[key:string]:any} = {};
+														return raw_data;
+													}
+												(<any>$_text__type__properties.properties.has_constraint.state.node))];
+												break;
+											case 'yes':
+												raw_data["has constraint"] = [$_text__type__properties.properties.has_constraint.state.name, (
+													function ($:read_api.Cyes__has_constraint__text__type__properties) { 
+														let $_yes__has_constraint__text__type__properties= $;
+														var raw_data:{[key:string]:any} = {};
+														raw_data["referencer"] = serialize_referencer($_yes__has_constraint__text__type__properties.properties.referencer);
+														switch ($_yes__has_constraint__text__type__properties.properties.type.state.name) {
+															case 'existing':
+																raw_data["type"] = [$_yes__has_constraint__text__type__properties.properties.type.state.name, (
+																	function ($:read_api.Cexisting) { 
+																		let $_existing= $;
+																		var raw_data:{[key:string]:any} = {};
+																		return raw_data;
+																	}
+																(<any>$_yes__has_constraint__text__type__properties.properties.type.state.node))];
+																break;
+															case 'new':
+																raw_data["type"] = [$_yes__has_constraint__text__type__properties.properties.type.state.name, (
+																	function ($:read_api.Cnew) { 
+																		let $_new= $;
+																		var raw_data:{[key:string]:any} = {};
+																		return raw_data;
+																	}
+																(<any>$_yes__has_constraint__text__type__properties.properties.type.state.node))];
+																break;
+															default:
+																throw new Error('Hmmm');
+														}
+														return raw_data;
+													}
+												(<any>$_text__type__properties.properties.has_constraint.state.node))];
+												break;
+											default:
+												throw new Error('Hmmm');
+										}
+										return raw_data;
+									}
+								(<any>$_properties.properties.type.state.node))];
+								break;
+							default:
+								throw new Error('Hmmm');
+						}
+						return raw_data;
+					}
+				(v));
+			}
+			return object;
+		}($));
 		return raw_data;
 	}
 );
@@ -681,9 +685,180 @@ let serialize_referencer = (
 	function ($:read_api.Creferencer) { 
 		let $_referencer= $;
 		var raw_data:{[key:string]:any} = {};
-		raw_data["collection"] = $_referencer.properties.collection.entry;
-		raw_data["head"] = serialize_node_selection_path($_referencer.properties.head);
-		raw_data["tail"] = serialize_node_content_path($_referencer.properties.tail);
+		switch ($_referencer.properties.has_tail.state.name) {
+			case 'no':
+				raw_data["has tail"] = [$_referencer.properties.has_tail.state.name, (
+					function ($:read_api.Cno__has_tail) { 
+						let $_no__has_tail= $;
+						var raw_data:{[key:string]:any} = {};
+						return raw_data;
+					}
+				(<any>$_referencer.properties.has_tail.state.node))];
+				break;
+			case 'yes':
+				raw_data["has tail"] = [$_referencer.properties.has_tail.state.name, (
+					function ($:read_api.Cyes__has_tail) { 
+						let $_yes__has_tail= $;
+						var raw_data:{[key:string]:any} = {};
+						raw_data["tail"] = serialize_node_path_tail($_yes__has_tail.properties.tail);
+						return raw_data;
+					}
+				(<any>$_referencer.properties.has_tail.state.node))];
+				break;
+			default:
+				throw new Error('Hmmm');
+		}
+		raw_data["head"] = serialize_node_path($_referencer.properties.head);
+		raw_data["rules"] = serialize_where_clause($_referencer.properties.rules);
+		switch ($_referencer.properties.type.state.name) {
+			case 'sibling':
+				raw_data["type"] = [$_referencer.properties.type.state.name, (
+					function ($:read_api.Csibling) { 
+						let $_sibling= $;
+						var raw_data:{[key:string]:any} = {};
+						switch ($_sibling.properties.graph_participation.state.name) {
+							case 'no':
+								raw_data["graph participation"] = [$_sibling.properties.graph_participation.state.name, (
+									function ($:read_api.Cno__graph_participation) { 
+										let $_no__graph_participation= $;
+										var raw_data:{[key:string]:any} = {};
+										return raw_data;
+									}
+								(<any>$_sibling.properties.graph_participation.state.node))];
+								break;
+							case 'yes':
+								raw_data["graph participation"] = [$_sibling.properties.graph_participation.state.name, (
+									function ($:read_api.Cyes__graph_participation) { 
+										let $_yes__graph_participation= $;
+										var raw_data:{[key:string]:any} = {};
+										raw_data["graphs"] = (function ($) {
+											var object:{[key:string]:any} = {};
+											for (let [k,v] of $_yes__graph_participation.properties.graphs) {
+												object[k] = (
+													function ($:read_api.Cgraphs__yes) { 
+														let $_graphs__yes= $;
+														var raw_data:{[key:string]:any} = {};
+														return raw_data;
+													}
+												(v));
+											}
+											return object;
+										}($));
+										return raw_data;
+									}
+								(<any>$_sibling.properties.graph_participation.state.node))];
+								break;
+							default:
+								throw new Error('Hmmm');
+						}
+						return raw_data;
+					}
+				(<any>$_referencer.properties.type.state.node))];
+				break;
+			case 'unrestricted':
+				raw_data["type"] = [$_referencer.properties.type.state.name, (
+					function ($:read_api.Cunrestricted) { 
+						let $_unrestricted= $;
+						var raw_data:{[key:string]:any} = {};
+						raw_data["collection"] = $_unrestricted.properties.collection.entry;
+						return raw_data;
+					}
+				(<any>$_referencer.properties.type.state.node))];
+				break;
+			default:
+				throw new Error('Hmmm');
+		}
+		return raw_data;
+	}
+);
+let serialize_where_clause = (
+	function ($:read_api.Cwhere_clause) { 
+		let $_where_clause= $;
+		var raw_data:{[key:string]:any} = {};
+		switch ($_where_clause.properties.has_rule.state.name) {
+			case 'no':
+				raw_data["has rule"] = [$_where_clause.properties.has_rule.state.name, (
+					function ($:read_api.Cno__has_rule) { 
+						let $_no__has_rule= $;
+						var raw_data:{[key:string]:any} = {};
+						return raw_data;
+					}
+				(<any>$_where_clause.properties.has_rule.state.node))];
+				break;
+			case 'yes':
+				raw_data["has rule"] = [$_where_clause.properties.has_rule.state.name, (
+					function ($:read_api.Cyes__has_rule) { 
+						let $_yes__has_rule= $;
+						var raw_data:{[key:string]:any} = {};
+						raw_data["first"] = $_yes__has_rule.properties.first.entry;
+						return raw_data;
+					}
+				(<any>$_where_clause.properties.has_rule.state.node))];
+				break;
+			default:
+				throw new Error('Hmmm');
+		}
+		raw_data["rules"] = (function ($) {
+			var object:{[key:string]:any} = {};
+			for (let [k,v] of $_where_clause.properties.rules) {
+				object[k] = (
+					function ($:read_api.Crules) { 
+						let $_rules= $;
+						var raw_data:{[key:string]:any} = {};
+						switch ($_rules.properties.context.state.name) {
+							case 'context':
+								raw_data["context"] = [$_rules.properties.context.state.name, (
+									function ($:read_api.Ccontext) { 
+										let $_context= $;
+										var raw_data:{[key:string]:any} = {};
+										raw_data["path"] = serialize_context_node_path($_context.properties.path);
+										return raw_data;
+									}
+								(<any>$_rules.properties.context.state.node))];
+								break;
+							case 'sibling rule':
+								raw_data["context"] = [$_rules.properties.context.state.name, (
+									function ($:read_api.Csibling_rule) { 
+										let $_sibling_rule= $;
+										var raw_data:{[key:string]:any} = {};
+										raw_data["rule"] = $_sibling_rule.properties.rule.entry;
+										return raw_data;
+									}
+								(<any>$_rules.properties.context.state.node))];
+								break;
+							default:
+								throw new Error('Hmmm');
+						}
+						switch ($_rules.properties.has_successor.state.name) {
+							case 'no':
+								raw_data["has successor"] = [$_rules.properties.has_successor.state.name, (
+									function ($:read_api.Cno__has_successor__rules) { 
+										let $_no__has_successor__rules= $;
+										var raw_data:{[key:string]:any} = {};
+										return raw_data;
+									}
+								(<any>$_rules.properties.has_successor.state.node))];
+								break;
+							case 'yes':
+								raw_data["has successor"] = [$_rules.properties.has_successor.state.name, (
+									function ($:read_api.Cyes__has_successor__rules) { 
+										let $_yes__has_successor__rules= $;
+										var raw_data:{[key:string]:any} = {};
+										raw_data["successor"] = $_yes__has_successor__rules.properties.successor.entry;
+										return raw_data;
+									}
+								(<any>$_rules.properties.has_successor.state.node))];
+								break;
+							default:
+								throw new Error('Hmmm');
+						}
+						raw_data["tail"] = serialize_node_path_tail($_rules.properties.tail);
+						return raw_data;
+					}
+				(v));
+			}
+			return object;
+		}($));
 		return raw_data;
 	}
 );
@@ -711,30 +886,6 @@ export var serialize = (
 					function ($:read_api.Cnumerical_types) { 
 						let $_numerical_types= $;
 						var raw_data:{[key:string]:any} = {};
-						switch ($_numerical_types.properties.has_factor.state.name) {
-							case 'no':
-								raw_data["has factor"] = [$_numerical_types.properties.has_factor.state.name, (
-									function ($:read_api.Cno__has_factor) { 
-										let $_no__has_factor= $;
-										var raw_data:{[key:string]:any} = {};
-										return raw_data;
-									}
-								(<any>$_numerical_types.properties.has_factor.state.node))];
-								break;
-							case 'yes':
-								raw_data["has factor"] = [$_numerical_types.properties.has_factor.state.name, (
-									function ($:read_api.Cyes__has_factor) { 
-										let $_yes__has_factor= $;
-										var raw_data:{[key:string]:any} = {};
-										raw_data["base"] = $_yes__has_factor.properties.base;
-										raw_data["exponent"] = $_yes__has_factor.properties.exponent;
-										return raw_data;
-									}
-								(<any>$_numerical_types.properties.has_factor.state.node))];
-								break;
-							default:
-								throw new Error('Hmmm');
-						}
 						return raw_data;
 					}
 				(v));

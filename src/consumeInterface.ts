@@ -2,16 +2,16 @@
 import * as child_process from "child_process";
 
 import * as api_application_protocol_hand from "./lib/api_configuration/types/application_protocol_hand/alan_api";
-import * as api_application_protocol_invoke from "./lib/api_configuration/types/application_protocol_invoke/alan_api";
+import * as api_application_protocol_request from "./lib/api_configuration/types/application_protocol_request/alan_api";
 import * as api_application_protocol_notify from "./lib/api_configuration/types/application_protocol_notify/alan_api";
 import * as api_application_protocol_shake from "./lib/api_configuration/types/application_protocol_shake/alan_api";
 import * as api_interface from "./lib/api_configuration/types/interface/alan_api";
-import * as api_interface_reply from "./lib/api_configuration/types/interface_reply/alan_api";
-import * as api_interface_request from "./lib/api_configuration/types/interface_request/alan_api";
+import * as api_interface_notification from "./lib/api_configuration/types/interface_notification/alan_api";
+import * as api_interface_subscription from "./lib/api_configuration/types/interface_subscription/alan_api";
 import * as api_manifest from "./lib/api_configuration-manifest/types/manifest/alan_api";
 import * as serializer_application_protocol_hand from "./lib/api_configuration/types/application_protocol_hand/serializer_json";
-import * as serializer_application_protocol_invoke from "./lib/api_configuration/types/application_protocol_invoke/serializer_json";
-import * as serializer_interface_request from "./lib/api_configuration/types/interface_request/serializer_json";
+import * as serializer_application_protocol_request from "./lib/api_configuration/types/application_protocol_request/serializer_json";
+import * as serializer_interface_subscription from "./lib/api_configuration/types/interface_subscription/serializer_json";
 
 import {default as readFiles} from "./lib/read-from-zip/readFilesFromZipArchive";
 import {default as stream_handler_create} from "./lib/stream_handler";
@@ -28,7 +28,7 @@ export function consumeInterface(
 	onInterfaceLoaded:(consuming_interface:{
 		createSubscriptionConnection:(
 			subscription_request_jso:any,
-			replyHandler:(reply:api_interface_reply.Cinterface_reply) => void,
+			replyHandler:(reply:api_interface_notification.Cinterface_notification) => void,
 			onError:(error:string) => void
 		) => {
 			invokeCommand(command_jso:any):void,
@@ -77,23 +77,23 @@ export function consumeInterface(
 	consumeInterface = function (
 		subscription_request_jso:any,
 		validate_subscription_requests_replies:boolean,
-		notifyHandler:(reply:api_interface_reply.Cinterface_reply|string) => void,
+		notifyHandler:(reply:api_interface_notification.Cinterface_notification|string) => void,
 		onError:(error_message:string) => void
 	):{
 		invokeCommand(command_jso:any):void,
 		close():void
 	} {
-		var subscription_request_decorated: api_interface_request.Cinterface_request | undefined,
+		var subscription_request_decorated: api_interface_subscription.Cinterface_subscription | undefined,
 			subscription_request_raw: any;
 		if (subscription_request_jso !== null) {
 			if (validate_subscription_requests_replies === true) {
-				subscription_request_decorated = new api_interface_request.Cinterface_request(
-					{ "type": ["subscribe", subscription_request_jso] },
+				subscription_request_decorated = new api_interface_subscription.Cinterface_subscription(
+					subscription_request_jso,
 					{ "interface": $interface },
 					false
 				);
 			} else {
-				subscription_request_raw = { "type": ["subscribe", subscription_request_jso] };
+				subscription_request_raw = subscription_request_jso;
 			}
 		}
 
@@ -131,23 +131,42 @@ export function consumeInterface(
 					if (subscription_request_jso === null) {
 						connection_receive_state = EXPECT_NOTHING;
 					} else {
+						child.stdin.write(Buffer.from(JSON.stringify(serializer_application_protocol_request.serialize(new api_application_protocol_request.Capplication_protocol_request({
+							"type": [ "subscribe", {
+								"id": "", //TODO: support subscription ids
+								"subscription": JSON.stringify(
+									subscription_request_decorated !== undefined
+									? serializer_interface_subscription.serialize(subscription_request_decorated)
+									: subscription_request_raw
+								)
+							} ]
+						}, false))), "utf8"));
+						child.stdin.write(Buffer.from([ 0 ]));
+
 						connection_receive_state = EXPECT_NOTIFY;
 					}
 					break;
 				case EXPECT_NOTIFY:
 					var notify_reply = new api_application_protocol_notify.Capplication_protocol_notify(JSON.parse(raw_msg.toString("utf8")), false);
-					notifyHandler(
-						subscription_request_decorated !== undefined
-							?  new api_interface_reply.Cinterface_reply(
-								JSON.parse(notify_reply.properties.notification),
-								{
-									"interface": $interface,
-									"request": subscription_request_decorated
-								},
-								false
-							)
-							: notify_reply.properties.notification
-					);
+					notify_reply.properties.result.switch({
+						"notification": function ($) {
+							//TODO: pass $.properties.id to event handler
+							notifyHandler(
+								subscription_request_decorated !== undefined
+									?  new api_interface_notification.Cinterface_notification(
+										JSON.parse($.properties.notification),
+										{
+											"interface": $interface
+										},
+										false
+									)
+									: $.properties.notification
+							);
+						},
+						"unsubscribe": function ($) {
+							//TODO: handle server-initiated unsubscribe msg
+						}
+					});
 					break;
 				case EXPECT_NOTHING:
 					throw new Error("Error in js_application_runtime: Unexpected received data from server. Expected no data, because no subscription data requested.");
@@ -210,22 +229,8 @@ export function consumeInterface(
 			child_status.exit_signal = signal;
 			cleanup();
 		});
-		if (subscription_request_jso !== null) {
-			if (subscription_request_decorated !== undefined) {
-				subscription_request_decorated.path;
-			} else {
-				subscription_request_raw = { "type": ["subscribe", subscription_request_jso] };
-			}
-		}
 		child.stdin.write(Buffer.from(JSON.stringify(serializer_application_protocol_hand.serialize(new api_application_protocol_hand.Capplication_protocol_hand({
 			"interface version": interface_hash,
-			"subscribe": subscription_request_jso === null
-				? ["no", {}]
-				: ["yes", { "subscription": JSON.stringify(
-					subscription_request_decorated !== undefined
-							? serializer_interface_request.serialize(subscription_request_decorated)
-							: subscription_request_raw
-				) }]
 		}, false))), "utf8"));
 		child.stdin.write(Buffer.from([ 0 ]));
 		connection_receive_state = EXPECT_SHAKE;
@@ -234,12 +239,10 @@ export function consumeInterface(
 			invokeCommand: function (command_jso) {
 				switch (connection_send_state) {
 					case OPEN:
-						child.stdin.write(Buffer.from(JSON.stringify(serializer_application_protocol_invoke.serialize(new api_application_protocol_invoke.Capplication_protocol_invoke({
-							"command": JSON.stringify(serializer_interface_request.serialize(new api_interface_request.Cinterface_request(
-								{ "type": ["command execution", command_jso] },
-								{ "interface": $interface },
-								false
-							)))
+						child.stdin.write(Buffer.from(JSON.stringify(serializer_application_protocol_request.serialize(new api_application_protocol_request.Capplication_protocol_request({
+							"type": [ "invoke", {
+								"command": JSON.stringify(command_jso)
+							} ]
 						}, false))), "utf8"));
 						child.stdin.write(Buffer.from([ 0 ]));
 						break;

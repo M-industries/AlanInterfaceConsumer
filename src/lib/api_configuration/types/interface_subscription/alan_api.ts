@@ -1,4 +1,5 @@
-import * as application_protocol_notify from './alan_api';
+import * as interface_subscription from './alan_api';
+import * as interface_ from '../interface/alan_api';
 
 function isFunction<T>(p:T): p is T & Function {
 	return (typeof p === 'function');
@@ -172,7 +173,7 @@ export abstract class AlanDictionary<T extends {node: AlanNode & {key:(string|Re
 			return isFunction(onExists) ? onExists(this.load_entry(key, entry)) : onExists;
 		}
 	}
-}	
+}
 
 export abstract class AlanSet<T extends {node: AlanNode, init: any }, P extends AlanNode> {
 	private _entries:Set<T['node']>;
@@ -245,123 +246,178 @@ export abstract class AlanCombinator extends AlanObject {public is(other:AlanCom
 	}
 }
 export abstract class AlanNode extends AlanObject {
-	public abstract get root():Capplication_protocol_notify;
+	public abstract get root():Cinterface_subscription;
 	public is(other:AlanNode):boolean {
 		return this === other;
 	}
 }
 
 /* alan objects */
-
-export type Tapplication_protocol_notify = {
-	'result':['notification', Tnotification]|['unsubscribe', Tunsubscribe];
+export type Tcontext_keys__interface_subscription = {
+	'context keys':Record<string, Tcontext_keys__context_keys>;
 };
-export class Capplication_protocol_notify extends AlanNode {
-	public key?:string;
-	public get root() { return this; }
+export class Ccontext_keys__interface_subscription extends AlanNode {
 	public readonly properties:{
-		readonly result:Capplication_protocol_notify.Dresult<
-			{ name: 'notification', node:Cnotification, init:Tnotification}|
-			{ name: 'unsubscribe', node:Cunsubscribe, init:Tunsubscribe}>
+		readonly context_keys:Ccontext_keys__interface_subscription.Dcontext_keys
 	};
-	constructor(init:Tapplication_protocol_notify, public lazy_eval:boolean) {
+	constructor(init:Tcontext_keys__interface_subscription, public location:AlanNode) {
 		super();
 		const $this = this;
 		this.properties = {
-			result: new Capplication_protocol_notify.Dresult(init['result'], $this)
+			context_keys: new Ccontext_keys__interface_subscription.Dcontext_keys(init['context keys'], $this)
+		};
+	}
+	public get root() { return this.location.root; }
+	public get component_root() { return this; }
+	public get path() { return `${this.location.path}/context keys`; }
+}
+export class Kcontext_keys__context_keys extends Reference<interface_.Ccontext_keys, string> {
+	constructor(key:string, $this:Ccontext_keys__context_keys) {
+		super(key, cache(() => resolve($this.parent).then(() => $this.parent).then(context => context?.root.input.interface)
+			.then(context => context?.properties.context_keys.get(this.entry))
+			.result!, true))
+	}
+}
+export type Tcontext_keys__context_keys = {
+	'value':string;
+};
+export class Ccontext_keys__context_keys extends AlanNode {
+	public key:Kcontext_keys__context_keys;
+	public readonly properties:{
+		readonly value:string
+	};
+	constructor(key:string, init:Tcontext_keys__context_keys, public parent:Ccontext_keys__interface_subscription) {
+		super();
+		const $this = this;
+		this.key = new Kcontext_keys__context_keys(key, $this);
+		this.properties = {
+			value: init['value']
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/context keys[${this.key.entry}]`; }
+}
+
+export type Tinterface_subscription = {
+	'context keys':Tcontext_keys__interface_subscription;
+	'send initialization data':'no'|['no', {}]|'yes'|['yes', {}];
+};
+export class Cinterface_subscription extends AlanNode {
+	public key?:string;
+	public get root() { return this; }
+	public readonly properties:{
+		readonly context_keys:Ccontext_keys__interface_subscription,
+		readonly send_initialization_data:Cinterface_subscription.Dsend_initialization_data<
+			{ name: 'no', node:Cno, init:Tno}|
+			{ name: 'yes', node:Cyes, init:Tyes}>
+	};
+	constructor(init:Tinterface_subscription, public readonly input: {
+	'interface':interface_.Cinterface}, public lazy_eval:boolean) {
+		super();
+		const $this = this;
+		this.properties = {
+			context_keys: new Cinterface_subscription.Dcontext_keys(init['context keys'], $this),
+			send_initialization_data: new Cinterface_subscription.Dsend_initialization_data(init['send initialization data'], $this)
 		};
 	}
 	public get path() { return ``; }
 }
-export type Tnotification = {
-	'id':string;
-	'notification':string;
+export type Tno = {
 };
-export class Cnotification extends AlanNode {
-	public readonly properties:{
-		readonly id:string,
-		readonly notification:string
-	};
-	constructor(init:Tnotification, public parent:Capplication_protocol_notify) {
+export class Cno extends AlanNode {
+	constructor(init:Tno, public parent:Cinterface_subscription) {
 		super();
-		const $this = this;
-		this.properties = {
-			id: init['id'],
-			notification: init['notification']
-		};
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent; }
-	public get path() { return `${this.parent.path}/result?notification`; }
+	public get path() { return `${this.parent.path}/send initialization data?no`; }
 }
-export type Tunsubscribe = {
-	'id':string;
+export type Tyes = {
 };
-export class Cunsubscribe extends AlanNode {
-	public readonly properties:{
-		readonly id:string
-	};
-	constructor(init:Tunsubscribe, public parent:Capplication_protocol_notify) {
+export class Cyes extends AlanNode {
+	constructor(init:Tyes, public parent:Cinterface_subscription) {
 		super();
-		const $this = this;
-		this.properties = {
-			id: init['id']
-		};
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent; }
-	public get path() { return `${this.parent.path}/result?unsubscribe`; }
+	public get path() { return `${this.parent.path}/send initialization data?yes`; }
 }
 
-/* property classes */export namespace Capplication_protocol_notify {
-	export class Dresult<T extends
-		{ name: 'notification', node:Cnotification, init:Tnotification}|
-		{ name: 'unsubscribe', node:Cunsubscribe, init:Tunsubscribe}> extends StateGroup<T> {
+/* property classes */export namespace Ccontext_keys__interface_subscription {
+	export class Dcontext_keys extends AlanDictionary<{ node:Ccontext_keys__context_keys, init:Tcontext_keys__context_keys},Ccontext_keys__interface_subscription> {
+		protected graph_iterator(graph:string):(node:Ccontext_keys__context_keys) => Ccontext_keys__context_keys { throw new Error(`Dictionary has no graph iterators.`); }
+		protected initialize(parent:Ccontext_keys__interface_subscription, key:string, entry_init:Tcontext_keys__context_keys) { return new Ccontext_keys__context_keys(key, entry_init, parent); }
+		protected resolve = resolve_context_keys__context_keys
+		protected get path() { return `${this.parent.path}/context keys`; }
+		constructor(data:Tcontext_keys__interface_subscription['context keys'], parent:Ccontext_keys__interface_subscription) {
+			super(data, parent);
+		}
+	}
+}
+export namespace Ccontext_keys__context_keys {
+}
+export namespace Cinterface_subscription {
+	export class Dcontext_keys extends Ccontext_keys__interface_subscription {
+		constructor(data:Tinterface_subscription['context keys'], parent:Cinterface_subscription) {
+			super(data, parent)
+		}
+	}
+	export class Dsend_initialization_data<T extends
+		{ name: 'no', node:Cno, init:Tno}|
+		{ name: 'yes', node:Cyes, init:Tyes}> extends StateGroup<T> {
 		protected initializer(state:T['name']) {
 			switch (state) {
-				case 'notification': return (init:Tnotification, parent:Capplication_protocol_notify) => new Cnotification(init, parent);
-				case 'unsubscribe': return (init:Tunsubscribe, parent:Capplication_protocol_notify) => new Cunsubscribe(init, parent);
+				case 'no': return (init:Tno, parent:Cinterface_subscription) => new Cno(init, parent);
+				case 'yes': return (init:Tyes, parent:Cinterface_subscription) => new Cyes(init, parent);
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
 		protected resolver(state:T['name']) {
 			switch (state) {
-				case 'notification': return resolve_notification;
-				case 'unsubscribe': return resolve_unsubscribe;
+				case 'no': return resolve_no;
+				case 'yes': return resolve_yes;
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		constructor(data:Tapplication_protocol_notify['result'], parent:Capplication_protocol_notify) {
+		constructor(data:Tinterface_subscription['send initialization data'], parent:Cinterface_subscription) {
 			super(data, parent);
 		}
 	}
 }
-export namespace Cnotification {
-}
-export namespace Cunsubscribe {
-}
 /* de(resolution) */
-function auto_defer<T extends (...args:any) => void>(root:Capplication_protocol_notify, callback:T):T {
+function auto_defer<T extends (...args:any) => void>(root:Cinterface_subscription, callback:T):T {
 	return callback;
 }
-function resolve_notification(obj:Cnotification, detach:boolean = false) {
+function resolve_context_keys__context_keys(obj:Ccontext_keys__context_keys, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Ccontext_keys>(obj.key as any).resolve)(detach) !== undefined || detach);
+}
+function resolve_context_keys__interface_subscription(obj:Ccontext_keys__interface_subscription, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	obj.properties.context_keys.forEach(entry => resolve_context_keys__context_keys(entry, detach));
+}
+function resolve_no(obj:Cno, detach:boolean = false) {
 	if (obj.destroyed) { return; };
 }
-function resolve_unsubscribe(obj:Cunsubscribe, detach:boolean = false) {
+function resolve_yes(obj:Cyes, detach:boolean = false) {
 	if (obj.destroyed) { return; };
 }
-function resolve_application_protocol_notify(obj:Capplication_protocol_notify, detach:boolean = false) {
+function resolve_interface_subscription(obj:Cinterface_subscription, detach:boolean = false) {
 	if (obj.destroyed) { return; };
-	obj.properties.result.switch({
-		'notification': node => resolve_notification(node, detach),
-		'unsubscribe': node => resolve_unsubscribe(node, detach)
+	resolve_context_keys__interface_subscription(obj.properties.context_keys, detach);
+	obj.properties.send_initialization_data.switch({
+		'no': node => resolve_no(node, detach),
+		'yes': node => resolve_yes(node, detach)
 	});
 }
 
-export namespace Capplication_protocol_notify {
-	export function create(init:Tapplication_protocol_notify, lazy_eval:boolean = false):Capplication_protocol_notify {
-		const instance = new Capplication_protocol_notify(init, lazy_eval);
-		if (!lazy_eval) resolve_application_protocol_notify(instance);
+export namespace Cinterface_subscription {
+	export function create(init:Tinterface_subscription, input: {
+		'interface':interface_.Cinterface
+	}, lazy_eval:boolean = false):Cinterface_subscription {
+		const instance = new Cinterface_subscription(init, input as any, lazy_eval);
+		if (!lazy_eval) resolve_interface_subscription(instance);
 		return instance;
 	};
 }

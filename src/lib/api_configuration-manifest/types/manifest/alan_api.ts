@@ -24,6 +24,7 @@ function cache<T extends AlanObject>(callback:() => T, update_ref_count = false)
 		}
 		if (detach && update_ref_count && cached_value !== undefined) {
 			--cached_value.reference_count;
+			(cached_value as any) = undefined;
 		} else if (cached_value === undefined) {
 			resolving = true;
 			cached_value = callback();

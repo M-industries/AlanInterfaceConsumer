@@ -24,6 +24,7 @@ function cache<T extends AlanObject>(callback:() => T, update_ref_count = false)
 		}
 		if (detach && update_ref_count && cached_value !== undefined) {
 			--cached_value.reference_count;
+			(cached_value as any) = undefined;
 		} else if (cached_value === undefined) {
 			resolving = true;
 			cached_value = callback();
@@ -251,123 +252,21 @@ export abstract class AlanNode extends AlanObject {
 }
 
 /* alan objects */
-export type Tancestor_parameters_selection = {
-	'has steps':'no'|['no', {}]|['yes', Tyes__has_steps__ancestor_parameters_selection];
-};
-export class Cancestor_parameters_selection extends AlanNode {
-	public readonly properties:{
-		readonly has_steps:Cancestor_parameters_selection.Dhas_steps<
-			{ name: 'no', node:Cno__has_steps__ancestor_parameters_selection, init:Tno__has_steps__ancestor_parameters_selection}|
-			{ name: 'yes', node:Cyes__has_steps__ancestor_parameters_selection, init:Tyes__has_steps__ancestor_parameters_selection}>
-	};
-	public readonly output:{
-		result_parameters: () => interface_.Ccommand_parameters;
-	} = {
-		result_parameters: cache(() =>
-			resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.properties.has_steps.state.node.output.result_parameters())
-				.result!
-			).result!)
-	};
-	constructor(init:Tancestor_parameters_selection, public location:AlanNode, public input: {
-		context_parameters: () => interface_.Ccommand_parameters
-	}) {
-		super();
-		const $this = this;
-		this.properties = {
-			has_steps: new Cancestor_parameters_selection.Dhas_steps(init['has steps'], $this)
-		};
-	}
-	public get root() { return this.location.root; }
-	public get component_root() { return this; }
-	public get path() { return `${this.location.path}/ancestor parameters selection`; }
-}
-export type Tno__has_steps__ancestor_parameters_selection = {
-};
-export class Cno__has_steps__ancestor_parameters_selection extends AlanNode {
-	public readonly output:{
-		result_parameters: () => interface_.Ccommand_parameters;
-	} = {
-		result_parameters: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.component_root.input.context_parameters())
-				.result!
-			).result!, false)
-	}
-	constructor(init:Tno__has_steps__ancestor_parameters_selection, public parent:Cancestor_parameters_selection) {
-		super();
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent; }
-	public get path() { return `${this.parent.path}/has steps?no`; }
-}
-export type Tyes__has_steps__ancestor_parameters_selection = {
-	'tail':Tancestor_parameters_selection;
-	'type':'matrix parent'|['matrix parent', {}]|'state parent'|['state parent', {}];
-};
-export class Cyes__has_steps__ancestor_parameters_selection extends AlanNode {
-	public readonly properties:{
-		readonly tail:Cancestor_parameters_selection,
-		readonly type:Cyes__has_steps__ancestor_parameters_selection.Dtype<
-			{ name: 'matrix parent', node:Cmatrix_parent, init:Tmatrix_parent}|
-			{ name: 'state parent', node:Cstate_parent__type__yes__has_steps__ancestor_parameters_selection, init:Tstate_parent__type__yes__has_steps__ancestor_parameters_selection}>
-	};
-	public readonly output:{
-		result_parameters: () => interface_.Ccommand_parameters;
-	} = {
-		result_parameters: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.properties.tail)
-				.then(context => context?.component_root.output.result_parameters())
-				.result!
-			).result!, false)
-	}
-	public readonly inferences:{
-		parent_parameter: () => interface_.Ccommand_parameters
-	} = {
-		parent_parameter: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.component_root.input.context_parameters())
-			.then(context => context?.component_root.output.parent())
-			.then(context => context?.cast('parameter'))
-			.result!, true)
-	}
-	constructor(init:Tyes__has_steps__ancestor_parameters_selection, public parent:Cancestor_parameters_selection) {
-		super();
-		const $this = this;
-		this.properties = {
-			tail: new Cyes__has_steps__ancestor_parameters_selection.Dtail(init['tail'], $this),
-			type: new Cyes__has_steps__ancestor_parameters_selection.Dtype(init['type'], $this)
-		};
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent; }
-	public get path() { return `${this.parent.path}/has steps?yes`; }
-}
-export type Tmatrix_parent = {
-};
-export class Cmatrix_parent extends AlanNode {
-	constructor(init:Tmatrix_parent, public parent:Cyes__has_steps__ancestor_parameters_selection) {
-		super();
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/type?matrix parent`; }
-}
-export type Tstate_parent__type__yes__has_steps__ancestor_parameters_selection = {
-};
-export class Cstate_parent__type__yes__has_steps__ancestor_parameters_selection extends AlanNode {
-	constructor(init:Tstate_parent__type__yes__has_steps__ancestor_parameters_selection, public parent:Cyes__has_steps__ancestor_parameters_selection) {
-		super();
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/type?state parent`; }
-}
 type Vchoice = { name: 'state group parameter', definition: Cstate_group__type__properties}|{ name: 'state group property', definition: Cstate_group__type__property}
 export class Cchoice extends AlanObject {
 	constructor(
 		public readonly variant:Vchoice) { super(); }
 	public definitions:{
 		value: Cvalue;
+		value_type: Cvalue_type;
 	} = {
-		value: new Cvalue({name:'choice', definition: this})
+		value: new Cvalue({name:'choice', definition: this}, {
+			value_type: cache(() => resolve(this).then(this_context => resolve(this_context)
+					.then(context => context?.definitions.value_type)
+					.result!
+				).result!, false)
+		}),
+		value_type: new Cvalue_type({name:'choice', definition: this})
 	}
 	public cast<K extends Vchoice['name']>(_variant:K):Extract<Vchoice, {name:K}>['definition'] {
 		return this.variant.definition as any;
@@ -387,20 +286,35 @@ export class Cchoice extends AlanObject {
 			&& (this.variant.definition === other.variant.definition || this.variant.definition.is(other.variant.definition as any));
 	}
 }
-type Vcollection__interface = { name: 'node collection', definition: Ccollection__type__property}|{ name: 'parameter collection', definition: Cmatrix__type__properties}
+type Vcollection__interface = { name: 'node collection', definition: Ccollection__type__property}|{ name: 'parameter collection', definition: Ccollection__type__properties}
 export class Ccollection__interface extends AlanObject {
 	constructor(
 		public readonly variant:Vcollection__interface, public input: {
-			value: () => interface_.Cvalue
+			key_member: () => interface_.Cmember,
+			value: () => interface_.Cobject
 		}) { super(); }
 	public definitions:{
+		entity: Centity;
 		value: Cvalue;
 	} = {
-		value: new Cvalue({name:'collection', definition: this})
+		entity: new Centity({name:'collection', definition: this}),
+		value: new Cvalue({name:'collection', definition: this}, {
+			value_type: cache(() => resolve(this).then(this_context => resolve(this_context)
+					.then(context => context?.component_root.input.value())
+					.then(context => context?.definitions.value_type)
+					.result!
+				).result!, false)
+		})
 	}
 	public readonly output:{
-		value: () => interface_.Cvalue;
+		key_member: () => interface_.Cmember;
+		value: () => interface_.Cobject;
 	} = {
+		key_member: cache(() =>
+			resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.component_root.input.key_member())
+				.result!
+			).result!),
 		value: cache(() =>
 			resolve(this).then(this_context => resolve(this_context)
 				.then(context => context?.component_root.input.value())
@@ -425,487 +339,604 @@ export class Ccollection__interface extends AlanObject {
 			&& (this.variant.definition === other.variant.definition || this.variant.definition.is(other.variant.definition as any));
 	}
 }
-export type Tcommand_parameter_referencer = {
-	'collection':string;
-	'context type':['command parameter', Tcommand_parameter]|'context node'|['context node', {}];
-	'head':Tnode_selection_path;
-	'tail':Tnode_content_path;
+type Vcontext_constraint = { name: 'context node', definition: (typeof Ccontext_constraint.Pcontext_node)}|{ name: 'none', definition: (typeof Ccontext_constraint.Pnone)}
+export class Ccontext_constraint extends AlanObject {
+	public static Pcontext_node:Ccontext_constraint = new class PrimitiveInstance extends Ccontext_constraint {
+		constructor () {
+			super({name: 'context node', definition: undefined as unknown as Ccontext_constraint})
+			this.variant.definition = this;
+		}
+	}
+	public static Pnone:Ccontext_constraint = new class PrimitiveInstance extends Ccontext_constraint {
+		constructor () {
+			super({name: 'none', definition: undefined as unknown as Ccontext_constraint})
+			this.variant.definition = this;
+		}
+	}
+	constructor(
+		public readonly variant:Vcontext_constraint) { super(); }
+	public cast<K extends Vcontext_constraint['name']>(_variant:K):Extract<Vcontext_constraint, {name:K}>['definition'] {
+		return this.variant.definition as any;
+	}
+	switch<TS> (cases:{[K in Vcontext_constraint['name']]:(($:Extract<Vcontext_constraint, {name:K}>['definition']) => TS) | (() => TS) | Exclude<TS, Function>}):TS {
+		const handler = cases[this.variant.name];
+		if (isFunction(handler)) {
+			return handler(this.variant.definition as any);
+		} else {
+			return handler as Exclude<TS, Function>;
+		}
+	}
+	public get component_root() { return this; }
+	public get path() { return `/context constraint`; }
+	public is(other:Ccontext_constraint):boolean {
+		return this.variant.name === other.variant.name
+			&& (this.variant.definition === other.variant.definition || this.variant.definition.is(other.variant.definition as any));
+	}
+}
+export type Tcontext_node_path = {
+	'context':'context node'|['context node', {}]|['parameter definition', Tparameter_definition__context]|'root'|['root', {}]|'this node'|['this node', {}];
 };
-export class Ccommand_parameter_referencer extends AlanNode {
+export class Ccontext_node_path extends AlanNode {
 	public readonly properties:{
-		readonly collection:Ccommand_parameter_referencer.Dcollection,
-		readonly context_type:Ccommand_parameter_referencer.Dcontext_type<
-			{ name: 'command parameter', node:Ccommand_parameter, init:Tcommand_parameter}|
-			{ name: 'context node', node:Ccontext_node, init:Tcontext_node}>,
-		readonly head:Cnode_selection_path,
-		readonly tail:Cnode_content_path
+		readonly context:Ccontext_node_path.Dcontext<
+			{ name: 'context node', node:Ccontext_node, init:Tcontext_node}|
+			{ name: 'parameter definition', node:Cparameter_definition__context, init:Tparameter_definition__context}|
+			{ name: 'root', node:Croot, init:Troot}|
+			{ name: 'this node', node:Cthis_node, init:Tthis_node}>
 	};
 	public readonly output:{
-		referenced_node: () => interface_.Cnode;
+		direction: () => interface_.Cdirection;
+		node: () => interface_.Cnode;
 	} = {
-		referenced_node: cache(() =>
+		direction: cache(() =>
 			resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.properties.tail)
-				.then(context => context?.component_root.output.result_interface_node())
+				.then(context => context?.properties.context.state.node.output.direction())
+				.result!
+			).result!),
+		node: cache(() =>
+			resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.context.state.node.output.node())
 				.result!
 			).result!)
 	};
-	constructor(init:Tcommand_parameter_referencer, public location:AlanNode, public input: {
+	constructor(init:Tcontext_node_path, public location:AlanNode, public input: {
+		context_constraint: () => interface_.Ccontext_constraint,
+		context_direction: () => interface_.Cdirection,
 		context_node: () => interface_.Cnode,
-		parameter: () => interface_.Ccommand_parameters
+		this: () => interface_.Cobject
 	}) {
 		super();
 		const $this = this;
 		this.properties = {
-			collection: new Ccommand_parameter_referencer.Dcollection(init['collection'], $this),
-			context_type: new Ccommand_parameter_referencer.Dcontext_type(init['context type'], $this),
-			head: new Ccommand_parameter_referencer.Dhead(init['head'], $this),
-			tail: new Ccommand_parameter_referencer.Dtail(init['tail'], $this)
+			context: new Ccontext_node_path.Dcontext(init['context'], $this)
 		};
 	}
 	public get root() { return this.location.root; }
 	public get component_root() { return this; }
-	public get path() { return `${this.location.path}/command parameter referencer`; }
+	public get path() { return `${this.location.path}/context node path`; }
 }
-export type Tcommand_parameter = {
-	'ancestor selection':Tancestor_parameters_selection;
-	'type':'key'|['key', {}]|['reference', Treference__type__command_parameter];
+export type Tcontext_node = {
 };
-export class Ccommand_parameter extends AlanNode {
-	public readonly properties:{
-		readonly ancestor_selection:Cancestor_parameters_selection,
-		readonly type:Ccommand_parameter.Dtype<
-			{ name: 'key', node:Ckey, init:Tkey}|
-			{ name: 'reference', node:Creference__type__command_parameter, init:Treference__type__command_parameter}>
-	};
+export class Ccontext_node extends AlanNode {
 	public readonly output:{
-		result_node: () => interface_.Cnode;
+		direction: () => interface_.Cdirection;
+		node: () => interface_.Cnode;
 	} = {
-		result_node: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.properties.type.state.node.output.result_node())
+		direction: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.component_root.input.context_direction())
+				.result!
+			).result!, false),
+		node: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.component_root.input.context_node())
 				.result!
 			).result!, false)
 	}
-	constructor(init:Tcommand_parameter, public parent:Ccommand_parameter_referencer) {
+	constructor(init:Tcontext_node, public parent:Ccontext_node_path) {
 		super();
-		const $this = this;
-		this.properties = {
-			ancestor_selection: new Ccommand_parameter.Dancestor_selection(init['ancestor selection'], $this),
-			type: new Ccommand_parameter.Dtype(init['type'], $this)
-		};
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent; }
-	public get path() { return `${this.parent.path}/context type?command parameter`; }
+	public get path() { return `${this.parent.path}/context?context node`; }
 }
-export type Tkey = {
+export type Tparameter_definition__context = {
+	'head':Tcontext_parameter_path;
+	'type':['reference', Treference__type__parameter_definition]|['state context rule', Tstate_context_rule__type__parameter_definition];
 };
-export class Ckey extends AlanNode {
+export class Cparameter_definition__context extends AlanNode {
+	public readonly properties:{
+		readonly head:Ccontext_parameter_path,
+		readonly type:Cparameter_definition__context.Dtype<
+			{ name: 'reference', node:Creference__type__parameter_definition, init:Treference__type__parameter_definition}|
+			{ name: 'state context rule', node:Cstate_context_rule__type__parameter_definition, init:Tstate_context_rule__type__parameter_definition}>
+	};
 	public readonly output:{
-		result_node: () => interface_.Cnode;
+		direction: () => interface_.Cdirection;
+		node: () => interface_.Cnode;
 	} = {
-		result_node: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.inferences.matrix()).then(context => context?.properties.referencer)
-				.then(context => context?.component_root.output.referenced_node())
+		direction: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.type.state.node.output.direction())
+				.result!
+			).result!, false),
+		node: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.type.state.node.output.node())
 				.result!
 			).result!, false)
 	}
 	public readonly inferences:{
-		matrix: () => interface_.Cmatrix__type__properties
+		context_parameter: () => interface_.Cparameter_definition__interface,
+		unbounded_navigation: () => interface_.Ccontext_constraint
 	} = {
-		matrix: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.properties.ancestor_selection)
-			.then(context => context?.component_root.output.result_parameters())
-			.then(context => context?.component_root.output.location())
-			.then(context => context?.cast('matrix'))
+		context_parameter: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.component_root.input.this())
+			.then(context => context?.cast('parameter'))
+			.result!, true),
+		unbounded_navigation: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.component_root.input.context_constraint())
+			.then(context => context?.cast('none'))
 			.result!, true)
 	}
-	constructor(init:Tkey, public parent:Ccommand_parameter) {
+	constructor(init:Tparameter_definition__context, public parent:Ccontext_node_path) {
 		super();
+		const $this = this;
+		this.properties = {
+			head: new Cparameter_definition__context.Dhead(init['head'], $this),
+			type: new Cparameter_definition__context.Dtype(init['type'], $this)
+		};
 	}
 	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/type?key`; }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/context?parameter definition`; }
 }
-export type Treference__type__command_parameter = {
+export type Treference__type__parameter_definition = {
 	'reference':string;
 };
-export class Creference__type__command_parameter extends AlanNode {
+export class Creference__type__parameter_definition extends AlanNode {
 	public readonly properties:{
-		readonly reference:Creference__type__command_parameter.Dreference
+		readonly reference:Creference__type__parameter_definition.Dreference
 	};
 	public readonly output:{
-		result_node: () => interface_.Cnode;
+		direction: () => interface_.Cdirection;
+		node: () => interface_.Cnode;
 	} = {
-		result_node: cache(() => resolve(this).then(this_context => resolve(this_context)
+		direction: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.reference.ref)
+				.then(context => context?.properties.referencer)
+				.then(context => context?.component_root.output.direction())
+				.result!
+			).result!, false),
+		node: cache(() => resolve(this).then(this_context => resolve(this_context)
 				.then(context => context?.properties.reference.ref)
 				.then(context => context?.properties.referencer)
 				.then(context => context?.component_root.output.referenced_node())
 				.result!
 			).result!, false)
 	}
-	constructor(init:Treference__type__command_parameter, public parent:Ccommand_parameter) {
+	constructor(init:Treference__type__parameter_definition, public parent:Cparameter_definition__context) {
 		super();
 		const $this = this;
 		this.properties = {
-			reference: new Creference__type__command_parameter.Dreference(init['reference'], $this)
+			reference: new Creference__type__parameter_definition.Dreference(init['reference'], $this)
 		};
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent.parent; }
 	public get path() { return `${this.parent.path}/type?reference`; }
 }
-export type Tcontext_node = {
+export type Tstate_context_rule__type__parameter_definition = {
+	'rule':string;
 };
-export class Ccontext_node extends AlanNode {
+export class Cstate_context_rule__type__parameter_definition extends AlanNode {
+	public readonly properties:{
+		readonly rule:Cstate_context_rule__type__parameter_definition.Drule
+	};
 	public readonly output:{
-		result_node: () => interface_.Cnode;
+		direction: () => interface_.Cdirection;
+		node: () => interface_.Cnode;
 	} = {
-		result_node: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.component_root.input.context_node())
+		direction: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.rule.ref)
+				.then(context => context?.properties.tail)
+				.then(context => context?.component_root.output.direction())
+				.result!
+			).result!, false),
+		node: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.rule.ref)
+				.then(context => context?.properties.tail)
+				.then(context => context?.component_root.output.node())
 				.result!
 			).result!, false)
 	}
-	constructor(init:Tcontext_node, public parent:Ccommand_parameter_referencer) {
+	public readonly inferences:{
+		state: () => interface_.Cstates__state_group__type__properties
+	} = {
+		state: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.properties.head)
+			.then(context => context?.component_root.output.parameter())
+			.then(context => context?.component_root.output.location())
+			.then(context => context?.cast('state'))
+			.result!, true)
+	}
+	constructor(init:Tstate_context_rule__type__parameter_definition, public parent:Cparameter_definition__context) {
+		super();
+		const $this = this;
+		this.properties = {
+			rule: new Cstate_context_rule__type__parameter_definition.Drule(init['rule'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent; }
+	public get path() { return `${this.parent.path}/type?state context rule`; }
+}
+export type Troot = {
+};
+export class Croot extends AlanNode {
+	public readonly output:{
+		direction: () => interface_.Cdirection;
+		node: () => interface_.Cnode;
+	} = {
+		direction: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(() => interface_.Cdirection.Pself)
+				.result!
+			).result!, false),
+		node: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.root)
+				.then(context => context?.properties.root)
+				.result!
+			).result!, false)
+	}
+	public readonly inferences:{
+		unbounded_navigation: () => interface_.Ccontext_constraint
+	} = {
+		unbounded_navigation: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.component_root.input.context_constraint())
+			.then(context => context?.cast('none'))
+			.result!, true)
+	}
+	constructor(init:Troot, public parent:Ccontext_node_path) {
 		super();
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent; }
-	public get path() { return `${this.parent.path}/context type?context node`; }
+	public get path() { return `${this.parent.path}/context?root`; }
 }
-export type Tcommand_parameters = {
-	'properties':Record<string, Tproperties>;
+export type Tthis_node = {
 };
-export class Ccommand_parameters extends AlanNode {
-	public definitions:{
-		object: Cobject;
-		parameter_parent: Cparameter_parent;
+export class Cthis_node extends AlanNode {
+	public readonly output:{
+		direction: () => interface_.Cdirection;
+		node: () => interface_.Cnode;
 	} = {
-		object: new Cobject({name:'parameter', definition: this}),
-		parameter_parent: new Cparameter_parent({name:'parameter', definition: this})
+		direction: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(() => interface_.Cdirection.Pself)
+				.result!
+			).result!, false),
+		node: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.component_root.input.this())
+				.then(context => context?.component_root.output.this_node())
+				.result!
+			).result!, false)
 	}
+	public readonly inferences:{
+		unbounded_navigation: () => interface_.Ccontext_constraint
+	} = {
+		unbounded_navigation: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.component_root.input.context_constraint())
+			.then(context => context?.cast('none'))
+			.result!, true)
+	}
+	constructor(init:Tthis_node, public parent:Ccontext_node_path) {
+		super();
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/context?this node`; }
+}
+export type Tcontext_parameter_path = {
+	'has steps':'no'|['no', {}]|['yes', Tyes__has_steps__context_parameter_path];
+};
+export class Ccontext_parameter_path extends AlanNode {
 	public readonly properties:{
-		readonly properties:Ccommand_parameters.Dproperties
+		readonly has_steps:Ccontext_parameter_path.Dhas_steps<
+			{ name: 'no', node:Cno__has_steps__context_parameter_path, init:Tno__has_steps__context_parameter_path}|
+			{ name: 'yes', node:Cyes__has_steps__context_parameter_path, init:Tyes__has_steps__context_parameter_path}>
 	};
 	public readonly output:{
-		location: () => interface_.Cparameter_location;
-		parent: () => interface_.Cparameter_parent;
+		parameter: () => interface_.Cparameter_definition__interface;
 	} = {
-		location: cache(() =>
+		parameter: cache(() =>
 			resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.component_root.input.location())
-				.result!
-			).result!),
-		parent: cache(() =>
-			resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.component_root.input.parent())
+				.then(context => context?.properties.has_steps.state.node.output.parameter())
 				.result!
 			).result!)
 	};
-	constructor(init:Tcommand_parameters, public location:AlanNode, public input: {
-		context_node: () => interface_.Cnode,
-		location: () => interface_.Cparameter_location,
-		parent: () => interface_.Cparameter_parent
+	constructor(init:Tcontext_parameter_path, public location:AlanNode, public input: {
+		context_parameter: () => interface_.Cparameter_definition__interface
 	}) {
 		super();
 		const $this = this;
 		this.properties = {
-			properties: new Ccommand_parameters.Dproperties(init['properties'], $this)
+			has_steps: new Ccontext_parameter_path.Dhas_steps(init['has steps'], $this)
 		};
 	}
 	public get root() { return this.location.root; }
 	public get component_root() { return this; }
-	public get path() { return `${this.location.path}/command parameters`; }
+	public get path() { return `${this.location.path}/context parameter path`; }
 }
-export type Tproperties = {
-	'type':'file'|['file', {}]|['matrix', Tmatrix__type__properties]|['number', Tnumber__type__properties]|['reference', Treference__type__properties]|['state group', Tstate_group__type__properties]|'text'|['text', {}];
+export type Tno__has_steps__context_parameter_path = {
 };
-export class Cproperties extends AlanNode {
-	public key:string;
-	public definitions:{
-		member: Cmember;
-		value_member: Cvalue_member;
+export class Cno__has_steps__context_parameter_path extends AlanNode {
+	public readonly output:{
+		parameter: () => interface_.Cparameter_definition__interface;
 	} = {
-		member: new Cmember({name:'parameter', definition: this}),
-		value_member: new Cvalue_member({name:'parameter', definition: this}, {
-			value: cache(() => resolve(this).then(this_context => resolve(this_context)
-					.then(context => context?.properties.type.state.node.output.value())
-					.result!
-				).result!, false)
-		})
+		parameter: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.component_root.input.context_parameter())
+				.result!
+			).result!, false)
 	}
+	constructor(init:Tno__has_steps__context_parameter_path, public parent:Ccontext_parameter_path) {
+		super();
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/has steps?no`; }
+}
+export type Tyes__has_steps__context_parameter_path = {
+	'tail':Tcontext_parameter_path;
+	'type':['group', Tgroup__type__yes__has_steps__context_parameter_path]|'parent'|['parent', {}];
+};
+export class Cyes__has_steps__context_parameter_path extends AlanNode {
 	public readonly properties:{
-		readonly type:Cproperties.Dtype<
-			{ name: 'file', node:Cfile__type__properties, init:Tfile__type__properties}|
-			{ name: 'matrix', node:Cmatrix__type__properties, init:Tmatrix__type__properties}|
-			{ name: 'number', node:Cnumber__type__properties, init:Tnumber__type__properties}|
-			{ name: 'reference', node:Creference__type__properties, init:Treference__type__properties}|
-			{ name: 'state group', node:Cstate_group__type__properties, init:Tstate_group__type__properties}|
-			{ name: 'text', node:Ctext__type__properties, init:Ttext__type__properties}>
+		readonly tail:Ccontext_parameter_path,
+		readonly type:Cyes__has_steps__context_parameter_path.Dtype<
+			{ name: 'group', node:Cgroup__type__yes__has_steps__context_parameter_path, init:Tgroup__type__yes__has_steps__context_parameter_path}|
+			{ name: 'parent', node:Cparent__type__yes__has_steps__context_parameter_path, init:Tparent__type__yes__has_steps__context_parameter_path}>
 	};
-	constructor(key:string, init:Tproperties, public parent:Ccommand_parameters) {
+	public readonly output:{
+		parameter: () => interface_.Cparameter_definition__interface;
+	} = {
+		parameter: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.tail)
+				.then(context => context?.component_root.output.parameter())
+				.result!
+			).result!, false)
+	}
+	constructor(init:Tyes__has_steps__context_parameter_path, public parent:Ccontext_parameter_path) {
 		super();
 		const $this = this;
-		this.key = key;
 		this.properties = {
-			type: new Cproperties.Dtype(init['type'], $this)
+			tail: new Cyes__has_steps__context_parameter_path.Dtail(init['tail'], $this),
+			type: new Cyes__has_steps__context_parameter_path.Dtype(init['type'], $this)
 		};
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent; }
-	public get path() { return `${this.parent.path}/properties[${this.key}]`; }
+	public get path() { return `${this.parent.path}/has steps?yes`; }
 }
-export type Tfile__type__properties = {
+export type Tgroup__type__yes__has_steps__context_parameter_path = {
+	'group':string;
 };
-export class Cfile__type__properties extends AlanNode {
-	public readonly output:{
-		value: () => interface_.Cvalue;
-	} = {
-		value: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(() => interface_.Cvalue.Pfile)
-				.result!
-			).result!, false)
-	}
-	constructor(init:Tfile__type__properties, public parent:Cproperties) {
-		super();
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/type?file`; }
-}
-export type Tmatrix__type__properties = {
-	'parameters':Tcommand_parameters;
-	'referencer':Tcommand_parameter_referencer;
-	'type':'dense'|['dense', {}]|'sparse'|['sparse', {}];
-};
-export class Cmatrix__type__properties extends AlanNode {
-	public definitions:{
-		collection: Ccollection__interface;
-		parameter_location: Cparameter_location;
-	} = {
-		collection: new Ccollection__interface({name:'parameter collection', definition: this}, {
-			value: cache(() => resolve(this).then(this_context => resolve(this_context)
-					.then(context => context?.properties.parameters)
-					.then(context => context?.definitions.object)
-					.then(context => context?.definitions.value)
-					.result!
-				).result!, false)
-		}),
-		parameter_location: new Cparameter_location({name:'matrix', definition: this})
-	}
+export class Cgroup__type__yes__has_steps__context_parameter_path extends AlanNode {
 	public readonly properties:{
-		readonly parameters:Ccommand_parameters,
-		readonly referencer:Ccommand_parameter_referencer,
-		readonly type:Cmatrix__type__properties.Dtype<
-			{ name: 'dense', node:Cdense, init:Tdense}|
-			{ name: 'sparse', node:Csparse, init:Tsparse}>
+		readonly group:Cgroup__type__yes__has_steps__context_parameter_path.Dgroup
 	};
 	public readonly output:{
-		value: () => interface_.Cvalue;
+		parameter: () => interface_.Cparameter_definition__interface;
 	} = {
-		value: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.definitions.collection)
-				.then(context => context?.definitions.value)
+		parameter: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.group.ref)
+				.then(context => context?.properties.parameters)
 				.result!
 			).result!, false)
 	}
-	constructor(init:Tmatrix__type__properties, public parent:Cproperties) {
+	constructor(init:Tgroup__type__yes__has_steps__context_parameter_path, public parent:Cyes__has_steps__context_parameter_path) {
 		super();
 		const $this = this;
 		this.properties = {
-			parameters: new Cmatrix__type__properties.Dparameters(init['parameters'], $this),
-			referencer: new Cmatrix__type__properties.Dreferencer(init['referencer'], $this),
-			type: new Cmatrix__type__properties.Dtype(init['type'], $this)
+			group: new Cgroup__type__yes__has_steps__context_parameter_path.Dgroup(init['group'], $this)
 		};
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/type?matrix`; }
+	public get path() { return `${this.parent.path}/type?group`; }
 }
-export type Tdense = {
+export type Tparent__type__yes__has_steps__context_parameter_path = {
 };
-export class Cdense extends AlanNode {
-	constructor(init:Tdense, public parent:Cmatrix__type__properties) {
-		super();
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent.parent; }
-	public get path() { return `${this.parent.path}/type?dense`; }
-}
-export type Tsparse = {
-};
-export class Csparse extends AlanNode {
-	constructor(init:Tsparse, public parent:Cmatrix__type__properties) {
-		super();
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent.parent; }
-	public get path() { return `${this.parent.path}/type?sparse`; }
-}
-export type Tnumber__type__properties = {
-	'numerical type':string;
-	'set':'integer'|['integer', {}]|'natural'|['natural', {}];
-};
-export class Cnumber__type__properties extends AlanNode {
-	public readonly properties:{
-		readonly numerical_type:Cnumber__type__properties.Dnumerical_type,
-		readonly set:Cnumber__type__properties.Dset<
-			{ name: 'integer', node:Cinteger__set__number__type__properties, init:Tinteger__set__number__type__properties}|
-			{ name: 'natural', node:Cnatural__set__number__type__properties, init:Tnatural__set__number__type__properties}>
-	};
+export class Cparent__type__yes__has_steps__context_parameter_path extends AlanNode {
 	public readonly output:{
-		value: () => interface_.Cvalue;
+		parameter: () => interface_.Cparameter_definition__interface;
 	} = {
-		value: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(() => interface_.Cvalue.Pnumber)
-				.result!
+		parameter: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.inferences.parent_parameter()).result!
 			).result!, false)
 	}
-	constructor(init:Tnumber__type__properties, public parent:Cproperties) {
+	public readonly inferences:{
+		parent_parameter: () => interface_.Cparameter_definition__interface
+	} = {
+		parent_parameter: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.component_root.input.context_parameter())
+			.then(context => context?.component_root.output.parent())
+			.then(context => context?.cast('parameter'))
+			.result!, true)
+	}
+	constructor(init:Tparent__type__yes__has_steps__context_parameter_path, public parent:Cyes__has_steps__context_parameter_path) {
 		super();
-		const $this = this;
-		this.properties = {
-			numerical_type: new Cnumber__type__properties.Dnumerical_type(init['numerical type'], $this),
-			set: new Cnumber__type__properties.Dset(init['set'], $this)
-		};
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/type?number`; }
+	public get path() { return `${this.parent.path}/type?parent`; }
 }
-export type Tinteger__set__number__type__properties = {
-};
-export class Cinteger__set__number__type__properties extends AlanNode {
-	constructor(init:Tinteger__set__number__type__properties, public parent:Cnumber__type__properties) {
-		super();
+type Vdependency = { name: 'allowed', definition: (typeof Cdependency.Pallowed)}|{ name: 'disallowed', definition: (typeof Cdependency.Pdisallowed)}
+export class Cdependency extends AlanObject {
+	public static Pallowed:Cdependency = new class PrimitiveInstance extends Cdependency {
+		constructor () {
+			super({name: 'allowed', definition: undefined as unknown as Cdependency})
+			this.variant.definition = this;
+		}
 	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent.parent; }
-	public get path() { return `${this.parent.path}/set?integer`; }
-}
-export type Tnatural__set__number__type__properties = {
-};
-export class Cnatural__set__number__type__properties extends AlanNode {
-	constructor(init:Tnatural__set__number__type__properties, public parent:Cnumber__type__properties) {
-		super();
+	public static Pdisallowed:Cdependency = new class PrimitiveInstance extends Cdependency {
+		constructor () {
+			super({name: 'disallowed', definition: undefined as unknown as Cdependency})
+			this.variant.definition = this;
+		}
 	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent.parent; }
-	public get path() { return `${this.parent.path}/set?natural`; }
+	constructor(
+		public readonly variant:Vdependency) { super(); }
+	public cast<K extends Vdependency['name']>(_variant:K):Extract<Vdependency, {name:K}>['definition'] {
+		return this.variant.definition as any;
+	}
+	switch<TS> (cases:{[K in Vdependency['name']]:(($:Extract<Vdependency, {name:K}>['definition']) => TS) | (() => TS) | Exclude<TS, Function>}):TS {
+		const handler = cases[this.variant.name];
+		if (isFunction(handler)) {
+			return handler(this.variant.definition as any);
+		} else {
+			return handler as Exclude<TS, Function>;
+		}
+	}
+	public get component_root() { return this; }
+	public get path() { return `/dependency`; }
+	public is(other:Cdependency):boolean {
+		return this.variant.name === other.variant.name
+			&& (this.variant.definition === other.variant.definition || this.variant.definition.is(other.variant.definition as any));
+	}
 }
-export type Treference__type__properties = {
-	'referencer':Tcommand_parameter_referencer;
+type Vdirection = { name: 'dependency', definition: (typeof Cdirection.Pdependency)}|{ name: 'self', definition: (typeof Cdirection.Pself)}
+export class Cdirection extends AlanObject {
+	public static Pdependency:Cdirection = new class PrimitiveInstance extends Cdirection {
+		constructor () {
+			super({name: 'dependency', definition: undefined as unknown as Cdirection})
+			this.variant.definition = this;
+		}
+	}
+	public static Pself:Cdirection = new class PrimitiveInstance extends Cdirection {
+		constructor () {
+			super({name: 'self', definition: undefined as unknown as Cdirection})
+			this.variant.definition = this;
+		}
+	}
+	constructor(
+		public readonly variant:Vdirection) { super(); }
+	public cast<K extends Vdirection['name']>(_variant:K):Extract<Vdirection, {name:K}>['definition'] {
+		return this.variant.definition as any;
+	}
+	switch<TS> (cases:{[K in Vdirection['name']]:(($:Extract<Vdirection, {name:K}>['definition']) => TS) | (() => TS) | Exclude<TS, Function>}):TS {
+		const handler = cases[this.variant.name];
+		if (isFunction(handler)) {
+			return handler(this.variant.definition as any);
+		} else {
+			return handler as Exclude<TS, Function>;
+		}
+	}
+	public get component_root() { return this; }
+	public get path() { return `/direction`; }
+	public is(other:Cdirection):boolean {
+		return this.variant.name === other.variant.name
+			&& (this.variant.definition === other.variant.definition || this.variant.definition.is(other.variant.definition as any));
+	}
+}
+type Ventity = { name: 'collection', definition: Ccollection__interface}|{ name: 'root', definition: Cinterface}
+export class Centity extends AlanObject {
+	constructor(
+		public readonly variant:Ventity) { super(); }
+	public cast<K extends Ventity['name']>(_variant:K):Extract<Ventity, {name:K}>['definition'] {
+		return this.variant.definition as any;
+	}
+	switch<TS> (cases:{[K in Ventity['name']]:(($:Extract<Ventity, {name:K}>['definition']) => TS) | (() => TS) | Exclude<TS, Function>}):TS {
+		const handler = cases[this.variant.name];
+		if (isFunction(handler)) {
+			return handler(this.variant.definition as any);
+		} else {
+			return handler as Exclude<TS, Function>;
+		}
+	}
+	public get component_root() { return this; }
+	public get path() { return `/entity`; }
+	public is(other:Centity):boolean {
+		return this.variant.name === other.variant.name
+			&& (this.variant.definition === other.variant.definition || this.variant.definition.is(other.variant.definition as any));
+	}
+}
+export type Tgraphs_definition = {
+	'graphs':Record<string, Tgraphs__graphs_definition>;
 };
-export class Creference__type__properties extends AlanNode {
+export class Cgraphs_definition extends AlanNode {
 	public readonly properties:{
-		readonly referencer:Ccommand_parameter_referencer
+		readonly graphs:Cgraphs_definition.Dgraphs
 	};
-	public readonly output:{
-		value: () => interface_.Cvalue;
-	} = {
-		value: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(() => interface_.Cvalue.Ptext)
-				.result!
-			).result!, false)
-	}
-	constructor(init:Treference__type__properties, public parent:Cproperties) {
+	constructor(init:Tgraphs_definition, public location:AlanNode, public input: {
+		collection: () => interface_.Ccollection__interface
+	}) {
 		super();
 		const $this = this;
 		this.properties = {
-			referencer: new Creference__type__properties.Dreferencer(init['referencer'], $this)
+			graphs: new Cgraphs_definition.Dgraphs(init['graphs'], $this)
 		};
 	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/type?reference`; }
+	public get root() { return this.location.root; }
+	public get component_root() { return this; }
+	public get path() { return `${this.location.path}/graphs definition`; }
 }
-export type Tstate_group__type__properties = {
-	'states':Record<string, Tstates__state_group__type__properties>;
+export type Tgraphs__graphs_definition = {
+	'type':'acyclic'|['acyclic', {}]|['ordered', Tordered];
 };
-export class Cstate_group__type__properties extends AlanNode {
-	public definitions:{
-		choice: Cchoice;
-	} = {
-		choice: new Cchoice({name:'state group parameter', definition: this})
-	}
-	public readonly properties:{
-		readonly states:Cstate_group__type__properties.Dstates
-	};
-	public readonly output:{
-		value: () => interface_.Cvalue;
-	} = {
-		value: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.definitions.choice)
-				.then(context => context?.definitions.value)
-				.result!
-			).result!, false)
-	}
-	constructor(init:Tstate_group__type__properties, public parent:Cproperties) {
-		super();
-		const $this = this;
-		this.properties = {
-			states: new Cstate_group__type__properties.Dstates(init['states'], $this)
-		};
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/type?state group`; }
-}
-export type Tstates__state_group__type__properties = {
-	'parameters':Tcommand_parameters;
-};
-export class Cstates__state_group__type__properties extends AlanNode {
+export class Cgraphs__graphs_definition extends AlanNode {
 	public key:string;
-	public definitions:{
-		parameter_location: Cparameter_location;
-		state: Cstate__interface;
-	} = {
-		parameter_location: new Cparameter_location({name:'state', definition: this}),
-		state: new Cstate__interface({name:'state parameter', definition: this}, {
-			value: cache(() => resolve(this).then(this_context => resolve(this_context)
-					.then(context => context?.properties.parameters)
-					.then(context => context?.definitions.object)
-					.then(context => context?.definitions.value)
-					.result!
-				).result!, false)
-		})
-	}
 	public readonly properties:{
-		readonly parameters:Ccommand_parameters
+		readonly type:Cgraphs__graphs_definition.Dtype<
+			{ name: 'acyclic', node:Cacyclic, init:Tacyclic}|
+			{ name: 'ordered', node:Cordered, init:Tordered}>
 	};
-	constructor(key:string, init:Tstates__state_group__type__properties, public parent:Cstate_group__type__properties) {
+	constructor(key:string, init:Tgraphs__graphs_definition, public parent:Cgraphs_definition) {
 		super();
 		const $this = this;
 		this.key = key;
 		this.properties = {
-			parameters: new Cstates__state_group__type__properties.Dparameters(init['parameters'], $this)
+			type: new Cgraphs__graphs_definition.Dtype(init['type'], $this)
 		};
 	}
 	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent.parent; }
-	public get path() { return `${this.parent.path}/states[${this.key}]`; }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/graphs[${this.key}]`; }
 }
-export type Ttext__type__properties = {
+export type Tacyclic = {
 };
-export class Ctext__type__properties extends AlanNode {
-	public readonly output:{
-		value: () => interface_.Cvalue;
-	} = {
-		value: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(() => interface_.Cvalue.Ptext)
-				.result!
-			).result!, false)
-	}
-	constructor(init:Ttext__type__properties, public parent:Cproperties) {
+export class Cacyclic extends AlanNode {
+	constructor(init:Tacyclic, public parent:Cgraphs__graphs_definition) {
 		super();
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/type?text`; }
+	public get path() { return `${this.parent.path}/type?acyclic`; }
+}
+export type Tordered = {
+	'ordering property':string;
+	'path':Tnode_path_tail;
+};
+export class Cordered extends AlanNode {
+	public readonly properties:{
+		readonly ordering_property:Cordered.Dordering_property,
+		readonly path:Cnode_path_tail
+	};
+	constructor(init:Tordered, public parent:Cgraphs__graphs_definition) {
+		super();
+		const $this = this;
+		this.properties = {
+			ordering_property: new Cordered.Dordering_property(init['ordering property'], $this),
+			path: new Cordered.Dpath(init['path'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent; }
+	public get path() { return `${this.parent.path}/type?ordered`; }
 }
 type Vmember = { name: 'attribute', definition: Cattributes}|{ name: 'parameter', definition: Cproperties}
 export class Cmember extends AlanObject {
 	constructor(
-		public readonly variant:Vmember) { super(); }
+		public readonly variant:Vmember, public input: {
+			type: () => interface_.Cmember_type
+		}) { super(); }
+	public readonly output:{
+		type: () => interface_.Cmember_type;
+	} = {
+		type: cache(() =>
+			resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.component_root.input.type())
+				.result!
+			).result!)
+	};
 	public cast<K extends Vmember['name']>(_variant:K):Extract<Vmember, {name:K}>['definition'] {
 		return this.variant.definition as any;
 	}
@@ -924,6 +955,99 @@ export class Cmember extends AlanObject {
 			&& (this.variant.definition === other.variant.definition || this.variant.definition.is(other.variant.definition as any));
 	}
 }
+type Vmember_type = { name: 'key', definition: (typeof Cmember_type.Pkey)}|{ name: 'simple', definition: (typeof Cmember_type.Psimple)}
+export class Cmember_type extends AlanObject {
+	public static Pkey:Cmember_type = new class PrimitiveInstance extends Cmember_type {
+		constructor () {
+			super({name: 'key', definition: undefined as unknown as Cmember_type})
+			this.variant.definition = this;
+		}
+	}
+	public static Psimple:Cmember_type = new class PrimitiveInstance extends Cmember_type {
+		constructor () {
+			super({name: 'simple', definition: undefined as unknown as Cmember_type})
+			this.variant.definition = this;
+		}
+	}
+	constructor(
+		public readonly variant:Vmember_type) { super(); }
+	public cast<K extends Vmember_type['name']>(_variant:K):Extract<Vmember_type, {name:K}>['definition'] {
+		return this.variant.definition as any;
+	}
+	switch<TS> (cases:{[K in Vmember_type['name']]:(($:Extract<Vmember_type, {name:K}>['definition']) => TS) | (() => TS) | Exclude<TS, Function>}):TS {
+		const handler = cases[this.variant.name];
+		if (isFunction(handler)) {
+			return handler(this.variant.definition as any);
+		} else {
+			return handler as Exclude<TS, Function>;
+		}
+	}
+	public get component_root() { return this; }
+	public get path() { return `/member type`; }
+	public is(other:Cmember_type):boolean {
+		return this.variant.name === other.variant.name
+			&& (this.variant.definition === other.variant.definition || this.variant.definition.is(other.variant.definition as any));
+	}
+}
+function evaluate__member_type_derivation(input: {
+	entity: () => interface_.Centity,
+	member: () => interface_.Cmember
+}):interface_.Cmember_type {
+	const self = { component_root: { input: input } };
+	return resolve(self).then(() => self).then(context => context?.component_root.input.entity())
+		.then(context => {
+			switch (context?.variant.name) {
+				case 'collection': return resolve(context.cast('collection'))
+					.then(match_context => {
+						const expression_context = resolve(match_context).then(context => {
+							const left = resolve(context)
+								.then(() => self).then(context => context?.component_root.input.member())
+							.result;
+							const right = resolve(context)
+								.then(context => context)
+								.then(context => context?.component_root.output.key_member())
+							.result;
+							return left.is(right) ? left : undefined
+						})
+						.result;
+						if (expression_context !== undefined) {
+							return resolve(expression_context).then(() => self).then(() => interface_.Cmember_type.Pkey)
+							.result
+						} else {
+							return resolve(match_context).then(() => self).then(() => interface_.Cmember_type.Psimple)
+							.result
+						}
+					})
+					.result;
+				case undefined: return undefined;
+				case 'root': return resolve(context.cast('root'))
+					.then(() => self).then(() => interface_.Cmember_type.Psimple)
+					.result;
+				case undefined: return undefined;
+				default: throw new Error(`Unexpected subtype '${(<any>context.variant).name}'`);
+			};
+		}).result!
+}
+function evaluate__navigation_step_direction(input: {
+	current: () => interface_.Cdirection,
+	step: () => interface_.Cdirection
+}):interface_.Cdirection {
+	const self = { component_root: { input: input } };
+	return resolve(self).then(() => self).then(context => context?.component_root.input.current())
+		.then(context => {
+			switch (context?.variant.name) {
+				case 'dependency': return resolve(context.cast('dependency'))
+					.then(() => self).then(context => context?.component_root.input.current())
+					.result;
+				case undefined: return undefined;
+				case 'self': return resolve(context.cast('self'))
+					.then(() => self).then(context => context?.component_root.input.step())
+					.result;
+				case undefined: return undefined;
+				default: throw new Error(`Unexpected subtype '${(<any>context.variant).name}'`);
+			};
+		}).result!
+}
 export type Tnode = {
 	'attributes':Record<string, Tattributes>;
 };
@@ -933,15 +1057,25 @@ export class Cnode extends AlanNode {
 		object: Cobject;
 	} = {
 		node_parent: new Cnode_parent({name:'node', definition: this}),
-		object: new Cobject({name:'node', definition: this})
+		object: new Cobject({name:'node', definition: this}, {
+			this_node: cache(() => resolve(this).then(this_context => resolve(this_context)
+					.result!
+				).result!, false)
+		})
 	}
 	public readonly properties:{
 		readonly attributes:Cnode.Dattributes
 	};
 	public readonly output:{
+		entity: () => interface_.Centity;
 		location: () => interface_.Cnode_location;
 		parent: () => interface_.Cnode_parent;
 	} = {
+		entity: cache(() =>
+			resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.component_root.input.entity())
+				.result!
+			).result!),
 		location: cache(() =>
 			resolve(this).then(this_context => resolve(this_context)
 				.then(context => context?.component_root.input.location())
@@ -954,6 +1088,7 @@ export class Cnode extends AlanNode {
 			).result!)
 	};
 	constructor(init:Tnode, public location:AlanNode, public input: {
+		entity: () => interface_.Centity,
 		location: () => interface_.Cnode_location,
 		parent: () => interface_.Cnode_parent
 	}) {
@@ -975,7 +1110,12 @@ export class Cattributes extends AlanNode {
 	public definitions:{
 		member: Cmember;
 	} = {
-		member: new Cmember({name:'attribute', definition: this})
+		member: new Cmember({name:'attribute', definition: this}, {
+			type: cache(() => resolve(this).then(this_context => resolve(this_context)
+					.then(context => context?.properties.type.state.node.output.member_type())
+					.result!
+				).result!, false)
+		})
 	}
 	public readonly properties:{
 		readonly type:Cattributes.Dtype<
@@ -995,7 +1135,7 @@ export class Cattributes extends AlanNode {
 	public get path() { return `${this.parent.path}/attributes[${this.key}]`; }
 }
 export type Tcommand = {
-	'parameters':Tcommand_parameters;
+	'parameters':Tparameter_definition__interface;
 };
 export class Ccommand extends AlanNode {
 	public definitions:{
@@ -1004,8 +1144,16 @@ export class Ccommand extends AlanNode {
 		parameter_location: new Cparameter_location({name:'command', definition: this})
 	}
 	public readonly properties:{
-		readonly parameters:Ccommand_parameters
+		readonly parameters:Cparameter_definition__interface
 	};
+	public readonly output:{
+		member_type: () => interface_.Cmember_type;
+	} = {
+		member_type: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(() => interface_.Cmember_type.Psimple)
+				.result!
+			).result!, false)
+	}
 	constructor(init:Tcommand, public parent:Cattributes) {
 		super();
 		const $this = this;
@@ -1018,13 +1166,18 @@ export class Ccommand extends AlanNode {
 	public get path() { return `${this.parent.path}/type?command`; }
 }
 export type Tproperty = {
-	'type':['collection', Tcollection__type__property]|'file'|['file', {}]|['group', Tgroup__type__property]|['number', Tnumber__type__property]|['reference', Treference__type__property]|['state group', Tstate_group__type__property]|'text'|['text', {}];
+	'type':['collection', Tcollection__type__property]|'file'|['file', {}]|['group', Tgroup__type__property]|['number', Tnumber__type__property]|['state group', Tstate_group__type__property]|['text', Ttext__type__property];
 };
 export class Cproperty extends AlanNode {
 	public definitions:{
 		value_member: Cvalue_member;
 	} = {
 		value_member: new Cvalue_member({name:'property', definition: this}, {
+			member: cache(() => resolve(this).then(this_context => resolve(this_context)
+					.then(context => context?.parent)
+					.then(context => context?.definitions.member)
+					.result!
+				).result!, false),
 			value: cache(() => resolve(this).then(this_context => resolve(this_context)
 					.then(context => context?.properties.type.state.node.output.value())
 					.result!
@@ -1037,10 +1190,30 @@ export class Cproperty extends AlanNode {
 			{ name: 'file', node:Cfile__type__property, init:Tfile__type__property}|
 			{ name: 'group', node:Cgroup__type__property, init:Tgroup__type__property}|
 			{ name: 'number', node:Cnumber__type__property, init:Tnumber__type__property}|
-			{ name: 'reference', node:Creference__type__property, init:Treference__type__property}|
 			{ name: 'state group', node:Cstate_group__type__property, init:Tstate_group__type__property}|
 			{ name: 'text', node:Ctext__type__property, init:Ttext__type__property}>
 	};
+	public readonly output:{
+		member_type: () => interface_.Cmember_type;
+	} = {
+		member_type: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.inferences.member_type()).result!
+			).result!, false)
+	}
+	public readonly inferences:{
+		member_type: () => interface_.Cmember_type
+	} = {
+		member_type: cache(() => resolve(this.parent).then(context => evaluate__member_type_derivation(
+				{
+				entity: () => resolve(context).then(() => this.parent).then(context => context?.component_root.input.entity())
+					.result
+				,
+				member: () => resolve(context).then(() => this.parent).then(context => context?.definitions.member)
+					.result
+
+				}))
+			.result!, true)
+	}
 	constructor(init:Tproperty, public parent:Cattributes) {
 		super();
 		const $this = this;
@@ -1053,8 +1226,9 @@ export class Cproperty extends AlanNode {
 	public get path() { return `${this.parent.path}/type?property`; }
 }
 export type Tcollection__type__property = {
+	'graphs':Tgraphs_definition;
+	'key property':string;
 	'node':Tnode;
-	'type':'dictionary'|['dictionary', {}]|['matrix', Tmatrix__type__collection];
 };
 export class Ccollection__type__property extends AlanNode {
 	public definitions:{
@@ -1062,20 +1236,25 @@ export class Ccollection__type__property extends AlanNode {
 		node_location: Cnode_location;
 	} = {
 		collection: new Ccollection__interface({name:'node collection', definition: this}, {
+			key_member: cache(() => resolve(this).then(this_context => resolve(this_context)
+					.then(context => context?.properties.key_property.ref)
+					.then(context => context?.parent)
+					.then(context => context?.parent)
+					.then(context => context?.definitions.member)
+					.result!
+				).result!, false),
 			value: cache(() => resolve(this).then(this_context => resolve(this_context)
 					.then(context => context?.properties.node)
 					.then(context => context?.definitions.object)
-					.then(context => context?.definitions.value)
 					.result!
 				).result!, false)
 		}),
 		node_location: new Cnode_location({name:'collection', definition: this})
 	}
 	public readonly properties:{
-		readonly node:Cnode,
-		readonly type:Ccollection__type__property.Dtype<
-			{ name: 'dictionary', node:Cdictionary, init:Tdictionary}|
-			{ name: 'matrix', node:Cmatrix__type__collection, init:Tmatrix__type__collection}>
+		readonly graphs:Cgraphs_definition,
+		readonly key_property:Ccollection__type__property.Dkey_property,
+		readonly node:Cnode
 	};
 	public readonly output:{
 		value: () => interface_.Cvalue;
@@ -1090,41 +1269,14 @@ export class Ccollection__type__property extends AlanNode {
 		super();
 		const $this = this;
 		this.properties = {
-			node: new Ccollection__type__property.Dnode(init['node'], $this),
-			type: new Ccollection__type__property.Dtype(init['type'], $this)
+			graphs: new Ccollection__type__property.Dgraphs(init['graphs'], $this),
+			key_property: new Ccollection__type__property.Dkey_property(init['key property'], $this),
+			node: new Ccollection__type__property.Dnode(init['node'], $this)
 		};
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent.parent.parent; }
 	public get path() { return `${this.parent.path}/type?collection`; }
-}
-export type Tdictionary = {
-};
-export class Cdictionary extends AlanNode {
-	constructor(init:Tdictionary, public parent:Ccollection__type__property) {
-		super();
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent.parent.parent; }
-	public get path() { return `${this.parent.path}/type?dictionary`; }
-}
-export type Tmatrix__type__collection = {
-	'referencer':Treferencer;
-};
-export class Cmatrix__type__collection extends AlanNode {
-	public readonly properties:{
-		readonly referencer:Creferencer
-	};
-	constructor(init:Tmatrix__type__collection, public parent:Ccollection__type__property) {
-		super();
-		const $this = this;
-		this.properties = {
-			referencer: new Cmatrix__type__collection.Dreferencer(init['referencer'], $this)
-		};
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent.parent.parent; }
-	public get path() { return `${this.parent.path}/type?matrix`; }
 }
 export type Tfile__type__property = {
 };
@@ -1178,15 +1330,11 @@ export class Cgroup__type__property extends AlanNode {
 	public get path() { return `${this.parent.path}/type?group`; }
 }
 export type Tnumber__type__property = {
-	'set':'integer'|['integer', {}]|'natural'|['natural', {}];
-	'type':string;
+	'type':Tnumber_type;
 };
 export class Cnumber__type__property extends AlanNode {
 	public readonly properties:{
-		readonly set:Cnumber__type__property.Dset<
-			{ name: 'integer', node:Cinteger__set__number__type__property, init:Tinteger__set__number__type__property}|
-			{ name: 'natural', node:Cnatural__set__number__type__property, init:Tnatural__set__number__type__property}>,
-		readonly type:Cnumber__type__property.Dtype
+		readonly type:Cnumber_type
 	};
 	public readonly output:{
 		value: () => interface_.Cvalue;
@@ -1200,7 +1348,6 @@ export class Cnumber__type__property extends AlanNode {
 		super();
 		const $this = this;
 		this.properties = {
-			set: new Cnumber__type__property.Dset(init['set'], $this),
 			type: new Cnumber__type__property.Dtype(init['type'], $this)
 		};
 	}
@@ -1208,54 +1355,8 @@ export class Cnumber__type__property extends AlanNode {
 	public get component_root() { return this.parent.parent.parent; }
 	public get path() { return `${this.parent.path}/type?number`; }
 }
-export type Tinteger__set__number__type__property = {
-};
-export class Cinteger__set__number__type__property extends AlanNode {
-	constructor(init:Tinteger__set__number__type__property, public parent:Cnumber__type__property) {
-		super();
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent.parent.parent; }
-	public get path() { return `${this.parent.path}/set?integer`; }
-}
-export type Tnatural__set__number__type__property = {
-};
-export class Cnatural__set__number__type__property extends AlanNode {
-	constructor(init:Tnatural__set__number__type__property, public parent:Cnumber__type__property) {
-		super();
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent.parent.parent; }
-	public get path() { return `${this.parent.path}/set?natural`; }
-}
-export type Treference__type__property = {
-	'referencer':Treferencer;
-};
-export class Creference__type__property extends AlanNode {
-	public readonly properties:{
-		readonly referencer:Creferencer
-	};
-	public readonly output:{
-		value: () => interface_.Cvalue;
-	} = {
-		value: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(() => interface_.Cvalue.Ptext)
-				.result!
-			).result!, false)
-	}
-	constructor(init:Treference__type__property, public parent:Cproperty) {
-		super();
-		const $this = this;
-		this.properties = {
-			referencer: new Creference__type__property.Dreferencer(init['referencer'], $this)
-		};
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent.parent; }
-	public get path() { return `${this.parent.path}/type?reference`; }
-}
 export type Tstate_group__type__property = {
-	'output parameters':Record<string, Toutput_parameters>;
+	'first state':string;
 	'states':Record<string, Tstates__state_group__type__property>;
 };
 export class Cstate_group__type__property extends AlanNode {
@@ -1265,7 +1366,7 @@ export class Cstate_group__type__property extends AlanNode {
 		choice: new Cchoice({name:'state group property', definition: this})
 	}
 	public readonly properties:{
-		readonly output_parameters:Cstate_group__type__property.Doutput_parameters,
+		readonly first_state:Cstate_group__type__property.Dfirst_state,
 		readonly states:Cstate_group__type__property.Dstates
 	};
 	public readonly output:{
@@ -1281,7 +1382,7 @@ export class Cstate_group__type__property extends AlanNode {
 		super();
 		const $this = this;
 		this.properties = {
-			output_parameters: new Cstate_group__type__property.Doutput_parameters(init['output parameters'], $this),
+			first_state: new Cstate_group__type__property.Dfirst_state(init['first state'], $this),
 			states: new Cstate_group__type__property.Dstates(init['states'], $this)
 		};
 	}
@@ -1289,29 +1390,10 @@ export class Cstate_group__type__property extends AlanNode {
 	public get component_root() { return this.parent.parent.parent; }
 	public get path() { return `${this.parent.path}/type?state group`; }
 }
-export type Toutput_parameters = {
-	'node selection':Tnode_type_path;
-};
-export class Coutput_parameters extends AlanNode {
-	public key:string;
-	public readonly properties:{
-		readonly node_selection:Cnode_type_path
-	};
-	constructor(key:string, init:Toutput_parameters, public parent:Cstate_group__type__property) {
-		super();
-		const $this = this;
-		this.key = key;
-		this.properties = {
-			node_selection: new Coutput_parameters.Dnode_selection(init['node selection'], $this)
-		};
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent.parent.parent; }
-	public get path() { return `${this.parent.path}/output parameters[${this.key}]`; }
-}
 export type Tstates__state_group__type__property = {
+	'context rules':Twhere_clause;
+	'has successor':'no'|['no', {}]|['yes', Tyes__has_successor__states__state_group__type__property];
 	'node':Tnode;
-	'output arguments':Record<string, Toutput_arguments>;
 };
 export class Cstates__state_group__type__property extends AlanNode {
 	public key:string;
@@ -1324,60 +1406,68 @@ export class Cstates__state_group__type__property extends AlanNode {
 			value: cache(() => resolve(this).then(this_context => resolve(this_context)
 					.then(context => context?.properties.node)
 					.then(context => context?.definitions.object)
-					.then(context => context?.definitions.value)
 					.result!
 				).result!, false)
 		})
 	}
 	public readonly properties:{
-		readonly node:Cnode,
-		readonly output_arguments:Cstates__state_group__type__property.Doutput_arguments
+		readonly context_rules:Cwhere_clause,
+		readonly has_successor:Cstates__state_group__type__property.Dhas_successor<
+			{ name: 'no', node:Cno__has_successor__states__state_group__type__property, init:Tno__has_successor__states__state_group__type__property}|
+			{ name: 'yes', node:Cyes__has_successor__states__state_group__type__property, init:Tyes__has_successor__states__state_group__type__property}>,
+		readonly node:Cnode
 	};
 	constructor(key:string, init:Tstates__state_group__type__property, public parent:Cstate_group__type__property) {
 		super();
 		const $this = this;
 		this.key = key;
 		this.properties = {
-			node: new Cstates__state_group__type__property.Dnode(init['node'], $this),
-			output_arguments: new Cstates__state_group__type__property.Doutput_arguments(init['output arguments'], $this)
+			context_rules: new Cstates__state_group__type__property.Dcontext_rules(init['context rules'], $this),
+			has_successor: new Cstates__state_group__type__property.Dhas_successor(init['has successor'], $this),
+			node: new Cstates__state_group__type__property.Dnode(init['node'], $this)
 		};
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent.parent.parent.parent; }
 	public get path() { return `${this.parent.path}/states[${this.key}]`; }
 }
-export class Koutput_arguments extends Reference<interface_.Coutput_parameters, string> {
-	constructor(key:string, $this:Coutput_arguments) {
-		super(key, cache(() => resolve($this.parent).then(() => $this.parent).then(context => context?.parent)
-			.then(context => context?.properties.output_parameters.get(this.entry))
-			.result!, true))
-	}
-}
-export type Toutput_arguments = {
-	'path':Tnode_selection_path;
+export type Tno__has_successor__states__state_group__type__property = {
 };
-export class Coutput_arguments extends AlanNode {
-	public key:Koutput_arguments;
+export class Cno__has_successor__states__state_group__type__property extends AlanNode {
+	constructor(init:Tno__has_successor__states__state_group__type__property, public parent:Cstates__state_group__type__property) {
+		super();
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent.parent.parent.parent; }
+	public get path() { return `${this.parent.path}/has successor?no`; }
+}
+export type Tyes__has_successor__states__state_group__type__property = {
+	'successor':string;
+};
+export class Cyes__has_successor__states__state_group__type__property extends AlanNode {
 	public readonly properties:{
-		readonly path:Cnode_selection_path & { readonly inferences: {
-			constraint: () => interface_.Cnode;
-		} }
+		readonly successor:Cyes__has_successor__states__state_group__type__property.Dsuccessor
 	};
-	constructor(key:string, init:Toutput_arguments, public parent:Cstates__state_group__type__property) {
+	constructor(init:Tyes__has_successor__states__state_group__type__property, public parent:Cstates__state_group__type__property) {
 		super();
 		const $this = this;
-		this.key = new Koutput_arguments(key, $this);
 		this.properties = {
-			path: new Coutput_arguments.Dpath(init['path'], $this)
+			successor: new Cyes__has_successor__states__state_group__type__property.Dsuccessor(init['successor'], $this)
 		};
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent.parent.parent.parent.parent; }
-	public get path() { return `${this.parent.path}/output arguments[${this.key.entry}]`; }
+	public get path() { return `${this.parent.path}/has successor?yes`; }
 }
 export type Ttext__type__property = {
+	'has constraint':'no'|['no', {}]|['yes', Tyes__has_constraint__text__type__property];
 };
 export class Ctext__type__property extends AlanNode {
+	public readonly properties:{
+		readonly has_constraint:Ctext__type__property.Dhas_constraint<
+			{ name: 'no', node:Cno__has_constraint__text__type__property, init:Tno__has_constraint__text__type__property}|
+			{ name: 'yes', node:Cyes__has_constraint__text__type__property, init:Tyes__has_constraint__text__type__property}>
+	};
 	public readonly output:{
 		value: () => interface_.Cvalue;
 	} = {
@@ -1388,148 +1478,59 @@ export class Ctext__type__property extends AlanNode {
 	}
 	constructor(init:Ttext__type__property, public parent:Cproperty) {
 		super();
+		const $this = this;
+		this.properties = {
+			has_constraint: new Ctext__type__property.Dhas_constraint(init['has constraint'], $this)
+		};
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent.parent.parent; }
 	public get path() { return `${this.parent.path}/type?text`; }
 }
-export type Tnode_content_path = {
-	'has steps':'no'|['no', {}]|['yes', Tyes__has_steps__node_content_path];
+export type Tno__has_constraint__text__type__property = {
 };
-export class Cnode_content_path extends AlanNode {
-	public readonly properties:{
-		readonly has_steps:Cnode_content_path.Dhas_steps<
-			{ name: 'no', node:Cno__has_steps__node_content_path, init:Tno__has_steps__node_content_path}|
-			{ name: 'yes', node:Cyes__has_steps__node_content_path, init:Tyes__has_steps__node_content_path}>
-	};
+export class Cno__has_constraint__text__type__property extends AlanNode {
 	public readonly output:{
-		result_interface_node: () => interface_.Cnode;
+		reference: () => interface_.Creference__interface;
 	} = {
-		result_interface_node: cache(() =>
-			resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.properties.has_steps.state.node.output.result_interface_node())
-				.result!
-			).result!)
-	};
-	constructor(init:Tnode_content_path, public location:AlanNode, public input: {
-		context_node: () => interface_.Cnode
-	}) {
-		super();
-		const $this = this;
-		this.properties = {
-			has_steps: new Cnode_content_path.Dhas_steps(init['has steps'], $this)
-		};
-	}
-	public get root() { return this.location.root; }
-	public get component_root() { return this; }
-	public get path() { return `${this.location.path}/node content path`; }
-}
-export type Tno__has_steps__node_content_path = {
-};
-export class Cno__has_steps__node_content_path extends AlanNode {
-	public readonly output:{
-		result_interface_node: () => interface_.Cnode;
-	} = {
-		result_interface_node: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.component_root.input.context_node())
+		reference: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(() => interface_.Creference__interface.Pundefined)
 				.result!
 			).result!, false)
 	}
-	constructor(init:Tno__has_steps__node_content_path, public parent:Cnode_content_path) {
+	constructor(init:Tno__has_constraint__text__type__property, public parent:Ctext__type__property) {
 		super();
 	}
 	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent; }
-	public get path() { return `${this.parent.path}/has steps?no`; }
+	public get component_root() { return this.parent.parent.parent.parent; }
+	public get path() { return `${this.parent.path}/has constraint?no`; }
 }
-export type Tyes__has_steps__node_content_path = {
-	'tail':Tnode_content_path;
-	'type':['group', Tgroup__type__yes__has_steps__node_content_path]|['state', Tstate__type__yes__has_steps__node_content_path];
+export type Tyes__has_constraint__text__type__property = {
+	'referencer':Treferencer;
 };
-export class Cyes__has_steps__node_content_path extends AlanNode {
+export class Cyes__has_constraint__text__type__property extends AlanNode {
 	public readonly properties:{
-		readonly tail:Cnode_content_path,
-		readonly type:Cyes__has_steps__node_content_path.Dtype<
-			{ name: 'group', node:Cgroup__type__yes__has_steps__node_content_path, init:Tgroup__type__yes__has_steps__node_content_path}|
-			{ name: 'state', node:Cstate__type__yes__has_steps__node_content_path, init:Tstate__type__yes__has_steps__node_content_path}>
+		readonly referencer:Creferencer
 	};
 	public readonly output:{
-		result_interface_node: () => interface_.Cnode;
+		reference: () => interface_.Creference__interface;
 	} = {
-		result_interface_node: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.properties.tail)
-				.then(context => context?.component_root.output.result_interface_node())
+		reference: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.referencer)
+				.then(context => context?.definitions.reference)
 				.result!
 			).result!, false)
 	}
-	constructor(init:Tyes__has_steps__node_content_path, public parent:Cnode_content_path) {
+	constructor(init:Tyes__has_constraint__text__type__property, public parent:Ctext__type__property) {
 		super();
 		const $this = this;
 		this.properties = {
-			tail: new Cyes__has_steps__node_content_path.Dtail(init['tail'], $this),
-			type: new Cyes__has_steps__node_content_path.Dtype(init['type'], $this)
+			referencer: new Cyes__has_constraint__text__type__property.Dreferencer(init['referencer'], $this)
 		};
 	}
 	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent; }
-	public get path() { return `${this.parent.path}/has steps?yes`; }
-}
-export type Tgroup__type__yes__has_steps__node_content_path = {
-	'group':string;
-};
-export class Cgroup__type__yes__has_steps__node_content_path extends AlanNode {
-	public readonly properties:{
-		readonly group:Cgroup__type__yes__has_steps__node_content_path.Dgroup
-	};
-	public readonly output:{
-		result_interface_node: () => interface_.Cnode;
-	} = {
-		result_interface_node: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.properties.group.ref)
-				.then(context => context?.properties.node)
-				.result!
-			).result!, false)
-	}
-	constructor(init:Tgroup__type__yes__has_steps__node_content_path, public parent:Cyes__has_steps__node_content_path) {
-		super();
-		const $this = this;
-		this.properties = {
-			group: new Cgroup__type__yes__has_steps__node_content_path.Dgroup(init['group'], $this)
-		};
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/type?group`; }
-}
-export type Tstate__type__yes__has_steps__node_content_path = {
-	'state':string;
-	'state group':string;
-};
-export class Cstate__type__yes__has_steps__node_content_path extends AlanNode {
-	public readonly properties:{
-		readonly state:Cstate__type__yes__has_steps__node_content_path.Dstate,
-		readonly state_group:Cstate__type__yes__has_steps__node_content_path.Dstate_group
-	};
-	public readonly output:{
-		result_interface_node: () => interface_.Cnode;
-	} = {
-		result_interface_node: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.properties.state.ref)
-				.then(context => context?.properties.node)
-				.result!
-			).result!, false)
-	}
-	constructor(init:Tstate__type__yes__has_steps__node_content_path, public parent:Cyes__has_steps__node_content_path) {
-		super();
-		const $this = this;
-		this.properties = {
-			state: new Cstate__type__yes__has_steps__node_content_path.Dstate(init['state'], $this),
-			state_group: new Cstate__type__yes__has_steps__node_content_path.Dstate_group(init['state group'], $this)
-		};
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/type?state`; }
+	public get component_root() { return this.parent.parent.parent.parent; }
+	public get path() { return `${this.parent.path}/has constraint?yes`; }
 }
 type Vnode_location = { name: 'collection', definition: Ccollection__type__property}|{ name: 'group', definition: Cgroup__type__property}|{ name: 'root', definition: Cinterface}|{ name: 'state', definition: Cstates__state_group__type__property}
 export class Cnode_location extends AlanObject {
@@ -1581,199 +1582,252 @@ export class Cnode_parent extends AlanObject {
 			&& (this.variant.definition === other.variant.definition || this.variant.definition.is(other.variant.definition as any));
 	}
 }
-export type Tnode_selection_path = {
-	'has steps':'no'|['no', {}]|['yes', Tyes__has_steps__node_selection_path];
+export type Tnode_path = {
+	'head':Tcontext_node_path;
+	'tail':Tnode_path_tail;
 };
-export class Cnode_selection_path extends AlanNode {
+export class Cnode_path extends AlanNode {
 	public readonly properties:{
-		readonly has_steps:Cnode_selection_path.Dhas_steps<
-			{ name: 'no', node:Cno__has_steps__node_selection_path, init:Tno__has_steps__node_selection_path}|
-			{ name: 'yes', node:Cyes__has_steps__node_selection_path, init:Tyes__has_steps__node_selection_path}>
+		readonly head:Ccontext_node_path,
+		readonly tail:Cnode_path_tail
 	};
 	public readonly output:{
-		result_interface_node: () => interface_.Cnode;
+		direction: () => interface_.Cdirection;
+		node: () => interface_.Cnode;
 	} = {
-		result_interface_node: cache(() =>
+		direction: cache(() =>
 			resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.properties.has_steps.state.node.output.result_interface_node())
+				.then(context => context?.properties.tail)
+				.then(context => context?.component_root.output.direction())
+				.result!
+			).result!),
+		node: cache(() =>
+			resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.tail)
+				.then(context => context?.component_root.output.node())
 				.result!
 			).result!)
 	};
-	constructor(init:Tnode_selection_path, public location:AlanNode, public input: {
-		context_node: () => interface_.Cnode
+	constructor(init:Tnode_path, public location:AlanNode, public input: {
+		context_direction: () => interface_.Cdirection,
+		context_node: () => interface_.Cnode,
+		dependency: () => interface_.Cdependency,
+		participation: () => interface_.Cparticipation,
+		this: () => interface_.Cobject
 	}) {
 		super();
 		const $this = this;
 		this.properties = {
-			has_steps: new Cnode_selection_path.Dhas_steps(init['has steps'], $this)
+			head: new Cnode_path.Dhead(init['head'], $this),
+			tail: new Cnode_path.Dtail(init['tail'], $this)
 		};
 	}
 	public get root() { return this.location.root; }
 	public get component_root() { return this; }
-	public get path() { return `${this.location.path}/node selection path`; }
+	public get path() { return `${this.location.path}/node path`; }
 }
-export type Tno__has_steps__node_selection_path = {
+export type Tnode_path_tail = {
+	'has steps':'no'|['no', {}]|['yes', Tyes__has_steps__node_path_tail];
 };
-export class Cno__has_steps__node_selection_path extends AlanNode {
+export class Cnode_path_tail extends AlanNode {
+	public readonly properties:{
+		readonly has_steps:Cnode_path_tail.Dhas_steps<
+			{ name: 'no', node:Cno__has_steps__node_path_tail, init:Tno__has_steps__node_path_tail}|
+			{ name: 'yes', node:Cyes__has_steps__node_path_tail, init:Tyes__has_steps__node_path_tail}>
+	};
 	public readonly output:{
-		result_interface_node: () => interface_.Cnode;
+		direction: () => interface_.Cdirection;
+		node: () => interface_.Cnode;
 	} = {
-		result_interface_node: cache(() => resolve(this).then(this_context => resolve(this_context)
+		direction: cache(() =>
+			resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.has_steps.state.node.output.direction())
+				.result!
+			).result!),
+		node: cache(() =>
+			resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.has_steps.state.node.output.node())
+				.result!
+			).result!)
+	};
+	constructor(init:Tnode_path_tail, public location:AlanNode, public input: {
+		context_direction: () => interface_.Cdirection,
+		context_node: () => interface_.Cnode,
+		dependency: () => interface_.Cdependency,
+		participation: () => interface_.Cparticipation
+	}) {
+		super();
+		const $this = this;
+		this.properties = {
+			has_steps: new Cnode_path_tail.Dhas_steps(init['has steps'], $this)
+		};
+	}
+	public get root() { return this.location.root; }
+	public get component_root() { return this; }
+	public get path() { return `${this.location.path}/node path tail`; }
+}
+export type Tno__has_steps__node_path_tail = {
+};
+export class Cno__has_steps__node_path_tail extends AlanNode {
+	public readonly output:{
+		direction: () => interface_.Cdirection;
+		node: () => interface_.Cnode;
+	} = {
+		direction: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.component_root.input.context_direction())
+				.result!
+			).result!, false),
+		node: cache(() => resolve(this).then(this_context => resolve(this_context)
 				.then(context => context?.component_root.input.context_node())
 				.result!
 			).result!, false)
 	}
-	constructor(init:Tno__has_steps__node_selection_path, public parent:Cnode_selection_path) {
+	constructor(init:Tno__has_steps__node_path_tail, public parent:Cnode_path_tail) {
 		super();
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent; }
 	public get path() { return `${this.parent.path}/has steps?no`; }
 }
-export type Tyes__has_steps__node_selection_path = {
-	'tail':Tnode_selection_path;
-	'type':'collection parent'|['collection parent', {}]|['group', Tgroup__type__yes__has_steps__node_selection_path]|'group parent'|['group parent', {}]|'matrix key'|['matrix key', {}]|['reference', Treference__type__yes]|['state group output parameter', Tstate_group_output_parameter]|'state parent'|['state parent', {}];
+export type Tyes__has_steps__node_path_tail = {
+	'tail':Tnode_path_tail;
+	'type':['group', Tgroup__type__yes__has_steps__node_path_tail]|'parent'|['parent', {}]|['reference', Treference__type__yes]|['reference rule', Treference_rule]|['state', Tstate__type]|['state context rule', Tstate_context_rule__type__yes];
 };
-export class Cyes__has_steps__node_selection_path extends AlanNode {
+export class Cyes__has_steps__node_path_tail extends AlanNode {
 	public readonly properties:{
-		readonly tail:Cnode_selection_path,
-		readonly type:Cyes__has_steps__node_selection_path.Dtype<
-			{ name: 'collection parent', node:Ccollection_parent, init:Tcollection_parent}|
-			{ name: 'group', node:Cgroup__type__yes__has_steps__node_selection_path, init:Tgroup__type__yes__has_steps__node_selection_path}|
-			{ name: 'group parent', node:Cgroup_parent, init:Tgroup_parent}|
-			{ name: 'matrix key', node:Cmatrix_key, init:Tmatrix_key}|
+		readonly tail:Cnode_path_tail,
+		readonly type:Cyes__has_steps__node_path_tail.Dtype<
+			{ name: 'group', node:Cgroup__type__yes__has_steps__node_path_tail, init:Tgroup__type__yes__has_steps__node_path_tail}|
+			{ name: 'parent', node:Cparent__type__yes__has_steps__node_path_tail, init:Tparent__type__yes__has_steps__node_path_tail}|
 			{ name: 'reference', node:Creference__type__yes, init:Treference__type__yes}|
-			{ name: 'state group output parameter', node:Cstate_group_output_parameter, init:Tstate_group_output_parameter}|
-			{ name: 'state parent', node:Cstate_parent__type__yes__has_steps__node_selection_path, init:Tstate_parent__type__yes__has_steps__node_selection_path}>
+			{ name: 'reference rule', node:Creference_rule, init:Treference_rule}|
+			{ name: 'state', node:Cstate__type, init:Tstate__type}|
+			{ name: 'state context rule', node:Cstate_context_rule__type__yes, init:Tstate_context_rule__type__yes}>
 	};
 	public readonly output:{
-		result_interface_node: () => interface_.Cnode;
+		direction: () => interface_.Cdirection;
+		node: () => interface_.Cnode;
 	} = {
-		result_interface_node: cache(() => resolve(this).then(this_context => resolve(this_context)
+		direction: cache(() => resolve(this).then(this_context => resolve(this_context)
 				.then(context => context?.properties.tail)
-				.then(context => context?.component_root.output.result_interface_node())
+				.then(context => context?.component_root.output.direction())
+				.result!
+			).result!, false),
+		node: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.tail)
+				.then(context => context?.component_root.output.node())
 				.result!
 			).result!, false)
 	}
-	constructor(init:Tyes__has_steps__node_selection_path, public parent:Cnode_selection_path) {
+	constructor(init:Tyes__has_steps__node_path_tail, public parent:Cnode_path_tail) {
 		super();
 		const $this = this;
 		this.properties = {
-			tail: new Cyes__has_steps__node_selection_path.Dtail(init['tail'], $this),
-			type: new Cyes__has_steps__node_selection_path.Dtype(init['type'], $this)
+			tail: new Cyes__has_steps__node_path_tail.Dtail(init['tail'], $this),
+			type: new Cyes__has_steps__node_path_tail.Dtype(init['type'], $this)
 		};
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent; }
 	public get path() { return `${this.parent.path}/has steps?yes`; }
 }
-export type Tcollection_parent = {
-};
-export class Ccollection_parent extends AlanNode {
-	public readonly output:{
-		result_interface_node: () => interface_.Cnode;
-	} = {
-		result_interface_node: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.inferences.parent_node()).result!
-			).result!, false)
-	}
-	public readonly inferences:{
-		parent_node: () => interface_.Cnode
-	} = {
-		parent_node: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.component_root.input.context_node())
-			.then(context => context?.component_root.output.parent())
-			.then(context => context?.cast('node'))
-			.result!, true)
-	}
-	constructor(init:Tcollection_parent, public parent:Cyes__has_steps__node_selection_path) {
-		super();
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/type?collection parent`; }
-}
-export type Tgroup__type__yes__has_steps__node_selection_path = {
+export type Tgroup__type__yes__has_steps__node_path_tail = {
 	'group':string;
 };
-export class Cgroup__type__yes__has_steps__node_selection_path extends AlanNode {
+export class Cgroup__type__yes__has_steps__node_path_tail extends AlanNode {
 	public readonly properties:{
-		readonly group:Cgroup__type__yes__has_steps__node_selection_path.Dgroup
+		readonly group:Cgroup__type__yes__has_steps__node_path_tail.Dgroup
 	};
 	public readonly output:{
-		result_interface_node: () => interface_.Cnode;
+		dependency: () => interface_.Cdependency;
+		direction: () => interface_.Cdirection;
+		node: () => interface_.Cnode;
 	} = {
-		result_interface_node: cache(() => resolve(this).then(this_context => resolve(this_context)
+		dependency: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.component_root.input.dependency())
+				.result!
+			).result!, false),
+		direction: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.component_root.input.context_direction())
+				.result!
+			).result!, false),
+		node: cache(() => resolve(this).then(this_context => resolve(this_context)
 				.then(context => context?.properties.group.ref)
 				.then(context => context?.properties.node)
 				.result!
 			).result!, false)
 	}
-	constructor(init:Tgroup__type__yes__has_steps__node_selection_path, public parent:Cyes__has_steps__node_selection_path) {
+	constructor(init:Tgroup__type__yes__has_steps__node_path_tail, public parent:Cyes__has_steps__node_path_tail) {
 		super();
 		const $this = this;
 		this.properties = {
-			group: new Cgroup__type__yes__has_steps__node_selection_path.Dgroup(init['group'], $this)
+			group: new Cgroup__type__yes__has_steps__node_path_tail.Dgroup(init['group'], $this)
 		};
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent.parent; }
 	public get path() { return `${this.parent.path}/type?group`; }
 }
-export type Tgroup_parent = {
+export type Tparent__type__yes__has_steps__node_path_tail = {
 };
-export class Cgroup_parent extends AlanNode {
+export class Cparent__type__yes__has_steps__node_path_tail extends AlanNode {
 	public readonly output:{
-		result_interface_node: () => interface_.Cnode;
+		dependency: () => interface_.Cdependency;
+		direction: () => interface_.Cdirection;
+		node: () => interface_.Cnode;
 	} = {
-		result_interface_node: cache(() => resolve(this).then(this_context => resolve(this_context)
+		dependency: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.component_root.input.dependency())
+				.result!
+			).result!, false),
+		direction: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.component_root.input.context_direction())
+				.result!
+			).result!, false),
+		node: cache(() => resolve(this).then(this_context => resolve(this_context)
 				.then(context => context?.inferences.parent_node()).result!
 			).result!, false)
 	}
 	public readonly inferences:{
+		context_entity: () => interface_.Centity,
 		parent_node: () => interface_.Cnode
 	} = {
+		context_entity: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.component_root.input.context_direction())
+			.then(context => {
+				switch (context?.variant.name) {
+					case 'dependency': return resolve(context.cast('dependency'))
+						.then(context => {
+							const left = resolve(context)
+								.then(() => this.inferences.parent_node())
+								.then(context => context?.component_root.output.entity())
+							.result;
+							const right = resolve(context)
+								.then(() => this.parent).then(context => context?.component_root.input.context_node())
+								.then(context => context?.component_root.output.entity())
+							.result;
+							return left.is(right) ? left : undefined
+						})
+						.result;
+					case undefined: return undefined;
+					case 'self': return resolve(context.cast('self'))
+						.then(() => this.inferences.parent_node())
+						.then(context => context?.component_root.output.entity())
+						.result;
+					case undefined: return undefined;
+					default: throw new Error(`Unexpected subtype '${(<any>context.variant).name}'`);
+				};
+			}).result!, true),
 		parent_node: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.component_root.input.context_node())
 			.then(context => context?.component_root.output.parent())
 			.then(context => context?.cast('node'))
 			.result!, true)
 	}
-	constructor(init:Tgroup_parent, public parent:Cyes__has_steps__node_selection_path) {
+	constructor(init:Tparent__type__yes__has_steps__node_path_tail, public parent:Cyes__has_steps__node_path_tail) {
 		super();
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/type?group parent`; }
-}
-export type Tmatrix_key = {
-};
-export class Cmatrix_key extends AlanNode {
-	public readonly output:{
-		result_interface_node: () => interface_.Cnode;
-	} = {
-		result_interface_node: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.inferences.matrix()).then(context => context?.properties.referencer)
-				.then(context => context?.component_root.output.referenced_interface_node())
-				.result!
-			).result!, false)
-	}
-	public readonly inferences:{
-		collection: () => interface_.Ccollection__type__property,
-		matrix: () => interface_.Cmatrix__type__collection
-	} = {
-		collection: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.component_root.input.context_node())
-			.then(context => context?.component_root.output.location())
-			.then(context => context?.cast('collection'))
-			.result!, true),
-		matrix: cache(() => resolve(this.parent).then(() => this.inferences.collection())
-			.then(context => context?.properties.type.cast('matrix'))
-			.result!, true)
-	}
-	constructor(init:Tmatrix_key, public parent:Cyes__has_steps__node_selection_path) {
-		super();
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/type?matrix key`; }
+	public get path() { return `${this.parent.path}/type?parent`; }
 }
 export type Treference__type__yes = {
 	'reference':string;
@@ -1783,16 +1837,32 @@ export class Creference__type__yes extends AlanNode {
 		readonly reference:Creference__type__yes.Dreference
 	};
 	public readonly output:{
-		result_interface_node: () => interface_.Cnode;
+		dependency: () => interface_.Cdependency;
+		direction: () => interface_.Cdirection;
+		node: () => interface_.Cnode;
 	} = {
-		result_interface_node: cache(() => resolve(this).then(this_context => resolve(this_context)
+		dependency: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.component_root.input.dependency())
+				.result!
+			).result!, false),
+		direction: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.reference.inferences.direction()).result!
+			).result!, false),
+		node: cache(() => resolve(this).then(this_context => resolve(this_context)
 				.then(context => context?.properties.reference.ref)
 				.then(context => context?.properties.referencer)
-				.then(context => context?.component_root.output.referenced_interface_node())
+				.then(context => context?.component_root.output.referenced_node())
 				.result!
 			).result!, false)
 	}
-	constructor(init:Treference__type__yes, public parent:Cyes__has_steps__node_selection_path) {
+	public readonly inferences:{
+		dependency_allowed: () => interface_.Cdependency
+	} = {
+		dependency_allowed: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.component_root.input.dependency())
+			.then(context => context?.cast('allowed'))
+			.result!, true)
+	}
+	constructor(init:Treference__type__yes, public parent:Cyes__has_steps__node_path_tail) {
 		super();
 		const $this = this;
 		this.properties = {
@@ -1803,265 +1873,298 @@ export class Creference__type__yes extends AlanNode {
 	public get component_root() { return this.parent.parent; }
 	public get path() { return `${this.parent.path}/type?reference`; }
 }
-export type Tstate_group_output_parameter = {
-	'output parameter':string;
-	'state group':string;
+export type Treference_rule = {
+	'reference':string;
+	'rule':string;
 };
-export class Cstate_group_output_parameter extends AlanNode {
+export class Creference_rule extends AlanNode {
 	public readonly properties:{
-		readonly output_parameter:Cstate_group_output_parameter.Doutput_parameter,
-		readonly state_group:Cstate_group_output_parameter.Dstate_group
+		readonly reference:Creference_rule.Dreference,
+		readonly rule:Creference_rule.Drule
 	};
 	public readonly output:{
-		result_interface_node: () => interface_.Cnode;
+		dependency: () => interface_.Cdependency;
+		direction: () => interface_.Cdirection;
+		node: () => interface_.Cnode;
 	} = {
-		result_interface_node: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.properties.output_parameter.ref)
-				.then(context => context?.properties.node_selection)
-				.then(context => context?.component_root.output.result_interface_node())
+		dependency: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.component_root.input.dependency())
 				.result!
-			).result!, false)
-	}
-	constructor(init:Tstate_group_output_parameter, public parent:Cyes__has_steps__node_selection_path) {
-		super();
-		const $this = this;
-		this.properties = {
-			output_parameter: new Cstate_group_output_parameter.Doutput_parameter(init['output parameter'], $this),
-			state_group: new Cstate_group_output_parameter.Dstate_group(init['state group'], $this)
-		};
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/type?state group output parameter`; }
-}
-export type Tstate_parent__type__yes__has_steps__node_selection_path = {
-};
-export class Cstate_parent__type__yes__has_steps__node_selection_path extends AlanNode {
-	public readonly output:{
-		result_interface_node: () => interface_.Cnode;
-	} = {
-		result_interface_node: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.inferences.parent_node()).result!
+			).result!, false),
+		direction: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.rule.inferences.direction()).result!
+			).result!, false),
+		node: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.reference.ref)
+				.then(context => context?.properties.referencer)
+				.then(context => context?.component_root.output.referenced_node())
+				.result!
 			).result!, false)
 	}
 	public readonly inferences:{
-		parent_node: () => interface_.Cnode
+		dependency_allowed: () => interface_.Cdependency
 	} = {
-		parent_node: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.component_root.input.context_node())
-			.then(context => context?.component_root.output.parent())
-			.then(context => context?.cast('node'))
+		dependency_allowed: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.component_root.input.dependency())
+			.then(context => context?.cast('allowed'))
 			.result!, true)
 	}
-	constructor(init:Tstate_parent__type__yes__has_steps__node_selection_path, public parent:Cyes__has_steps__node_selection_path) {
-		super();
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/type?state parent`; }
-}
-export type Tnode_type_path = {
-	'steps':Tnode_type_path_step;
-};
-export class Cnode_type_path extends AlanNode {
-	public readonly properties:{
-		readonly steps:Cnode_type_path_step
-	};
-	public readonly output:{
-		result_interface_node: () => interface_.Cnode;
-	} = {
-		result_interface_node: cache(() =>
-			resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.properties.steps)
-				.then(context => context?.component_root.output.result_interface_node())
-				.result!
-			).result!)
-	};
-	constructor(init:Tnode_type_path, public location:AlanNode) {
+	constructor(init:Treference_rule, public parent:Cyes__has_steps__node_path_tail) {
 		super();
 		const $this = this;
 		this.properties = {
-			steps: new Cnode_type_path.Dsteps(init['steps'], $this)
-		};
-	}
-	public get root() { return this.location.root; }
-	public get component_root() { return this; }
-	public get path() { return `${this.location.path}/node type path`; }
-}
-export type Tnode_type_path_step = {
-	'has steps':'no'|['no', {}]|['yes', Tyes__has_steps__node_type_path_step];
-};
-export class Cnode_type_path_step extends AlanNode {
-	public readonly properties:{
-		readonly has_steps:Cnode_type_path_step.Dhas_steps<
-			{ name: 'no', node:Cno__has_steps__node_type_path_step, init:Tno__has_steps__node_type_path_step}|
-			{ name: 'yes', node:Cyes__has_steps__node_type_path_step, init:Tyes__has_steps__node_type_path_step}>
-	};
-	public readonly output:{
-		result_interface_node: () => interface_.Cnode;
-	} = {
-		result_interface_node: cache(() =>
-			resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.properties.has_steps.state.node.output.result_interface_node())
-				.result!
-			).result!)
-	};
-	constructor(init:Tnode_type_path_step, public location:AlanNode, public input: {
-		context_node: () => interface_.Cnode
-	}) {
-		super();
-		const $this = this;
-		this.properties = {
-			has_steps: new Cnode_type_path_step.Dhas_steps(init['has steps'], $this)
-		};
-	}
-	public get root() { return this.location.root; }
-	public get component_root() { return this; }
-	public get path() { return `${this.location.path}/node type path step`; }
-}
-export type Tno__has_steps__node_type_path_step = {
-};
-export class Cno__has_steps__node_type_path_step extends AlanNode {
-	public readonly output:{
-		result_interface_node: () => interface_.Cnode;
-	} = {
-		result_interface_node: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.component_root.input.context_node())
-				.result!
-			).result!, false)
-	}
-	constructor(init:Tno__has_steps__node_type_path_step, public parent:Cnode_type_path_step) {
-		super();
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent; }
-	public get path() { return `${this.parent.path}/has steps?no`; }
-}
-export type Tyes__has_steps__node_type_path_step = {
-	'tail':Tnode_type_path_step;
-	'type':['collection', Tcollection__type__yes]|['group', Tgroup__type__yes__has_steps__node_type_path_step]|['state', Tstate__type__yes__has_steps__node_type_path_step];
-};
-export class Cyes__has_steps__node_type_path_step extends AlanNode {
-	public readonly properties:{
-		readonly tail:Cnode_type_path_step,
-		readonly type:Cyes__has_steps__node_type_path_step.Dtype<
-			{ name: 'collection', node:Ccollection__type__yes, init:Tcollection__type__yes}|
-			{ name: 'group', node:Cgroup__type__yes__has_steps__node_type_path_step, init:Tgroup__type__yes__has_steps__node_type_path_step}|
-			{ name: 'state', node:Cstate__type__yes__has_steps__node_type_path_step, init:Tstate__type__yes__has_steps__node_type_path_step}>
-	};
-	public readonly output:{
-		result_interface_node: () => interface_.Cnode;
-	} = {
-		result_interface_node: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.properties.tail)
-				.then(context => context?.component_root.output.result_interface_node())
-				.result!
-			).result!, false)
-	}
-	constructor(init:Tyes__has_steps__node_type_path_step, public parent:Cnode_type_path_step) {
-		super();
-		const $this = this;
-		this.properties = {
-			tail: new Cyes__has_steps__node_type_path_step.Dtail(init['tail'], $this),
-			type: new Cyes__has_steps__node_type_path_step.Dtype(init['type'], $this)
-		};
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent; }
-	public get path() { return `${this.parent.path}/has steps?yes`; }
-}
-export type Tcollection__type__yes = {
-	'collection':string;
-};
-export class Ccollection__type__yes extends AlanNode {
-	public readonly properties:{
-		readonly collection:Ccollection__type__yes.Dcollection
-	};
-	public readonly output:{
-		result_interface_node: () => interface_.Cnode;
-	} = {
-		result_interface_node: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.properties.collection.ref)
-				.then(context => context?.properties.node)
-				.result!
-			).result!, false)
-	}
-	constructor(init:Tcollection__type__yes, public parent:Cyes__has_steps__node_type_path_step) {
-		super();
-		const $this = this;
-		this.properties = {
-			collection: new Ccollection__type__yes.Dcollection(init['collection'], $this)
+			reference: new Creference_rule.Dreference(init['reference'], $this),
+			rule: new Creference_rule.Drule(init['rule'], $this)
 		};
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/type?collection`; }
+	public get path() { return `${this.parent.path}/type?reference rule`; }
 }
-export type Tgroup__type__yes__has_steps__node_type_path_step = {
-	'group':string;
-};
-export class Cgroup__type__yes__has_steps__node_type_path_step extends AlanNode {
-	public readonly properties:{
-		readonly group:Cgroup__type__yes__has_steps__node_type_path_step.Dgroup
-	};
-	public readonly output:{
-		result_interface_node: () => interface_.Cnode;
-	} = {
-		result_interface_node: cache(() => resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.properties.group.ref)
-				.then(context => context?.properties.node)
-				.result!
-			).result!, false)
-	}
-	constructor(init:Tgroup__type__yes__has_steps__node_type_path_step, public parent:Cyes__has_steps__node_type_path_step) {
-		super();
-		const $this = this;
-		this.properties = {
-			group: new Cgroup__type__yes__has_steps__node_type_path_step.Dgroup(init['group'], $this)
-		};
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/type?group`; }
-}
-export type Tstate__type__yes__has_steps__node_type_path_step = {
+export type Tstate__type = {
 	'state':string;
 	'state group':string;
 };
-export class Cstate__type__yes__has_steps__node_type_path_step extends AlanNode {
+export class Cstate__type extends AlanNode {
 	public readonly properties:{
-		readonly state:Cstate__type__yes__has_steps__node_type_path_step.Dstate,
-		readonly state_group:Cstate__type__yes__has_steps__node_type_path_step.Dstate_group
+		readonly state:Cstate__type.Dstate,
+		readonly state_group:Cstate__type.Dstate_group
 	};
 	public readonly output:{
-		result_interface_node: () => interface_.Cnode;
+		dependency: () => interface_.Cdependency;
+		direction: () => interface_.Cdirection;
+		node: () => interface_.Cnode;
 	} = {
-		result_interface_node: cache(() => resolve(this).then(this_context => resolve(this_context)
+		dependency: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(() => interface_.Cdependency.Pdisallowed)
+				.result!
+			).result!, false),
+		direction: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.component_root.input.context_direction())
+				.result!
+			).result!, false),
+		node: cache(() => resolve(this).then(this_context => resolve(this_context)
 				.then(context => context?.properties.state.ref)
 				.then(context => context?.properties.node)
 				.result!
 			).result!, false)
 	}
-	constructor(init:Tstate__type__yes__has_steps__node_type_path_step, public parent:Cyes__has_steps__node_type_path_step) {
+	public readonly inferences:{
+		conditional_result: () => interface_.Cparticipation
+	} = {
+		conditional_result: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.component_root.input.participation())
+			.then(context => context?.cast('conditional'))
+			.result!, true)
+	}
+	constructor(init:Tstate__type, public parent:Cyes__has_steps__node_path_tail) {
 		super();
 		const $this = this;
 		this.properties = {
-			state: new Cstate__type__yes__has_steps__node_type_path_step.Dstate(init['state'], $this),
-			state_group: new Cstate__type__yes__has_steps__node_type_path_step.Dstate_group(init['state group'], $this)
+			state: new Cstate__type.Dstate(init['state'], $this),
+			state_group: new Cstate__type.Dstate_group(init['state group'], $this)
 		};
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent.parent; }
 	public get path() { return `${this.parent.path}/type?state`; }
 }
-type Vobject = { name: 'node', definition: Cnode}|{ name: 'parameter', definition: Ccommand_parameters}
+export type Tstate_context_rule__type__yes = {
+	'context rule':string;
+};
+export class Cstate_context_rule__type__yes extends AlanNode {
+	public readonly properties:{
+		readonly context_rule:Cstate_context_rule__type__yes.Dcontext_rule
+	};
+	public readonly output:{
+		dependency: () => interface_.Cdependency;
+		direction: () => interface_.Cdirection;
+		node: () => interface_.Cnode;
+	} = {
+		dependency: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.component_root.input.dependency())
+				.result!
+			).result!, false),
+		direction: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.context_rule.inferences.direction()).result!
+			).result!, false),
+		node: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.context_rule.ref)
+				.then(context => context?.properties.tail)
+				.then(context => context?.component_root.output.node())
+				.result!
+			).result!, false)
+	}
+	public readonly inferences:{
+		state: () => interface_.Cstates__state_group__type__property
+	} = {
+		state: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.component_root.input.context_node())
+			.then(context => context?.component_root.output.location())
+			.then(context => context?.cast('state'))
+			.result!, true)
+	}
+	constructor(init:Tstate_context_rule__type__yes, public parent:Cyes__has_steps__node_path_tail) {
+		super();
+		const $this = this;
+		this.properties = {
+			context_rule: new Cstate_context_rule__type__yes.Dcontext_rule(init['context rule'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent; }
+	public get path() { return `${this.parent.path}/type?state context rule`; }
+}
+type Vnumber_set_type = { name: 'integer', definition: (typeof Cnumber_set_type.Pinteger)}|{ name: 'natural', definition: (typeof Cnumber_set_type.Pnatural)}
+export class Cnumber_set_type extends AlanObject {
+	public static Pinteger:Cnumber_set_type = new class PrimitiveInstance extends Cnumber_set_type {
+		constructor () {
+			super({name: 'integer', definition: undefined as unknown as Cnumber_set_type})
+			this.variant.definition = this;
+		}
+	}
+	public static Pnatural:Cnumber_set_type = new class PrimitiveInstance extends Cnumber_set_type {
+		constructor () {
+			super({name: 'natural', definition: undefined as unknown as Cnumber_set_type})
+			this.variant.definition = this;
+		}
+	}
+	constructor(
+		public readonly variant:Vnumber_set_type) { super(); }
+	public cast<K extends Vnumber_set_type['name']>(_variant:K):Extract<Vnumber_set_type, {name:K}>['definition'] {
+		return this.variant.definition as any;
+	}
+	switch<TS> (cases:{[K in Vnumber_set_type['name']]:(($:Extract<Vnumber_set_type, {name:K}>['definition']) => TS) | (() => TS) | Exclude<TS, Function>}):TS {
+		const handler = cases[this.variant.name];
+		if (isFunction(handler)) {
+			return handler(this.variant.definition as any);
+		} else {
+			return handler as Exclude<TS, Function>;
+		}
+	}
+	public get component_root() { return this; }
+	public get path() { return `/number set type`; }
+	public is(other:Cnumber_set_type):boolean {
+		return this.variant.name === other.variant.name
+			&& (this.variant.definition === other.variant.definition || this.variant.definition.is(other.variant.definition as any));
+	}
+}
+export type Tnumber_type = {
+	'decimal places':'no'|['no', {}]|['yes', Tyes__decimal_places];
+	'set':'integer'|['integer', {}]|'natural'|['natural', {}];
+	'type':string;
+};
+export class Cnumber_type extends AlanNode {
+	public readonly properties:{
+		readonly decimal_places:Cnumber_type.Ddecimal_places<
+			{ name: 'no', node:Cno__decimal_places, init:Tno__decimal_places}|
+			{ name: 'yes', node:Cyes__decimal_places, init:Tyes__decimal_places}>,
+		readonly set:Cnumber_type.Dset<
+			{ name: 'integer', node:Cinteger, init:Tinteger}|
+			{ name: 'natural', node:Cnatural, init:Tnatural}>,
+		readonly type:Cnumber_type.Dtype
+	};
+	constructor(init:Tnumber_type, public location:AlanNode) {
+		super();
+		const $this = this;
+		this.properties = {
+			decimal_places: new Cnumber_type.Ddecimal_places(init['decimal places'], $this),
+			set: new Cnumber_type.Dset(init['set'], $this),
+			type: new Cnumber_type.Dtype(init['type'], $this)
+		};
+	}
+	public get root() { return this.location.root; }
+	public get component_root() { return this; }
+	public get path() { return `${this.location.path}/number type`; }
+}
+export type Tno__decimal_places = {
+};
+export class Cno__decimal_places extends AlanNode {
+	constructor(init:Tno__decimal_places, public parent:Cnumber_type) {
+		super();
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/decimal places?no`; }
+}
+export type Tyes__decimal_places = {
+	'places':number;
+};
+export class Cyes__decimal_places extends AlanNode {
+	public readonly properties:{
+		readonly places:number
+	};
+	constructor(init:Tyes__decimal_places, public parent:Cnumber_type) {
+		super();
+		const $this = this;
+		this.properties = {
+			places: init['places']
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/decimal places?yes`; }
+}
+export type Tinteger = {
+};
+export class Cinteger extends AlanNode {
+	public readonly output:{
+		set_type: () => interface_.Cnumber_set_type;
+	} = {
+		set_type: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(() => interface_.Cnumber_set_type.Pinteger)
+				.result!
+			).result!, false)
+	}
+	constructor(init:Tinteger, public parent:Cnumber_type) {
+		super();
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/set?integer`; }
+}
+export type Tnatural = {
+};
+export class Cnatural extends AlanNode {
+	public readonly output:{
+		set_type: () => interface_.Cnumber_set_type;
+	} = {
+		set_type: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(() => interface_.Cnumber_set_type.Pnatural)
+				.result!
+			).result!, false)
+	}
+	constructor(init:Tnatural, public parent:Cnumber_type) {
+		super();
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/set?natural`; }
+}
+type Vobject = { name: 'node', definition: Cnode}|{ name: 'parameter', definition: Cparameter_definition__interface}
 export class Cobject extends AlanObject {
 	constructor(
-		public readonly variant:Vobject) { super(); }
+		public readonly variant:Vobject, public input: {
+			this_node: () => interface_.Cnode
+		}) { super(); }
 	public definitions:{
 		value: Cvalue;
+		value_type: Cvalue_type;
 	} = {
-		value: new Cvalue({name:'object', definition: this})
+		value: new Cvalue({name:'object', definition: this}, {
+			value_type: cache(() => resolve(this).then(this_context => resolve(this_context)
+					.then(context => context?.definitions.value_type)
+					.result!
+				).result!, false)
+		}),
+		value_type: new Cvalue_type({name:'object', definition: this})
 	}
+	public readonly output:{
+		this_node: () => interface_.Cnode;
+	} = {
+		this_node: cache(() =>
+			resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.component_root.input.this_node())
+				.result!
+			).result!)
+	};
 	public cast<K extends Vobject['name']>(_variant:K):Extract<Vobject, {name:K}>['definition'] {
 		return this.variant.definition as any;
 	}
@@ -2080,7 +2183,513 @@ export class Cobject extends AlanObject {
 			&& (this.variant.definition === other.variant.definition || this.variant.definition.is(other.variant.definition as any));
 	}
 }
-type Vparameter_location = { name: 'command', definition: Ccommand}|{ name: 'matrix', definition: Cmatrix__type__properties}|{ name: 'state', definition: Cstates__state_group__type__properties}
+export type Tparameter_definition__interface = {
+	'properties':Record<string, Tproperties>;
+};
+export class Cparameter_definition__interface extends AlanNode {
+	public definitions:{
+		object: Cobject;
+		parameter_parent: Cparameter_parent;
+	} = {
+		object: new Cobject({name:'parameter', definition: this}, {
+			this_node: cache(() => resolve(this).then(this_context => resolve(this_context)
+					.then(context => context?.component_root.input.this_node())
+					.result!
+				).result!, false)
+		}),
+		parameter_parent: new Cparameter_parent({name:'parameter', definition: this})
+	}
+	public readonly properties:{
+		readonly properties:Cparameter_definition__interface.Dproperties
+	};
+	public readonly output:{
+		entity: () => interface_.Centity;
+		location: () => interface_.Cparameter_location;
+		parent: () => interface_.Cparameter_parent;
+	} = {
+		entity: cache(() =>
+			resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.component_root.input.entity())
+				.result!
+			).result!),
+		location: cache(() =>
+			resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.component_root.input.location())
+				.result!
+			).result!),
+		parent: cache(() =>
+			resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.component_root.input.parent())
+				.result!
+			).result!)
+	};
+	constructor(init:Tparameter_definition__interface, public location:AlanNode, public input: {
+		entity: () => interface_.Centity,
+		location: () => interface_.Cparameter_location,
+		parent: () => interface_.Cparameter_parent,
+		this_node: () => interface_.Cnode
+	}) {
+		super();
+		const $this = this;
+		this.properties = {
+			properties: new Cparameter_definition__interface.Dproperties(init['properties'], $this)
+		};
+	}
+	public get root() { return this.location.root; }
+	public get component_root() { return this; }
+	public get path() { return `${this.location.path}/parameter definition`; }
+}
+export type Tproperties = {
+	'type':['collection', Tcollection__type__properties]|'file'|['file', {}]|['group', Tgroup__type__properties]|['number', Tnumber__type__properties]|['state group', Tstate_group__type__properties]|['text', Ttext__type__properties];
+};
+export class Cproperties extends AlanNode {
+	public key:string;
+	public definitions:{
+		member: Cmember;
+		value_member: Cvalue_member;
+	} = {
+		member: new Cmember({name:'parameter', definition: this}, {
+			type: cache(() => resolve(this).then(this_context => resolve(this_context)
+					.then(context => context?.properties.type.state.node.output.member_type())
+					.result!
+				).result!, false)
+		}),
+		value_member: new Cvalue_member({name:'parameter', definition: this}, {
+			member: cache(() => resolve(this).then(this_context => resolve(this_context)
+					.then(context => context?.definitions.member)
+					.result!
+				).result!, false),
+			value: cache(() => resolve(this).then(this_context => resolve(this_context)
+					.then(context => context?.properties.type.state.node.output.value())
+					.result!
+				).result!, false)
+		})
+	}
+	public readonly properties:{
+		readonly type:Cproperties.Dtype<
+			{ name: 'collection', node:Ccollection__type__properties, init:Tcollection__type__properties}|
+			{ name: 'file', node:Cfile__type__properties, init:Tfile__type__properties}|
+			{ name: 'group', node:Cgroup__type__properties, init:Tgroup__type__properties}|
+			{ name: 'number', node:Cnumber__type__properties, init:Tnumber__type__properties}|
+			{ name: 'state group', node:Cstate_group__type__properties, init:Tstate_group__type__properties}|
+			{ name: 'text', node:Ctext__type__properties, init:Ttext__type__properties}>
+	};
+	constructor(key:string, init:Tproperties, public parent:Cparameter_definition__interface) {
+		super();
+		const $this = this;
+		this.key = key;
+		this.properties = {
+			type: new Cproperties.Dtype(init['type'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/properties[${this.key}]`; }
+}
+export type Tcollection__type__properties = {
+	'key property':string;
+	'parameters':Tparameter_definition__interface;
+	'type':'dense map'|['dense map', {}]|'simple'|['simple', {}];
+};
+export class Ccollection__type__properties extends AlanNode {
+	public definitions:{
+		collection: Ccollection__interface;
+		parameter_location: Cparameter_location;
+	} = {
+		collection: new Ccollection__interface({name:'parameter collection', definition: this}, {
+			key_member: cache(() => resolve(this).then(this_context => resolve(this_context)
+					.then(context => context?.properties.key_property.ref)
+					.then(context => context?.parent)
+					.then(context => context?.definitions.member)
+					.result!
+				).result!, false),
+			value: cache(() => resolve(this).then(this_context => resolve(this_context)
+					.then(context => context?.properties.parameters)
+					.then(context => context?.definitions.object)
+					.result!
+				).result!, false)
+		}),
+		parameter_location: new Cparameter_location({name:'collection', definition: this})
+	}
+	public readonly properties:{
+		readonly key_property:Ccollection__type__properties.Dkey_property,
+		readonly parameters:Cparameter_definition__interface,
+		readonly type:Ccollection__type__properties.Dtype<
+			{ name: 'dense map', node:Cdense_map, init:Tdense_map}|
+			{ name: 'simple', node:Csimple, init:Tsimple}>
+	};
+	public readonly output:{
+		member_type: () => interface_.Cmember_type;
+		value: () => interface_.Cvalue;
+	} = {
+		member_type: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(() => interface_.Cmember_type.Psimple)
+				.result!
+			).result!, false),
+		value: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.definitions.collection)
+				.then(context => context?.definitions.value)
+				.result!
+			).result!, false)
+	}
+	constructor(init:Tcollection__type__properties, public parent:Cproperties) {
+		super();
+		const $this = this;
+		this.properties = {
+			key_property: new Ccollection__type__properties.Dkey_property(init['key property'], $this),
+			parameters: new Ccollection__type__properties.Dparameters(init['parameters'], $this),
+			type: new Ccollection__type__properties.Dtype(init['type'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent; }
+	public get path() { return `${this.parent.path}/type?collection`; }
+}
+export type Tdense_map = {
+};
+export class Cdense_map extends AlanNode {
+	public readonly inferences:{
+		key_constraint: () => interface_.Cyes__has_constraint__text__type__properties
+	} = {
+		key_constraint: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.properties.key_property.ref)
+			.then(context => context?.properties.has_constraint.cast('yes'))
+			.result!, true)
+	}
+	constructor(init:Tdense_map, public parent:Ccollection__type__properties) {
+		super();
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent.parent; }
+	public get path() { return `${this.parent.path}/type?dense map`; }
+}
+export type Tsimple = {
+};
+export class Csimple extends AlanNode {
+	constructor(init:Tsimple, public parent:Ccollection__type__properties) {
+		super();
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent.parent; }
+	public get path() { return `${this.parent.path}/type?simple`; }
+}
+export type Tfile__type__properties = {
+};
+export class Cfile__type__properties extends AlanNode {
+	public readonly output:{
+		member_type: () => interface_.Cmember_type;
+		value: () => interface_.Cvalue;
+	} = {
+		member_type: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(() => interface_.Cmember_type.Psimple)
+				.result!
+			).result!, false),
+		value: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(() => interface_.Cvalue.Pfile)
+				.result!
+			).result!, false)
+	}
+	constructor(init:Tfile__type__properties, public parent:Cproperties) {
+		super();
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent; }
+	public get path() { return `${this.parent.path}/type?file`; }
+}
+export type Tgroup__type__properties = {
+	'parameters':Tparameter_definition__interface;
+};
+export class Cgroup__type__properties extends AlanNode {
+	public definitions:{
+		parameter_location: Cparameter_location;
+	} = {
+		parameter_location: new Cparameter_location({name:'group', definition: this})
+	}
+	public readonly properties:{
+		readonly parameters:Cparameter_definition__interface
+	};
+	public readonly output:{
+		member_type: () => interface_.Cmember_type;
+		value: () => interface_.Cvalue;
+	} = {
+		member_type: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(() => interface_.Cmember_type.Psimple)
+				.result!
+			).result!, false),
+		value: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.parameters)
+				.then(context => context?.definitions.object)
+				.then(context => context?.definitions.value)
+				.result!
+			).result!, false)
+	}
+	constructor(init:Tgroup__type__properties, public parent:Cproperties) {
+		super();
+		const $this = this;
+		this.properties = {
+			parameters: new Cgroup__type__properties.Dparameters(init['parameters'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent; }
+	public get path() { return `${this.parent.path}/type?group`; }
+}
+export type Tnumber__type__properties = {
+	'type':Tnumber_type;
+};
+export class Cnumber__type__properties extends AlanNode {
+	public readonly properties:{
+		readonly type:Cnumber_type
+	};
+	public readonly output:{
+		member_type: () => interface_.Cmember_type;
+		value: () => interface_.Cvalue;
+	} = {
+		member_type: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(() => interface_.Cmember_type.Psimple)
+				.result!
+			).result!, false),
+		value: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(() => interface_.Cvalue.Pnumber)
+				.result!
+			).result!, false)
+	}
+	constructor(init:Tnumber__type__properties, public parent:Cproperties) {
+		super();
+		const $this = this;
+		this.properties = {
+			type: new Cnumber__type__properties.Dtype(init['type'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent; }
+	public get path() { return `${this.parent.path}/type?number`; }
+}
+export type Tstate_group__type__properties = {
+	'first state':string;
+	'states':Record<string, Tstates__state_group__type__properties>;
+};
+export class Cstate_group__type__properties extends AlanNode {
+	public definitions:{
+		choice: Cchoice;
+	} = {
+		choice: new Cchoice({name:'state group parameter', definition: this})
+	}
+	public readonly properties:{
+		readonly first_state:Cstate_group__type__properties.Dfirst_state,
+		readonly states:Cstate_group__type__properties.Dstates
+	};
+	public readonly output:{
+		member_type: () => interface_.Cmember_type;
+		value: () => interface_.Cvalue;
+	} = {
+		member_type: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(() => interface_.Cmember_type.Psimple)
+				.result!
+			).result!, false),
+		value: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.definitions.choice)
+				.then(context => context?.definitions.value)
+				.result!
+			).result!, false)
+	}
+	constructor(init:Tstate_group__type__properties, public parent:Cproperties) {
+		super();
+		const $this = this;
+		this.properties = {
+			first_state: new Cstate_group__type__properties.Dfirst_state(init['first state'], $this),
+			states: new Cstate_group__type__properties.Dstates(init['states'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent; }
+	public get path() { return `${this.parent.path}/type?state group`; }
+}
+export type Tstates__state_group__type__properties = {
+	'context rules':Twhere_clause;
+	'has successor':'no'|['no', {}]|['yes', Tyes__has_successor__states__state_group__type__properties];
+	'parameters':Tparameter_definition__interface;
+};
+export class Cstates__state_group__type__properties extends AlanNode {
+	public key:string;
+	public definitions:{
+		parameter_location: Cparameter_location;
+		state: Cstate__interface;
+	} = {
+		parameter_location: new Cparameter_location({name:'state', definition: this}),
+		state: new Cstate__interface({name:'state parameter', definition: this}, {
+			value: cache(() => resolve(this).then(this_context => resolve(this_context)
+					.then(context => context?.properties.parameters)
+					.then(context => context?.definitions.object)
+					.result!
+				).result!, false)
+		})
+	}
+	public readonly properties:{
+		readonly context_rules:Cwhere_clause,
+		readonly has_successor:Cstates__state_group__type__properties.Dhas_successor<
+			{ name: 'no', node:Cno__has_successor__states__state_group__type__properties, init:Tno__has_successor__states__state_group__type__properties}|
+			{ name: 'yes', node:Cyes__has_successor__states__state_group__type__properties, init:Tyes__has_successor__states__state_group__type__properties}>,
+		readonly parameters:Cparameter_definition__interface
+	};
+	constructor(key:string, init:Tstates__state_group__type__properties, public parent:Cstate_group__type__properties) {
+		super();
+		const $this = this;
+		this.key = key;
+		this.properties = {
+			context_rules: new Cstates__state_group__type__properties.Dcontext_rules(init['context rules'], $this),
+			has_successor: new Cstates__state_group__type__properties.Dhas_successor(init['has successor'], $this),
+			parameters: new Cstates__state_group__type__properties.Dparameters(init['parameters'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent.parent; }
+	public get path() { return `${this.parent.path}/states[${this.key}]`; }
+}
+export type Tno__has_successor__states__state_group__type__properties = {
+};
+export class Cno__has_successor__states__state_group__type__properties extends AlanNode {
+	constructor(init:Tno__has_successor__states__state_group__type__properties, public parent:Cstates__state_group__type__properties) {
+		super();
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent.parent.parent; }
+	public get path() { return `${this.parent.path}/has successor?no`; }
+}
+export type Tyes__has_successor__states__state_group__type__properties = {
+	'successor':string;
+};
+export class Cyes__has_successor__states__state_group__type__properties extends AlanNode {
+	public readonly properties:{
+		readonly successor:Cyes__has_successor__states__state_group__type__properties.Dsuccessor
+	};
+	constructor(init:Tyes__has_successor__states__state_group__type__properties, public parent:Cstates__state_group__type__properties) {
+		super();
+		const $this = this;
+		this.properties = {
+			successor: new Cyes__has_successor__states__state_group__type__properties.Dsuccessor(init['successor'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent.parent.parent; }
+	public get path() { return `${this.parent.path}/has successor?yes`; }
+}
+export type Ttext__type__properties = {
+	'has constraint':'no'|['no', {}]|['yes', Tyes__has_constraint__text__type__properties];
+};
+export class Ctext__type__properties extends AlanNode {
+	public readonly properties:{
+		readonly has_constraint:Ctext__type__properties.Dhas_constraint<
+			{ name: 'no', node:Cno__has_constraint__text__type__properties, init:Tno__has_constraint__text__type__properties}|
+			{ name: 'yes', node:Cyes__has_constraint__text__type__properties, init:Tyes__has_constraint__text__type__properties}>
+	};
+	public readonly output:{
+		member_type: () => interface_.Cmember_type;
+		value: () => interface_.Cvalue;
+	} = {
+		member_type: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.inferences.member_type()).result!
+			).result!, false),
+		value: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(() => interface_.Cvalue.Ptext)
+				.result!
+			).result!, false)
+	}
+	public readonly inferences:{
+		member_type: () => interface_.Cmember_type
+	} = {
+		member_type: cache(() => resolve(this.parent).then(context => evaluate__member_type_derivation(
+				{
+				entity: () => resolve(context).then(() => this.parent).then(context => context?.component_root.input.entity())
+					.result
+				,
+				member: () => resolve(context).then(() => this.parent).then(context => context?.definitions.member)
+					.result
+
+				}))
+			.result!, true)
+	}
+	constructor(init:Ttext__type__properties, public parent:Cproperties) {
+		super();
+		const $this = this;
+		this.properties = {
+			has_constraint: new Ctext__type__properties.Dhas_constraint(init['has constraint'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent; }
+	public get path() { return `${this.parent.path}/type?text`; }
+}
+export type Tno__has_constraint__text__type__properties = {
+};
+export class Cno__has_constraint__text__type__properties extends AlanNode {
+	public readonly output:{
+		reference: () => interface_.Creference__interface;
+	} = {
+		reference: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(() => interface_.Creference__interface.Pundefined)
+				.result!
+			).result!, false)
+	}
+	constructor(init:Tno__has_constraint__text__type__properties, public parent:Ctext__type__properties) {
+		super();
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent.parent; }
+	public get path() { return `${this.parent.path}/has constraint?no`; }
+}
+export type Tyes__has_constraint__text__type__properties = {
+	'referencer':Treferencer;
+	'type':'existing'|['existing', {}]|'new'|['new', {}];
+};
+export class Cyes__has_constraint__text__type__properties extends AlanNode {
+	public readonly properties:{
+		readonly referencer:Creferencer,
+		readonly type:Cyes__has_constraint__text__type__properties.Dtype<
+			{ name: 'existing', node:Cexisting, init:Texisting}|
+			{ name: 'new', node:Cnew, init:Tnew}>
+	};
+	public readonly output:{
+		reference: () => interface_.Creference__interface;
+	} = {
+		reference: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.referencer)
+				.then(context => context?.definitions.reference)
+				.result!
+			).result!, false)
+	}
+	constructor(init:Tyes__has_constraint__text__type__properties, public parent:Ctext__type__properties) {
+		super();
+		const $this = this;
+		this.properties = {
+			referencer: new Cyes__has_constraint__text__type__properties.Dreferencer(init['referencer'], $this),
+			type: new Cyes__has_constraint__text__type__properties.Dtype(init['type'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent.parent; }
+	public get path() { return `${this.parent.path}/has constraint?yes`; }
+}
+export type Texisting = {
+};
+export class Cexisting extends AlanNode {
+	constructor(init:Texisting, public parent:Cyes__has_constraint__text__type__properties) {
+		super();
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent.parent.parent; }
+	public get path() { return `${this.parent.path}/type?existing`; }
+}
+export type Tnew = {
+};
+export class Cnew extends AlanNode {
+	constructor(init:Tnew, public parent:Cyes__has_constraint__text__type__properties) {
+		super();
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent.parent.parent; }
+	public get path() { return `${this.parent.path}/type?new`; }
+}
+type Vparameter_location = { name: 'collection', definition: Ccollection__type__properties}|{ name: 'command', definition: Ccommand}|{ name: 'group', definition: Cgroup__type__properties}|{ name: 'state', definition: Cstates__state_group__type__properties}
 export class Cparameter_location extends AlanObject {
 	constructor(
 		public readonly variant:Vparameter_location) { super(); }
@@ -2102,7 +2711,7 @@ export class Cparameter_location extends AlanObject {
 			&& (this.variant.definition === other.variant.definition || this.variant.definition.is(other.variant.definition as any));
 	}
 }
-type Vparameter_parent = { name: 'none', definition: (typeof Cparameter_parent.Pnone)}|{ name: 'parameter', definition: Ccommand_parameters}
+type Vparameter_parent = { name: 'none', definition: (typeof Cparameter_parent.Pnone)}|{ name: 'parameter', definition: Cparameter_definition__interface}
 export class Cparameter_parent extends AlanObject {
 	public static Pnone:Cparameter_parent = new class PrimitiveInstance extends Cparameter_parent {
 		constructor () {
@@ -2130,50 +2739,309 @@ export class Cparameter_parent extends AlanObject {
 			&& (this.variant.definition === other.variant.definition || this.variant.definition.is(other.variant.definition as any));
 	}
 }
+type Vparticipation = { name: 'conditional', definition: (typeof Cparticipation.Pconditional)}|{ name: 'singular', definition: (typeof Cparticipation.Psingular)}
+export class Cparticipation extends AlanObject {
+	public static Pconditional:Cparticipation = new class PrimitiveInstance extends Cparticipation {
+		constructor () {
+			super({name: 'conditional', definition: undefined as unknown as Cparticipation})
+			this.variant.definition = this;
+		}
+	}
+	public static Psingular:Cparticipation = new class PrimitiveInstance extends Cparticipation {
+		constructor () {
+			super({name: 'singular', definition: undefined as unknown as Cparticipation})
+			this.variant.definition = this;
+		}
+	}
+	constructor(
+		public readonly variant:Vparticipation) { super(); }
+	public cast<K extends Vparticipation['name']>(_variant:K):Extract<Vparticipation, {name:K}>['definition'] {
+		return this.variant.definition as any;
+	}
+	switch<TS> (cases:{[K in Vparticipation['name']]:(($:Extract<Vparticipation, {name:K}>['definition']) => TS) | (() => TS) | Exclude<TS, Function>}):TS {
+		const handler = cases[this.variant.name];
+		if (isFunction(handler)) {
+			return handler(this.variant.definition as any);
+		} else {
+			return handler as Exclude<TS, Function>;
+		}
+	}
+	public get component_root() { return this; }
+	public get path() { return `/participation`; }
+	public is(other:Cparticipation):boolean {
+		return this.variant.name === other.variant.name
+			&& (this.variant.definition === other.variant.definition || this.variant.definition.is(other.variant.definition as any));
+	}
+}
+type Vreference__interface = { name: 'defined', definition: Creferencer}|{ name: 'undefined', definition: (typeof Creference__interface.Pundefined)}
+export class Creference__interface extends AlanObject {
+	public static Pundefined:Creference__interface = new class PrimitiveInstance extends Creference__interface {
+		constructor () {
+			super({name: 'undefined', definition: undefined as unknown as Creference__interface})
+			this.variant.definition = this;
+		}
+	}
+	constructor(
+		public readonly variant:Vreference__interface) { super(); }
+	public cast<K extends Vreference__interface['name']>(_variant:K):Extract<Vreference__interface, {name:K}>['definition'] {
+		return this.variant.definition as any;
+	}
+	switch<TS> (cases:{[K in Vreference__interface['name']]:(($:Extract<Vreference__interface, {name:K}>['definition']) => TS) | (() => TS) | Exclude<TS, Function>}):TS {
+		const handler = cases[this.variant.name];
+		if (isFunction(handler)) {
+			return handler(this.variant.definition as any);
+		} else {
+			return handler as Exclude<TS, Function>;
+		}
+	}
+	public get component_root() { return this; }
+	public get path() { return `/reference`; }
+	public is(other:Creference__interface):boolean {
+		return this.variant.name === other.variant.name
+			&& (this.variant.definition === other.variant.definition || this.variant.definition.is(other.variant.definition as any));
+	}
+}
 export type Treferencer = {
-	'collection':string;
-	'head':Tnode_selection_path;
-	'tail':Tnode_content_path;
+	'has tail':'no'|['no', {}]|['yes', Tyes__has_tail];
+	'head':Tnode_path;
+	'rules':Twhere_clause;
+	'type':['sibling', Tsibling]|['unrestricted', Tunrestricted];
 };
 export class Creferencer extends AlanNode {
+	public definitions:{
+		reference: Creference__interface;
+	} = {
+		reference: new Creference__interface({name:'defined', definition: this})
+	}
 	public readonly properties:{
-		readonly collection:Creferencer.Dcollection,
-		readonly head:Cnode_selection_path,
-		readonly tail:Cnode_content_path
+		readonly has_tail:Creferencer.Dhas_tail<
+			{ name: 'no', node:Cno__has_tail, init:Tno__has_tail}|
+			{ name: 'yes', node:Cyes__has_tail, init:Tyes__has_tail}>,
+		readonly head:Cnode_path,
+		readonly rules:Cwhere_clause,
+		readonly type:Creferencer.Dtype<
+			{ name: 'sibling', node:Csibling, init:Tsibling}|
+			{ name: 'unrestricted', node:Cunrestricted, init:Tunrestricted}>
 	};
 	public readonly output:{
-		referenced_interface_node: () => interface_.Cnode;
+		direction: () => interface_.Cdirection;
+		referenced_node: () => interface_.Cnode;
 	} = {
-		referenced_interface_node: cache(() =>
+		direction: cache(() =>
 			resolve(this).then(this_context => resolve(this_context)
-				.then(context => context?.properties.tail)
-				.then(context => context?.component_root.output.result_interface_node())
+				.then(context => context?.properties.has_tail.state.node.output.direction())
+				.result!
+			).result!),
+		referenced_node: cache(() =>
+			resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.has_tail.state.node.output.node())
 				.result!
 			).result!)
 	};
 	constructor(init:Treferencer, public location:AlanNode, public input: {
-		context_node: () => interface_.Cnode
+		this: () => interface_.Cobject
 	}) {
 		super();
 		const $this = this;
 		this.properties = {
-			collection: new Creferencer.Dcollection(init['collection'], $this),
+			has_tail: new Creferencer.Dhas_tail(init['has tail'], $this),
 			head: new Creferencer.Dhead(init['head'], $this),
-			tail: new Creferencer.Dtail(init['tail'], $this)
+			rules: new Creferencer.Drules(init['rules'], $this),
+			type: new Creferencer.Dtype(init['type'], $this)
 		};
 	}
 	public get root() { return this.location.root; }
 	public get component_root() { return this; }
 	public get path() { return `${this.location.path}/referencer`; }
 }
+export type Tno__has_tail = {
+};
+export class Cno__has_tail extends AlanNode {
+	public readonly output:{
+		direction: () => interface_.Cdirection;
+		node: () => interface_.Cnode;
+	} = {
+		direction: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.parent)
+				.then(context => context?.properties.head)
+				.then(context => context?.component_root.output.direction())
+				.result!
+			).result!, false),
+		node: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.parent)
+				.then(context => context?.properties.type.state.node.output.collection())
+				.then(context => context?.properties.node)
+				.result!
+			).result!, false)
+	}
+	constructor(init:Tno__has_tail, public parent:Creferencer) {
+		super();
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/has tail?no`; }
+}
+export type Tyes__has_tail = {
+	'tail':Tnode_path_tail;
+};
+export class Cyes__has_tail extends AlanNode {
+	public readonly properties:{
+		readonly tail:Cnode_path_tail
+	};
+	public readonly output:{
+		direction: () => interface_.Cdirection;
+		node: () => interface_.Cnode;
+	} = {
+		direction: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.tail)
+				.then(context => context?.component_root.output.direction())
+				.result!
+			).result!, false),
+		node: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.tail)
+				.then(context => context?.component_root.output.node())
+				.result!
+			).result!, false)
+	}
+	constructor(init:Tyes__has_tail, public parent:Creferencer) {
+		super();
+		const $this = this;
+		this.properties = {
+			tail: new Cyes__has_tail.Dtail(init['tail'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/has tail?yes`; }
+}
+export type Tsibling = {
+	'graph participation':'no'|['no', {}]|['yes', Tyes__graph_participation];
+};
+export class Csibling extends AlanNode {
+	public readonly properties:{
+		readonly graph_participation:Csibling.Dgraph_participation<
+			{ name: 'no', node:Cno__graph_participation, init:Tno__graph_participation}|
+			{ name: 'yes', node:Cyes__graph_participation, init:Tyes__graph_participation}>
+	};
+	public readonly output:{
+		collection: () => interface_.Ccollection__type__property;
+	} = {
+		collection: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.inferences.collection()).result!
+			).result!, false)
+	}
+	public readonly inferences:{
+		collection: () => interface_.Ccollection__type__property
+	} = {
+		collection: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.properties.head)
+			.then(context => context?.component_root.output.node())
+			.then(context => context?.component_root.output.location())
+			.then(context => context?.cast('collection'))
+			.result!, true)
+	}
+	constructor(init:Tsibling, public parent:Creferencer) {
+		super();
+		const $this = this;
+		this.properties = {
+			graph_participation: new Csibling.Dgraph_participation(init['graph participation'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/type?sibling`; }
+}
+export type Tno__graph_participation = {
+};
+export class Cno__graph_participation extends AlanNode {
+	constructor(init:Tno__graph_participation, public parent:Csibling) {
+		super();
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent; }
+	public get path() { return `${this.parent.path}/graph participation?no`; }
+}
+export type Tyes__graph_participation = {
+	'graphs':Record<string, {}>;
+};
+export class Cyes__graph_participation extends AlanNode {
+	public readonly properties:{
+		readonly graphs:Cyes__graph_participation.Dgraphs
+	};
+	public readonly inferences:{
+		self_navigation: () => interface_.Cdirection
+	} = {
+		self_navigation: cache(() => resolve(this.parent).then(() => this.parent).then(context => context?.parent)
+			.then(context => context?.properties.head)
+			.then(context => context?.component_root.output.direction())
+			.then(context => context?.cast('self'))
+			.result!, true)
+	}
+	constructor(init:Tyes__graph_participation, public parent:Csibling) {
+		super();
+		const $this = this;
+		this.properties = {
+			graphs: new Cyes__graph_participation.Dgraphs(init['graphs'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent; }
+	public get path() { return `${this.parent.path}/graph participation?yes`; }
+}
+export class Kgraphs__yes extends Reference<interface_.Cgraphs__graphs_definition, string> {
+	constructor(key:string, $this:Cgraphs__yes) {
+		super(key, cache(() => resolve($this.parent).then(() => $this.parent).then(context => context?.parent)
+			.then(context => context?.inferences.collection()).then(context => context?.properties.graphs)
+			.then(context => context?.properties.graphs.get(this.entry))
+			.result!, true))
+	}
+}
+export type Tgraphs__yes = {
+};
+export class Cgraphs__yes extends AlanNode {
+	public key:Kgraphs__yes;
+	constructor(key:string, init:Tgraphs__yes, public parent:Cyes__graph_participation) {
+		super();
+		const $this = this;
+		this.key = new Kgraphs__yes(key, $this);
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent.parent; }
+	public get path() { return `${this.parent.path}/graphs[${this.key.entry}]`; }
+}
+export type Tunrestricted = {
+	'collection':string;
+};
+export class Cunrestricted extends AlanNode {
+	public readonly properties:{
+		readonly collection:Cunrestricted.Dcollection
+	};
+	public readonly output:{
+		collection: () => interface_.Ccollection__type__property;
+	} = {
+		collection: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.collection.ref)
+				.result!
+			).result!, false)
+	}
+	constructor(init:Tunrestricted, public parent:Creferencer) {
+		super();
+		const $this = this;
+		this.properties = {
+			collection: new Cunrestricted.Dcollection(init['collection'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/type?unrestricted`; }
+}
 type Vstate__interface = { name: 'state node', definition: Cstates__state_group__type__property}|{ name: 'state parameter', definition: Cstates__state_group__type__properties}
 export class Cstate__interface extends AlanObject {
 	constructor(
 		public readonly variant:Vstate__interface, public input: {
-			value: () => interface_.Cvalue
+			value: () => interface_.Cobject
 		}) { super(); }
 	public readonly output:{
-		value: () => interface_.Cvalue;
+		value: () => interface_.Cobject;
 	} = {
 		value: cache(() =>
 			resolve(this).then(this_context => resolve(this_context)
@@ -2203,24 +3071,47 @@ type Vvalue = { name: 'choice', definition: Cchoice}|{ name: 'collection', defin
 export class Cvalue extends AlanObject {
 	public static Pfile:Cvalue = new class PrimitiveInstance extends Cvalue {
 		constructor () {
-			super({name: 'file', definition: undefined as unknown as Cvalue})
+			super({name: 'file', definition: undefined as unknown as Cvalue}, {
+				value_type: () => resolve(this).then(() => interface_.Cvalue_type.Pscalar)
+				.result
+				}
+			)
 			this.variant.definition = this;
 		}
 	}
 	public static Pnumber:Cvalue = new class PrimitiveInstance extends Cvalue {
 		constructor () {
-			super({name: 'number', definition: undefined as unknown as Cvalue})
+			super({name: 'number', definition: undefined as unknown as Cvalue}, {
+				value_type: () => resolve(this).then(() => interface_.Cvalue_type.Pscalar)
+				.result
+				}
+			)
 			this.variant.definition = this;
 		}
 	}
 	public static Ptext:Cvalue = new class PrimitiveInstance extends Cvalue {
 		constructor () {
-			super({name: 'text', definition: undefined as unknown as Cvalue})
+			super({name: 'text', definition: undefined as unknown as Cvalue}, {
+				value_type: () => resolve(this).then(() => interface_.Cvalue_type.Pscalar)
+				.result
+				}
+			)
 			this.variant.definition = this;
 		}
 	}
 	constructor(
-		public readonly variant:Vvalue) { super(); }
+		public readonly variant:Vvalue, public input: {
+			value_type: () => interface_.Cvalue_type
+		}) { super(); }
+	public readonly output:{
+		value_type: () => interface_.Cvalue_type;
+	} = {
+		value_type: cache(() =>
+			resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.component_root.input.value_type())
+				.result!
+			).result!)
+	};
 	public cast<K extends Vvalue['name']>(_variant:K):Extract<Vvalue, {name:K}>['definition'] {
 		return this.variant.definition as any;
 	}
@@ -2243,11 +3134,18 @@ type Vvalue_member = { name: 'parameter', definition: Cproperties}|{ name: 'prop
 export class Cvalue_member extends AlanObject {
 	constructor(
 		public readonly variant:Vvalue_member, public input: {
+			member: () => interface_.Cmember,
 			value: () => interface_.Cvalue
 		}) { super(); }
 	public readonly output:{
+		member: () => interface_.Cmember;
 		value: () => interface_.Cvalue;
 	} = {
+		member: cache(() =>
+			resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.component_root.input.member())
+				.result!
+			).result!),
 		value: cache(() =>
 			resolve(this).then(this_context => resolve(this_context)
 				.then(context => context?.component_root.input.value())
@@ -2272,18 +3170,230 @@ export class Cvalue_member extends AlanObject {
 			&& (this.variant.definition === other.variant.definition || this.variant.definition.is(other.variant.definition as any));
 	}
 }
+type Vvalue_type = { name: 'choice', definition: Cchoice}|{ name: 'object', definition: Cobject}|{ name: 'scalar', definition: (typeof Cvalue_type.Pscalar)}
+export class Cvalue_type extends AlanObject {
+	public static Pscalar:Cvalue_type = new class PrimitiveInstance extends Cvalue_type {
+		constructor () {
+			super({name: 'scalar', definition: undefined as unknown as Cvalue_type})
+			this.variant.definition = this;
+		}
+	}
+	constructor(
+		public readonly variant:Vvalue_type) { super(); }
+	public cast<K extends Vvalue_type['name']>(_variant:K):Extract<Vvalue_type, {name:K}>['definition'] {
+		return this.variant.definition as any;
+	}
+	switch<TS> (cases:{[K in Vvalue_type['name']]:(($:Extract<Vvalue_type, {name:K}>['definition']) => TS) | (() => TS) | Exclude<TS, Function>}):TS {
+		const handler = cases[this.variant.name];
+		if (isFunction(handler)) {
+			return handler(this.variant.definition as any);
+		} else {
+			return handler as Exclude<TS, Function>;
+		}
+	}
+	public get component_root() { return this; }
+	public get path() { return `/value type`; }
+	public is(other:Cvalue_type):boolean {
+		return this.variant.name === other.variant.name
+			&& (this.variant.definition === other.variant.definition || this.variant.definition.is(other.variant.definition as any));
+	}
+}
+export type Twhere_clause = {
+	'has rule':'no'|['no', {}]|['yes', Tyes__has_rule];
+	'rules':Record<string, Trules>;
+};
+export class Cwhere_clause extends AlanNode {
+	public readonly properties:{
+		readonly has_rule:Cwhere_clause.Dhas_rule<
+			{ name: 'no', node:Cno__has_rule, init:Tno__has_rule}|
+			{ name: 'yes', node:Cyes__has_rule, init:Tyes__has_rule}>,
+		readonly rules:Cwhere_clause.Drules
+	};
+	constructor(init:Twhere_clause, public location:AlanNode, public input: {
+		context_constraint: () => interface_.Ccontext_constraint,
+		context_direction: () => interface_.Cdirection,
+		context_node: () => interface_.Cnode,
+		this: () => interface_.Cobject
+	}) {
+		super();
+		const $this = this;
+		this.properties = {
+			has_rule: new Cwhere_clause.Dhas_rule(init['has rule'], $this),
+			rules: new Cwhere_clause.Drules(init['rules'], $this)
+		};
+	}
+	public get root() { return this.location.root; }
+	public get component_root() { return this; }
+	public get path() { return `${this.location.path}/where clause`; }
+}
+export type Tno__has_rule = {
+};
+export class Cno__has_rule extends AlanNode {
+	constructor(init:Tno__has_rule, public parent:Cwhere_clause) {
+		super();
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/has rule?no`; }
+}
+export type Tyes__has_rule = {
+	'first':string;
+};
+export class Cyes__has_rule extends AlanNode {
+	public readonly properties:{
+		readonly first:Cyes__has_rule.Dfirst
+	};
+	constructor(init:Tyes__has_rule, public parent:Cwhere_clause) {
+		super();
+		const $this = this;
+		this.properties = {
+			first: new Cyes__has_rule.Dfirst(init['first'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/has rule?yes`; }
+}
+export type Trules = {
+	'context':['context', Tcontext]|['sibling rule', Tsibling_rule];
+	'has successor':'no'|['no', {}]|['yes', Tyes__has_successor__rules];
+	'tail':Tnode_path_tail;
+};
+export class Crules extends AlanNode {
+	public key:string;
+	public readonly properties:{
+		readonly context:Crules.Dcontext<
+			{ name: 'context', node:Ccontext, init:Tcontext}|
+			{ name: 'sibling rule', node:Csibling_rule, init:Tsibling_rule}>,
+		readonly has_successor:Crules.Dhas_successor<
+			{ name: 'no', node:Cno__has_successor__rules, init:Tno__has_successor__rules}|
+			{ name: 'yes', node:Cyes__has_successor__rules, init:Tyes__has_successor__rules}>,
+		readonly tail:Cnode_path_tail
+	};
+	constructor(key:string, init:Trules, public parent:Cwhere_clause) {
+		super();
+		const $this = this;
+		this.key = key;
+		this.properties = {
+			context: new Crules.Dcontext(init['context'], $this),
+			has_successor: new Crules.Dhas_successor(init['has successor'], $this),
+			tail: new Crules.Dtail(init['tail'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/rules[${this.key}]`; }
+}
+export type Tcontext = {
+	'path':Tcontext_node_path;
+};
+export class Ccontext extends AlanNode {
+	public readonly properties:{
+		readonly path:Ccontext_node_path
+	};
+	public readonly output:{
+		direction: () => interface_.Cdirection;
+		node: () => interface_.Cnode;
+	} = {
+		direction: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.path)
+				.then(context => context?.component_root.output.direction())
+				.result!
+			).result!, false),
+		node: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.path)
+				.then(context => context?.component_root.output.node())
+				.result!
+			).result!, false)
+	}
+	constructor(init:Tcontext, public parent:Crules) {
+		super();
+		const $this = this;
+		this.properties = {
+			path: new Ccontext.Dpath(init['path'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent; }
+	public get path() { return `${this.parent.path}/context?context`; }
+}
+export type Tsibling_rule = {
+	'rule':string;
+};
+export class Csibling_rule extends AlanNode {
+	public readonly properties:{
+		readonly rule:Csibling_rule.Drule
+	};
+	public readonly output:{
+		direction: () => interface_.Cdirection;
+		node: () => interface_.Cnode;
+	} = {
+		direction: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.rule.ref)
+				.then(context => context?.properties.tail)
+				.then(context => context?.component_root.output.direction())
+				.result!
+			).result!, false),
+		node: cache(() => resolve(this).then(this_context => resolve(this_context)
+				.then(context => context?.properties.rule.ref)
+				.then(context => context?.properties.tail)
+				.then(context => context?.component_root.output.node())
+				.result!
+			).result!, false)
+	}
+	constructor(init:Tsibling_rule, public parent:Crules) {
+		super();
+		const $this = this;
+		this.properties = {
+			rule: new Csibling_rule.Drule(init['rule'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent; }
+	public get path() { return `${this.parent.path}/context?sibling rule`; }
+}
+export type Tno__has_successor__rules = {
+};
+export class Cno__has_successor__rules extends AlanNode {
+	constructor(init:Tno__has_successor__rules, public parent:Crules) {
+		super();
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent; }
+	public get path() { return `${this.parent.path}/has successor?no`; }
+}
+export type Tyes__has_successor__rules = {
+	'successor':string;
+};
+export class Cyes__has_successor__rules extends AlanNode {
+	public readonly properties:{
+		readonly successor:Cyes__has_successor__rules.Dsuccessor
+	};
+	constructor(init:Tyes__has_successor__rules, public parent:Crules) {
+		super();
+		const $this = this;
+		this.properties = {
+			successor: new Cyes__has_successor__rules.Dsuccessor(init['successor'], $this)
+		};
+	}
+	public get root() { return this.component_root.root; }
+	public get component_root() { return this.parent.parent; }
+	public get path() { return `${this.parent.path}/has successor?yes`; }
+}
 
 export type Tinterface = {
 	'context keys':Record<string, {}>;
-	'numerical types':Record<string, Tnumerical_types>;
+	'numerical types':Record<string, {}>;
 	'root':Tnode;
 };
 export class Cinterface extends AlanNode {
 	public key?:string;
 	public get root() { return this; }
 	public definitions:{
+		entity: Centity;
 		node_location: Cnode_location;
 	} = {
+		entity: new Centity({name:'root', definition: this}),
 		node_location: new Cnode_location({name:'root', definition: this})
 	}
 	public readonly properties:{
@@ -2316,394 +3426,263 @@ export class Ccontext_keys extends AlanNode {
 	public get path() { return `${this.parent.path}/context keys[${this.key}]`; }
 }
 export type Tnumerical_types = {
-	'has factor':'no'|['no', {}]|['yes', Tyes__has_factor];
 };
 export class Cnumerical_types extends AlanNode {
 	public key:string;
-	public readonly properties:{
-		readonly has_factor:Cnumerical_types.Dhas_factor<
-			{ name: 'no', node:Cno__has_factor, init:Tno__has_factor}|
-			{ name: 'yes', node:Cyes__has_factor, init:Tyes__has_factor}>
-	};
 	constructor(key:string, init:Tnumerical_types, public parent:Cinterface) {
 		super();
 		const $this = this;
 		this.key = key;
-		this.properties = {
-			has_factor: new Cnumerical_types.Dhas_factor(init['has factor'], $this)
-		};
 	}
 	public get root() { return this.component_root.root; }
 	public get component_root() { return this.parent; }
 	public get path() { return `${this.parent.path}/numerical types[${this.key}]`; }
 }
-export type Tno__has_factor = {
-};
-export class Cno__has_factor extends AlanNode {
-	constructor(init:Tno__has_factor, public parent:Cnumerical_types) {
-		super();
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/has factor?no`; }
-}
-export type Tyes__has_factor = {
-	'base':number;
-	'exponent':number;
-};
-export class Cyes__has_factor extends AlanNode {
-	public readonly properties:{
-		readonly base:number,
-		readonly exponent:number
-	};
-	constructor(init:Tyes__has_factor, public parent:Cnumerical_types) {
-		super();
-		const $this = this;
-		this.properties = {
-			base: init['base'],
-			exponent: init['exponent']
-		};
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent.parent; }
-	public get path() { return `${this.parent.path}/has factor?yes`; }
-}
 
-/* property classes */export namespace Cancestor_parameters_selection {
-	export class Dhas_steps<T extends
-		{ name: 'no', node:Cno__has_steps__ancestor_parameters_selection, init:Tno__has_steps__ancestor_parameters_selection}|
-		{ name: 'yes', node:Cyes__has_steps__ancestor_parameters_selection, init:Tyes__has_steps__ancestor_parameters_selection}> extends StateGroup<T> {
+/* property classes */export namespace Ccontext_node_path {
+	export class Dcontext<T extends
+		{ name: 'context node', node:Ccontext_node, init:Tcontext_node}|
+		{ name: 'parameter definition', node:Cparameter_definition__context, init:Tparameter_definition__context}|
+		{ name: 'root', node:Croot, init:Troot}|
+		{ name: 'this node', node:Cthis_node, init:Tthis_node}> extends StateGroup<T> {
 		protected initializer(state:T['name']) {
 			switch (state) {
-				case 'no': return (init:Tno__has_steps__ancestor_parameters_selection, parent:Cancestor_parameters_selection) => new Cno__has_steps__ancestor_parameters_selection(init, parent);
-				case 'yes': return (init:Tyes__has_steps__ancestor_parameters_selection, parent:Cancestor_parameters_selection) => new Cyes__has_steps__ancestor_parameters_selection(init, parent);
+				case 'context node': return (init:Tcontext_node, parent:Ccontext_node_path) => new Ccontext_node(init, parent);
+				case 'parameter definition': return (init:Tparameter_definition__context, parent:Ccontext_node_path) => new Cparameter_definition__context(init, parent);
+				case 'root': return (init:Troot, parent:Ccontext_node_path) => new Croot(init, parent);
+				case 'this node': return (init:Tthis_node, parent:Ccontext_node_path) => new Cthis_node(init, parent);
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
 		protected resolver(state:T['name']) {
 			switch (state) {
-				case 'no': return resolve_no__has_steps__ancestor_parameters_selection;
-				case 'yes': return resolve_yes__has_steps__ancestor_parameters_selection;
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		constructor(data:Tancestor_parameters_selection['has steps'], parent:Cancestor_parameters_selection) {
-			super(data, parent);
-		}
-	}
-}
-export namespace Cyes__has_steps__ancestor_parameters_selection {
-	export class Dtail extends Cancestor_parameters_selection {
-		constructor(data:Tyes__has_steps__ancestor_parameters_selection['tail'], parent:Cyes__has_steps__ancestor_parameters_selection) {
-			super(data, parent, {
-				context_parameters: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.inferences.parent_parameter()).result!
-					).result!, false)
-			})
-		}
-	}
-	export class Dtype<T extends
-		{ name: 'matrix parent', node:Cmatrix_parent, init:Tmatrix_parent}|
-		{ name: 'state parent', node:Cstate_parent__type__yes__has_steps__ancestor_parameters_selection, init:Tstate_parent__type__yes__has_steps__ancestor_parameters_selection}> extends StateGroup<T> {
-		protected initializer(state:T['name']) {
-			switch (state) {
-				case 'matrix parent': return (init:Tmatrix_parent, parent:Cyes__has_steps__ancestor_parameters_selection) => new Cmatrix_parent(init, parent);
-				case 'state parent': return (init:Tstate_parent__type__yes__has_steps__ancestor_parameters_selection, parent:Cyes__has_steps__ancestor_parameters_selection) => new Cstate_parent__type__yes__has_steps__ancestor_parameters_selection(init, parent);
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		protected resolver(state:T['name']) {
-			switch (state) {
-				case 'matrix parent': return resolve_matrix_parent;
-				case 'state parent': return resolve_state_parent__type__yes__has_steps__ancestor_parameters_selection;
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		constructor(data:Tyes__has_steps__ancestor_parameters_selection['type'], parent:Cyes__has_steps__ancestor_parameters_selection) {
-			super(data, parent);
-		}
-	}
-}
-export namespace Ccommand_parameter_referencer {
-	export class Dcollection extends Reference<interface_.Ccollection__type__property,string> {
-
-		constructor(data:string, $this:Ccommand_parameter_referencer) {
-			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.properties.head)
-				.then(context => context?.component_root.output.result_interface_node())
-				.then(context => context?.properties.attributes.get(this.entry))
-
-				.then(context => context?.properties.type.cast('property').properties.type.cast('collection')).result!, true))
-		}
-	}
-	export class Dcontext_type<T extends
-		{ name: 'command parameter', node:Ccommand_parameter, init:Tcommand_parameter}|
-		{ name: 'context node', node:Ccontext_node, init:Tcontext_node}> extends StateGroup<T> {
-		protected initializer(state:T['name']) {
-			switch (state) {
-				case 'command parameter': return (init:Tcommand_parameter, parent:Ccommand_parameter_referencer) => new Ccommand_parameter(init, parent);
-				case 'context node': return (init:Tcontext_node, parent:Ccommand_parameter_referencer) => new Ccontext_node(init, parent);
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		protected resolver(state:T['name']) {
-			switch (state) {
-				case 'command parameter': return resolve_command_parameter;
 				case 'context node': return resolve_context_node;
+				case 'parameter definition': return resolve_parameter_definition__context;
+				case 'root': return resolve_root;
+				case 'this node': return resolve_this_node;
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		constructor(data:Tcommand_parameter_referencer['context type'], parent:Ccommand_parameter_referencer) {
+		constructor(data:Tcontext_node_path['context'], parent:Ccontext_node_path) {
 			super(data, parent);
 		}
 	}
-	export class Dhead extends Cnode_selection_path {
-		constructor(data:Tcommand_parameter_referencer['head'], parent:Ccommand_parameter_referencer) {
-			super(data, parent, {
-				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.properties.context_type.state.node.output.result_node())
-						.result!
-					).result!, false)
-			})
-		}
-	}
-	export class Dtail extends Cnode_content_path {
-		constructor(data:Tcommand_parameter_referencer['tail'], parent:Ccommand_parameter_referencer) {
-			super(data, parent, {
-				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.properties.collection.ref)
-						.then(context => context?.properties.node)
-						.result!
-					).result!, false)
-			})
-		}
-	}
 }
-export namespace Ccommand_parameter {
-	export class Dancestor_selection extends Cancestor_parameters_selection {
-		constructor(data:Tcommand_parameter['ancestor selection'], parent:Ccommand_parameter) {
+export namespace Cparameter_definition__context {
+	export class Dhead extends Ccontext_parameter_path {
+		constructor(data:Tparameter_definition__context['head'], parent:Cparameter_definition__context) {
 			super(data, parent, {
-				context_parameters: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.component_root.input.parameter())
-						.result!
+				context_parameter: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.inferences.context_parameter()).result!
 					).result!, false)
 			})
 		}
 	}
 	export class Dtype<T extends
-		{ name: 'key', node:Ckey, init:Tkey}|
-		{ name: 'reference', node:Creference__type__command_parameter, init:Treference__type__command_parameter}> extends StateGroup<T> {
+		{ name: 'reference', node:Creference__type__parameter_definition, init:Treference__type__parameter_definition}|
+		{ name: 'state context rule', node:Cstate_context_rule__type__parameter_definition, init:Tstate_context_rule__type__parameter_definition}> extends StateGroup<T> {
 		protected initializer(state:T['name']) {
 			switch (state) {
-				case 'key': return (init:Tkey, parent:Ccommand_parameter) => new Ckey(init, parent);
-				case 'reference': return (init:Treference__type__command_parameter, parent:Ccommand_parameter) => new Creference__type__command_parameter(init, parent);
+				case 'reference': return (init:Treference__type__parameter_definition, parent:Cparameter_definition__context) => new Creference__type__parameter_definition(init, parent);
+				case 'state context rule': return (init:Tstate_context_rule__type__parameter_definition, parent:Cparameter_definition__context) => new Cstate_context_rule__type__parameter_definition(init, parent);
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
 		protected resolver(state:T['name']) {
 			switch (state) {
-				case 'key': return resolve_key;
-				case 'reference': return resolve_reference__type__command_parameter;
+				case 'reference': return resolve_reference__type__parameter_definition;
+				case 'state context rule': return resolve_state_context_rule__type__parameter_definition;
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		constructor(data:Tcommand_parameter['type'], parent:Ccommand_parameter) {
+		constructor(data:Tparameter_definition__context['type'], parent:Cparameter_definition__context) {
 			super(data, parent);
 		}
 	}
 }
-export namespace Creference__type__command_parameter {
-	export class Dreference extends Reference<interface_.Creference__type__properties,string> {
+export namespace Creference__type__parameter_definition {
+	export class Dreference extends Reference<interface_.Cyes__has_constraint__text__type__properties,string> {
+		public readonly inferences:{
+			existing_entry_reference: () => interface_.Cexisting
+		}
 
-		constructor(data:string, $this:Creference__type__command_parameter) {
+		constructor(data:string, $this:Creference__type__parameter_definition) {
 			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.parent)
-				.then(context => context?.properties.ancestor_selection)
-				.then(context => context?.component_root.output.result_parameters())
+				.then(context => context?.properties.head)
+				.then(context => context?.component_root.output.parameter())
 				.then(context => context?.properties.properties.get(this.entry))
 
-				.then(context => context?.properties.type.cast('reference')).result!, true))
+				.then(context => context?.properties.type.cast('text').properties.has_constraint.cast('yes')).result!, true))
+			this.inferences = {
+				existing_entry_reference: cache(() => resolve($this.properties.reference.ref).then(context => context)
+					.then(context => context?.properties.type.cast('existing'))
+					.result!, true)
+			}
 		}
 	}
 }
-export namespace Ccommand_parameters {
-	export class Dproperties extends AlanDictionary<{ node:Cproperties, init:Tproperties},Ccommand_parameters> {
-		protected graph_iterator(graph:string):(node:Cproperties) => Cproperties { throw new Error(`Dictionary has no graph iterators.`); }
-		protected initialize(parent:Ccommand_parameters, key:string, entry_init:Tproperties) { return new Cproperties(key, entry_init, parent); }
-		protected resolve = resolve_properties
-		protected get path() { return `${this.parent.path}/properties`; }
-		constructor(data:Tcommand_parameters['properties'], parent:Ccommand_parameters) {
-			super(data, parent);
-		}
-	}
-}
-export namespace Cproperties {
-	export class Dtype<T extends
-		{ name: 'file', node:Cfile__type__properties, init:Tfile__type__properties}|
-		{ name: 'matrix', node:Cmatrix__type__properties, init:Tmatrix__type__properties}|
-		{ name: 'number', node:Cnumber__type__properties, init:Tnumber__type__properties}|
-		{ name: 'reference', node:Creference__type__properties, init:Treference__type__properties}|
-		{ name: 'state group', node:Cstate_group__type__properties, init:Tstate_group__type__properties}|
-		{ name: 'text', node:Ctext__type__properties, init:Ttext__type__properties}> extends StateGroup<T> {
-		protected initializer(state:T['name']) {
-			switch (state) {
-				case 'file': return (init:Tfile__type__properties, parent:Cproperties) => new Cfile__type__properties(init, parent);
-				case 'matrix': return (init:Tmatrix__type__properties, parent:Cproperties) => new Cmatrix__type__properties(init, parent);
-				case 'number': return (init:Tnumber__type__properties, parent:Cproperties) => new Cnumber__type__properties(init, parent);
-				case 'reference': return (init:Treference__type__properties, parent:Cproperties) => new Creference__type__properties(init, parent);
-				case 'state group': return (init:Tstate_group__type__properties, parent:Cproperties) => new Cstate_group__type__properties(init, parent);
-				case 'text': return (init:Ttext__type__properties, parent:Cproperties) => new Ctext__type__properties(init, parent);
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		protected resolver(state:T['name']) {
-			switch (state) {
-				case 'file': return resolve_file__type__properties;
-				case 'matrix': return resolve_matrix__type__properties;
-				case 'number': return resolve_number__type__properties;
-				case 'reference': return resolve_reference__type__properties;
-				case 'state group': return resolve_state_group__type__properties;
-				case 'text': return resolve_text__type__properties;
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		constructor(data:Tproperties['type'], parent:Cproperties) {
-			super(data, parent);
-		}
-	}
-}
-export namespace Cmatrix__type__properties {
-	export class Dparameters extends Ccommand_parameters {
-		constructor(data:Tmatrix__type__properties['parameters'], parent:Cmatrix__type__properties) {
-			super(data, parent, {
-				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.component_root.input.context_node())
-						.result!
-					).result!, false),
-				location: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.definitions.parameter_location)
-						.result!
-					).result!, false),
-				parent: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.parent)
-						.then(context => context?.parent)
-						.then(context => context?.definitions.parameter_parent)
-						.result!
-					).result!, false)
-			})
-		}
-	}
-	export class Dreferencer extends Ccommand_parameter_referencer {
-		constructor(data:Tmatrix__type__properties['referencer'], parent:Cmatrix__type__properties) {
-			super(data, parent, {
-				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.component_root.input.context_node())
-						.result!
-					).result!, false),
-				parameter: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.parent)
-						.then(context => context?.parent)
-						.result!
-					).result!, false)
-			})
-		}
-	}
-	export class Dtype<T extends
-		{ name: 'dense', node:Cdense, init:Tdense}|
-		{ name: 'sparse', node:Csparse, init:Tsparse}> extends StateGroup<T> {
-		protected initializer(state:T['name']) {
-			switch (state) {
-				case 'dense': return (init:Tdense, parent:Cmatrix__type__properties) => new Cdense(init, parent);
-				case 'sparse': return (init:Tsparse, parent:Cmatrix__type__properties) => new Csparse(init, parent);
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		protected resolver(state:T['name']) {
-			switch (state) {
-				case 'dense': return resolve_dense;
-				case 'sparse': return resolve_sparse;
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		constructor(data:Tmatrix__type__properties['type'], parent:Cmatrix__type__properties) {
-			super(data, parent);
-		}
-	}
-}
-export namespace Cnumber__type__properties {
-	export class Dnumerical_type extends Reference<interface_.Cnumerical_types,string> {
+export namespace Cstate_context_rule__type__parameter_definition {
+	export class Drule extends Reference<interface_.Crules,string> {
 
-		constructor(data:string, $this:Cnumber__type__properties) {
-			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.root)
-				.then(context => context?.properties.numerical_types.get(this.entry))
+		constructor(data:string, $this:Cstate_context_rule__type__parameter_definition) {
+			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.inferences.state()).then(context => context?.properties.context_rules)
+				.then(context => context?.properties.rules.get(this.entry))
 				.result!, true))
 		}
 	}
-	export class Dset<T extends
-		{ name: 'integer', node:Cinteger__set__number__type__properties, init:Tinteger__set__number__type__properties}|
-		{ name: 'natural', node:Cnatural__set__number__type__properties, init:Tnatural__set__number__type__properties}> extends StateGroup<T> {
+}
+export namespace Ccontext_parameter_path {
+	export class Dhas_steps<T extends
+		{ name: 'no', node:Cno__has_steps__context_parameter_path, init:Tno__has_steps__context_parameter_path}|
+		{ name: 'yes', node:Cyes__has_steps__context_parameter_path, init:Tyes__has_steps__context_parameter_path}> extends StateGroup<T> {
 		protected initializer(state:T['name']) {
 			switch (state) {
-				case 'integer': return (init:Tinteger__set__number__type__properties, parent:Cnumber__type__properties) => new Cinteger__set__number__type__properties(init, parent);
-				case 'natural': return (init:Tnatural__set__number__type__properties, parent:Cnumber__type__properties) => new Cnatural__set__number__type__properties(init, parent);
+				case 'no': return (init:Tno__has_steps__context_parameter_path, parent:Ccontext_parameter_path) => new Cno__has_steps__context_parameter_path(init, parent);
+				case 'yes': return (init:Tyes__has_steps__context_parameter_path, parent:Ccontext_parameter_path) => new Cyes__has_steps__context_parameter_path(init, parent);
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
 		protected resolver(state:T['name']) {
 			switch (state) {
-				case 'integer': return resolve_integer__set__number__type__properties;
-				case 'natural': return resolve_natural__set__number__type__properties;
+				case 'no': return resolve_no__has_steps__context_parameter_path;
+				case 'yes': return resolve_yes__has_steps__context_parameter_path;
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		constructor(data:Tnumber__type__properties['set'], parent:Cnumber__type__properties) {
+		constructor(data:Tcontext_parameter_path['has steps'], parent:Ccontext_parameter_path) {
 			super(data, parent);
 		}
 	}
 }
-export namespace Creference__type__properties {
-	export class Dreferencer extends Ccommand_parameter_referencer {
-		constructor(data:Treference__type__properties['referencer'], parent:Creference__type__properties) {
+export namespace Cyes__has_steps__context_parameter_path {
+	export class Dtail extends Ccontext_parameter_path {
+		constructor(data:Tyes__has_steps__context_parameter_path['tail'], parent:Cyes__has_steps__context_parameter_path) {
 			super(data, parent, {
-				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.component_root.input.context_node())
-						.result!
-					).result!, false),
-				parameter: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.parent)
-						.then(context => context?.parent)
+				context_parameter: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.properties.type.state.node.output.parameter())
 						.result!
 					).result!, false)
 			})
 		}
 	}
-}
-export namespace Cstate_group__type__properties {
-	export class Dstates extends AlanDictionary<{ node:Cstates__state_group__type__properties, init:Tstates__state_group__type__properties},Cstate_group__type__properties> {
-		protected graph_iterator(graph:string):(node:Cstates__state_group__type__properties) => Cstates__state_group__type__properties { throw new Error(`Dictionary has no graph iterators.`); }
-		protected initialize(parent:Cstate_group__type__properties, key:string, entry_init:Tstates__state_group__type__properties) { return new Cstates__state_group__type__properties(key, entry_init, parent); }
-		protected resolve = resolve_states__state_group__type__properties
-		protected get path() { return `${this.parent.path}/states`; }
-		constructor(data:Tstate_group__type__properties['states'], parent:Cstate_group__type__properties) {
+	export class Dtype<T extends
+		{ name: 'group', node:Cgroup__type__yes__has_steps__context_parameter_path, init:Tgroup__type__yes__has_steps__context_parameter_path}|
+		{ name: 'parent', node:Cparent__type__yes__has_steps__context_parameter_path, init:Tparent__type__yes__has_steps__context_parameter_path}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'group': return (init:Tgroup__type__yes__has_steps__context_parameter_path, parent:Cyes__has_steps__context_parameter_path) => new Cgroup__type__yes__has_steps__context_parameter_path(init, parent);
+				case 'parent': return (init:Tparent__type__yes__has_steps__context_parameter_path, parent:Cyes__has_steps__context_parameter_path) => new Cparent__type__yes__has_steps__context_parameter_path(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected resolver(state:T['name']) {
+			switch (state) {
+				case 'group': return resolve_group__type__yes__has_steps__context_parameter_path;
+				case 'parent': return resolve_parent__type__yes__has_steps__context_parameter_path;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Tyes__has_steps__context_parameter_path['type'], parent:Cyes__has_steps__context_parameter_path) {
 			super(data, parent);
 		}
 	}
 }
-export namespace Cstates__state_group__type__properties {
-	export class Dparameters extends Ccommand_parameters {
-		constructor(data:Tstates__state_group__type__properties['parameters'], parent:Cstates__state_group__type__properties) {
+export namespace Cgroup__type__yes__has_steps__context_parameter_path {
+	export class Dgroup extends Reference<interface_.Cgroup__type__properties,string> {
+
+		constructor(data:string, $this:Cgroup__type__yes__has_steps__context_parameter_path) {
+			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.component_root.input.context_parameter())
+				.then(context => context?.properties.properties.get(this.entry))
+
+				.then(context => context?.properties.type.cast('group')).result!, true))
+		}
+	}
+}
+export namespace Cgraphs_definition {
+	export class Dgraphs extends AlanDictionary<{ node:Cgraphs__graphs_definition, init:Tgraphs__graphs_definition},Cgraphs_definition> {
+		protected graph_iterator(graph:string):(node:Cgraphs__graphs_definition) => Cgraphs__graphs_definition { throw new Error(`Dictionary has no graph iterators.`); }
+		protected initialize(parent:Cgraphs_definition, key:string, entry_init:Tgraphs__graphs_definition) { return new Cgraphs__graphs_definition(key, entry_init, parent); }
+		protected resolve = resolve_graphs__graphs_definition
+		protected get path() { return `${this.parent.path}/graphs`; }
+		constructor(data:Tgraphs_definition['graphs'], parent:Cgraphs_definition) {
+			super(data, parent);
+		}
+	}
+}
+export namespace Cgraphs__graphs_definition {
+	export class Dtype<T extends
+		{ name: 'acyclic', node:Cacyclic, init:Tacyclic}|
+		{ name: 'ordered', node:Cordered, init:Tordered}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'acyclic': return (init:Tacyclic, parent:Cgraphs__graphs_definition) => new Cacyclic(init, parent);
+				case 'ordered': return (init:Tordered, parent:Cgraphs__graphs_definition) => new Cordered(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected resolver(state:T['name']) {
+			switch (state) {
+				case 'acyclic': return resolve_acyclic;
+				case 'ordered': return resolve_ordered;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Tgraphs__graphs_definition['type'], parent:Cgraphs__graphs_definition) {
+			super(data, parent);
+		}
+	}
+}
+export namespace Cordered {
+	export class Dordering_property extends Reference<interface_.Cproperty,string> {
+		public readonly inferences:{
+			graph_participation: () => interface_.Cyes__graph_participation,
+			participates_in_this_graph: () => interface_.Cgraphs__yes,
+			reference: () => interface_.Cyes__has_constraint__text__type__property
+		}
+
+		constructor(data:string, $this:Cordered) {
+			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.properties.path)
+				.then(context => context?.component_root.output.node())
+				.then(context => context?.properties.attributes.get(this.entry))
+
+				.then(context => context?.properties.type.cast('property')).result!, true))
+			this.inferences = {
+				graph_participation: cache(() => resolve($this.properties.ordering_property.ref).then(() => $this.properties.ordering_property.inferences.reference())
+					.then(context => context?.properties.referencer)
+					.then(context => context?.properties.type.cast('sibling').properties.graph_participation.cast('yes'))
+					.result!, true),
+				participates_in_this_graph: cache(() => resolve($this.properties.ordering_property.ref).then(() => $this.properties.ordering_property.inferences.graph_participation())
+					.then(context => {
+						const key_object = resolve(context).then(() => $this).then(context => context?.parent)
+						.result;
+						return context.properties.graphs.get(key_object?.key);
+					})
+					.result!, true),
+				reference: cache(() => resolve($this.properties.ordering_property.ref).then(context => context)
+					.then(context => context?.properties.type.cast('text').properties.has_constraint.cast('yes'))
+					.result!, true)
+			}
+		}
+	}
+	export class Dpath extends Cnode_path_tail {
+		constructor(data:Tordered['path'], parent:Cordered) {
 			super(data, parent, {
+				context_direction: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(() => interface_.Cdirection.Pself)
+						.result!
+					).result!, false),
 				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.component_root.input.context_node())
+						.then(context => context?.component_root.input.collection())
+						.then(context => context?.component_root.output.value())
+						.then(context => context?.component_root.output.this_node())
 						.result!
 					).result!, false),
-				location: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.definitions.parameter_location)
+				dependency: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(() => interface_.Cdependency.Pdisallowed)
 						.result!
 					).result!, false),
-				parent: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.parent)
-						.then(context => context?.parent)
-						.then(context => context?.parent)
-						.then(context => context?.definitions.parameter_parent)
+				participation: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(() => interface_.Cparticipation.Pconditional)
 						.result!
 					).result!, false)
 			})
@@ -2745,12 +3724,11 @@ export namespace Cattributes {
 	}
 }
 export namespace Ccommand {
-	export class Dparameters extends Ccommand_parameters {
+	export class Dparameters extends Cparameter_definition__interface {
 		constructor(data:Tcommand['parameters'], parent:Ccommand) {
 			super(data, parent, {
-				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.parent)
-						.then(context => context?.parent)
+				entity: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.component_root.input.entity())
 						.result!
 					).result!, false),
 				location: cache(() => resolve(parent).then(this_context => resolve(this_context)
@@ -2759,6 +3737,11 @@ export namespace Ccommand {
 					).result!, false),
 				parent: cache(() => resolve(parent).then(this_context => resolve(this_context)
 						.then(() => interface_.Cparameter_parent.Pnone)
+						.result!
+					).result!, false),
+				this_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.parent)
+						.then(context => context?.parent)
 						.result!
 					).result!, false)
 			})
@@ -2771,7 +3754,6 @@ export namespace Cproperty {
 		{ name: 'file', node:Cfile__type__property, init:Tfile__type__property}|
 		{ name: 'group', node:Cgroup__type__property, init:Tgroup__type__property}|
 		{ name: 'number', node:Cnumber__type__property, init:Tnumber__type__property}|
-		{ name: 'reference', node:Creference__type__property, init:Treference__type__property}|
 		{ name: 'state group', node:Cstate_group__type__property, init:Tstate_group__type__property}|
 		{ name: 'text', node:Ctext__type__property, init:Ttext__type__property}> extends StateGroup<T> {
 		protected initializer(state:T['name']) {
@@ -2780,7 +3762,6 @@ export namespace Cproperty {
 				case 'file': return (init:Tfile__type__property, parent:Cproperty) => new Cfile__type__property(init, parent);
 				case 'group': return (init:Tgroup__type__property, parent:Cproperty) => new Cgroup__type__property(init, parent);
 				case 'number': return (init:Tnumber__type__property, parent:Cproperty) => new Cnumber__type__property(init, parent);
-				case 'reference': return (init:Treference__type__property, parent:Cproperty) => new Creference__type__property(init, parent);
 				case 'state group': return (init:Tstate_group__type__property, parent:Cproperty) => new Cstate_group__type__property(init, parent);
 				case 'text': return (init:Ttext__type__property, parent:Cproperty) => new Ctext__type__property(init, parent);
 				default: throw new Error(`Unexpected state ${state}.`);
@@ -2792,7 +3773,6 @@ export namespace Cproperty {
 				case 'file': return resolve_file__type__property;
 				case 'group': return resolve_group__type__property;
 				case 'number': return resolve_number__type__property;
-				case 'reference': return resolve_reference__type__property;
 				case 'state group': return resolve_state_group__type__property;
 				case 'text': return resolve_text__type__property;
 				default: throw new Error(`Unexpected state ${state}.`);
@@ -2804,9 +3784,33 @@ export namespace Cproperty {
 	}
 }
 export namespace Ccollection__type__property {
+	export class Dgraphs extends Cgraphs_definition {
+		constructor(data:Tcollection__type__property['graphs'], parent:Ccollection__type__property) {
+			super(data, parent, {
+				collection: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.definitions.collection)
+						.result!
+					).result!, false)
+			})
+		}
+	}
+	export class Dkey_property extends Reference<interface_.Ctext__type__property,string> {
+
+		constructor(data:string, $this:Ccollection__type__property) {
+			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.properties.node)
+				.then(context => context?.properties.attributes.get(this.entry))
+
+				.then(context => context?.properties.type.cast('property').properties.type.cast('text')).result!, true))
+		}
+	}
 	export class Dnode extends Cnode {
 		constructor(data:Tcollection__type__property['node'], parent:Ccollection__type__property) {
 			super(data, parent, {
+				entity: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.definitions.collection)
+						.then(context => context?.definitions.entity)
+						.result!
+					).result!, false),
 				location: cache(() => resolve(parent).then(this_context => resolve(this_context)
 						.then(context => context?.definitions.node_location)
 						.result!
@@ -2821,47 +3825,15 @@ export namespace Ccollection__type__property {
 			})
 		}
 	}
-	export class Dtype<T extends
-		{ name: 'dictionary', node:Cdictionary, init:Tdictionary}|
-		{ name: 'matrix', node:Cmatrix__type__collection, init:Tmatrix__type__collection}> extends StateGroup<T> {
-		protected initializer(state:T['name']) {
-			switch (state) {
-				case 'dictionary': return (init:Tdictionary, parent:Ccollection__type__property) => new Cdictionary(init, parent);
-				case 'matrix': return (init:Tmatrix__type__collection, parent:Ccollection__type__property) => new Cmatrix__type__collection(init, parent);
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		protected resolver(state:T['name']) {
-			switch (state) {
-				case 'dictionary': return resolve_dictionary;
-				case 'matrix': return resolve_matrix__type__collection;
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		constructor(data:Tcollection__type__property['type'], parent:Ccollection__type__property) {
-			super(data, parent);
-		}
-	}
-}
-export namespace Cmatrix__type__collection {
-	export class Dreferencer extends Creferencer {
-		constructor(data:Tmatrix__type__collection['referencer'], parent:Cmatrix__type__collection) {
-			super(data, parent, {
-				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.parent)
-						.then(context => context?.parent)
-						.then(context => context?.parent)
-						.then(context => context?.parent)
-						.result!
-					).result!, false)
-			})
-		}
-	}
 }
 export namespace Cgroup__type__property {
 	export class Dnode extends Cnode {
 		constructor(data:Tgroup__type__property['node'], parent:Cgroup__type__property) {
 			super(data, parent, {
+				entity: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.component_root.input.entity())
+						.result!
+					).result!, false),
 				location: cache(() => resolve(parent).then(this_context => resolve(this_context)
 						.then(context => context?.definitions.node_location)
 						.result!
@@ -2878,62 +3850,29 @@ export namespace Cgroup__type__property {
 	}
 }
 export namespace Cnumber__type__property {
-	export class Dset<T extends
-		{ name: 'integer', node:Cinteger__set__number__type__property, init:Tinteger__set__number__type__property}|
-		{ name: 'natural', node:Cnatural__set__number__type__property, init:Tnatural__set__number__type__property}> extends StateGroup<T> {
-		protected initializer(state:T['name']) {
-			switch (state) {
-				case 'integer': return (init:Tinteger__set__number__type__property, parent:Cnumber__type__property) => new Cinteger__set__number__type__property(init, parent);
-				case 'natural': return (init:Tnatural__set__number__type__property, parent:Cnumber__type__property) => new Cnatural__set__number__type__property(init, parent);
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		protected resolver(state:T['name']) {
-			switch (state) {
-				case 'integer': return resolve_integer__set__number__type__property;
-				case 'natural': return resolve_natural__set__number__type__property;
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		constructor(data:Tnumber__type__property['set'], parent:Cnumber__type__property) {
-			super(data, parent);
-		}
-	}
-	export class Dtype extends Reference<interface_.Cnumerical_types,string> {
-
-		constructor(data:string, $this:Cnumber__type__property) {
-			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.root)
-				.then(context => context?.properties.numerical_types.get(this.entry))
-				.result!, true))
-		}
-	}
-}
-export namespace Creference__type__property {
-	export class Dreferencer extends Creferencer {
-		constructor(data:Treference__type__property['referencer'], parent:Creference__type__property) {
-			super(data, parent, {
-				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.parent)
-						.then(context => context?.parent)
-						.then(context => context?.parent)
-						.result!
-					).result!, false)
-			})
+	export class Dtype extends Cnumber_type {
+		constructor(data:Tnumber__type__property['type'], parent:Cnumber__type__property) {
+			super(data, parent)
 		}
 	}
 }
 export namespace Cstate_group__type__property {
-	export class Doutput_parameters extends AlanDictionary<{ node:Coutput_parameters, init:Toutput_parameters},Cstate_group__type__property> {
-		protected graph_iterator(graph:string):(node:Coutput_parameters) => Coutput_parameters { throw new Error(`Dictionary has no graph iterators.`); }
-		protected initialize(parent:Cstate_group__type__property, key:string, entry_init:Toutput_parameters) { return new Coutput_parameters(key, entry_init, parent); }
-		protected resolve = resolve_output_parameters
-		protected get path() { return `${this.parent.path}/output parameters`; }
-		constructor(data:Tstate_group__type__property['output parameters'], parent:Cstate_group__type__property) {
-			super(data, parent);
+	export class Dfirst_state extends Reference<interface_.Cstates__state_group__type__property,string> {
+
+		constructor(data:string, $this:Cstate_group__type__property) {
+			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.properties.states.get(this.entry))
+				.result!, true))
 		}
 	}
-	export class Dstates extends AlanDictionary<{ node:Cstates__state_group__type__property, init:Tstates__state_group__type__property},Cstate_group__type__property> {
-		protected graph_iterator(graph:string):(node:Cstates__state_group__type__property) => Cstates__state_group__type__property { throw new Error(`Dictionary has no graph iterators.`); }
+	export class Dstates extends AlanDictionary<{ node:Cstates__state_group__type__property, init:Tstates__state_group__type__property},Cstate_group__type__property,'order'> {
+		protected graph_iterator(graph:('order')):(node:Cstates__state_group__type__property) => Cstates__state_group__type__property {
+			switch (graph) {
+				case 'order': return (entry:Cstates__state_group__type__property) => resolve(entry)
+					.then(context => context?.properties.has_successor.state.name === 'yes' ? context.properties.has_successor.state.node as Cyes__has_successor__states__state_group__type__property : undefined)
+					.then(context => context?.properties.successor.ref).result!
+				default: throw new Error(`${graph} is not a valid graph iterator!`);
+			}
+		}
 		protected initialize(parent:Cstate_group__type__property, key:string, entry_init:Tstates__state_group__type__property) { return new Cstates__state_group__type__property(key, entry_init, parent); }
 		protected resolve = resolve_states__state_group__type__property
 		protected get path() { return `${this.parent.path}/states`; }
@@ -2942,17 +3881,64 @@ export namespace Cstate_group__type__property {
 		}
 	}
 }
-export namespace Coutput_parameters {
-	export class Dnode_selection extends Cnode_type_path {
-		constructor(data:Toutput_parameters['node selection'], parent:Coutput_parameters) {
-			super(data, parent)
+export namespace Cstates__state_group__type__property {
+	export class Dcontext_rules extends Cwhere_clause {
+		constructor(data:Tstates__state_group__type__property['context rules'], parent:Cstates__state_group__type__property) {
+			super(data, parent, {
+				context_constraint: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(() => interface_.Ccontext_constraint.Pnone)
+						.result!
+					).result!, false),
+				context_direction: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(() => interface_.Cdirection.Pself)
+						.result!
+					).result!, false),
+				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.parent)
+						.then(context => context?.parent)
+						.then(context => context?.parent)
+						.then(context => context?.parent)
+						.result!
+					).result!, false),
+				this: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.parent)
+						.then(context => context?.parent)
+						.then(context => context?.parent)
+						.then(context => context?.parent)
+						.then(context => context?.definitions.object)
+						.result!
+					).result!, false)
+			})
 		}
 	}
-}
-export namespace Cstates__state_group__type__property {
+	export class Dhas_successor<T extends
+		{ name: 'no', node:Cno__has_successor__states__state_group__type__property, init:Tno__has_successor__states__state_group__type__property}|
+		{ name: 'yes', node:Cyes__has_successor__states__state_group__type__property, init:Tyes__has_successor__states__state_group__type__property}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'no': return (init:Tno__has_successor__states__state_group__type__property, parent:Cstates__state_group__type__property) => new Cno__has_successor__states__state_group__type__property(init, parent);
+				case 'yes': return (init:Tyes__has_successor__states__state_group__type__property, parent:Cstates__state_group__type__property) => new Cyes__has_successor__states__state_group__type__property(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected resolver(state:T['name']) {
+			switch (state) {
+				case 'no': return resolve_no__has_successor__states__state_group__type__property;
+				case 'yes': return resolve_yes__has_successor__states__state_group__type__property;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Tstates__state_group__type__property['has successor'], parent:Cstates__state_group__type__property) {
+			super(data, parent);
+		}
+	}
 	export class Dnode extends Cnode {
 		constructor(data:Tstates__state_group__type__property['node'], parent:Cstates__state_group__type__property) {
 			super(data, parent, {
+				entity: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.component_root.input.entity())
+						.result!
+					).result!, false),
 				location: cache(() => resolve(parent).then(this_context => resolve(this_context)
 						.then(context => context?.definitions.node_location)
 						.result!
@@ -2968,208 +3954,188 @@ export namespace Cstates__state_group__type__property {
 			})
 		}
 	}
-	export class Doutput_arguments extends AlanDictionary<{ node:Coutput_arguments, init:Toutput_arguments},Cstates__state_group__type__property> {
-		protected graph_iterator(graph:string):(node:Coutput_arguments) => Coutput_arguments { throw new Error(`Dictionary has no graph iterators.`); }
-		protected initialize(parent:Cstates__state_group__type__property, key:string, entry_init:Toutput_arguments) { return new Coutput_arguments(key, entry_init, parent); }
-		protected resolve = resolve_output_arguments
-		protected get path() { return `${this.parent.path}/output arguments`; }
-		constructor(data:Tstates__state_group__type__property['output arguments'], parent:Cstates__state_group__type__property) {
-			super(data, parent);
-		}
-	}
 }
-export namespace Coutput_arguments {
-	export class Dpath extends Cnode_selection_path {
-		public readonly inferences:{
-			constraint: () => interface_.Cnode
-		}
-		constructor(data:Toutput_arguments['path'], parent:Coutput_arguments) {
-			super(data, parent, {
-				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.parent)
-						.then(context => context?.properties.node)
-						.result!
-					).result!, false)
-			})
-			this.inferences = {
-				constraint: cache(() => resolve(parent.properties.path).then(context => {
-						const left = resolve(context)
-							.then(context => context)
-							.then(context => context?.component_root.output.result_interface_node())
-						.result;
-						const right = resolve(context)
-							.then(() => parent).then(context => context?.key.ref)
-							.then(context => context?.properties.node_selection)
-							.then(context => context?.component_root.output.result_interface_node())
-						.result;
-						return left.is(right) ? left : undefined
-					})
-					.result!, true)
-			}
-		}
-	}
-}
-export namespace Cnode_content_path {
-	export class Dhas_steps<T extends
-		{ name: 'no', node:Cno__has_steps__node_content_path, init:Tno__has_steps__node_content_path}|
-		{ name: 'yes', node:Cyes__has_steps__node_content_path, init:Tyes__has_steps__node_content_path}> extends StateGroup<T> {
-		protected initializer(state:T['name']) {
-			switch (state) {
-				case 'no': return (init:Tno__has_steps__node_content_path, parent:Cnode_content_path) => new Cno__has_steps__node_content_path(init, parent);
-				case 'yes': return (init:Tyes__has_steps__node_content_path, parent:Cnode_content_path) => new Cyes__has_steps__node_content_path(init, parent);
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		protected resolver(state:T['name']) {
-			switch (state) {
-				case 'no': return resolve_no__has_steps__node_content_path;
-				case 'yes': return resolve_yes__has_steps__node_content_path;
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		constructor(data:Tnode_content_path['has steps'], parent:Cnode_content_path) {
-			super(data, parent);
-		}
-	}
-}
-export namespace Cyes__has_steps__node_content_path {
-	export class Dtail extends Cnode_content_path {
-		constructor(data:Tyes__has_steps__node_content_path['tail'], parent:Cyes__has_steps__node_content_path) {
-			super(data, parent, {
-				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.properties.type.state.node.output.result_interface_node())
-						.result!
-					).result!, false)
-			})
-		}
-	}
-	export class Dtype<T extends
-		{ name: 'group', node:Cgroup__type__yes__has_steps__node_content_path, init:Tgroup__type__yes__has_steps__node_content_path}|
-		{ name: 'state', node:Cstate__type__yes__has_steps__node_content_path, init:Tstate__type__yes__has_steps__node_content_path}> extends StateGroup<T> {
-		protected initializer(state:T['name']) {
-			switch (state) {
-				case 'group': return (init:Tgroup__type__yes__has_steps__node_content_path, parent:Cyes__has_steps__node_content_path) => new Cgroup__type__yes__has_steps__node_content_path(init, parent);
-				case 'state': return (init:Tstate__type__yes__has_steps__node_content_path, parent:Cyes__has_steps__node_content_path) => new Cstate__type__yes__has_steps__node_content_path(init, parent);
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		protected resolver(state:T['name']) {
-			switch (state) {
-				case 'group': return resolve_group__type__yes__has_steps__node_content_path;
-				case 'state': return resolve_state__type__yes__has_steps__node_content_path;
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		constructor(data:Tyes__has_steps__node_content_path['type'], parent:Cyes__has_steps__node_content_path) {
-			super(data, parent);
-		}
-	}
-}
-export namespace Cgroup__type__yes__has_steps__node_content_path {
-	export class Dgroup extends Reference<interface_.Cgroup__type__property,string> {
+export namespace Cyes__has_successor__states__state_group__type__property {
+	export class Dsuccessor extends Reference<interface_.Cstates__state_group__type__property,string> {
 
-		constructor(data:string, $this:Cgroup__type__yes__has_steps__node_content_path) {
-			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.component_root.input.context_node())
-				.then(context => context?.properties.attributes.get(this.entry))
-
-				.then(context => context?.properties.type.cast('property').properties.type.cast('group')).result!, true))
-		}
-	}
-}
-export namespace Cstate__type__yes__has_steps__node_content_path {
-	export class Dstate extends Reference<interface_.Cstates__state_group__type__property,string> {
-
-		constructor(data:string, $this:Cstate__type__yes__has_steps__node_content_path) {
-			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.properties.state_group.ref)
-				.then(context => context?.properties.states.get(this.entry))
+		constructor(data:string, $this:Cyes__has_successor__states__state_group__type__property) {
+			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.parent)
+				.then(context => context?.parent.properties.states.get(this.entry))
 				.result!, true))
 		}
 	}
-	export class Dstate_group extends Reference<interface_.Cstate_group__type__property,string> {
-
-		constructor(data:string, $this:Cstate__type__yes__has_steps__node_content_path) {
-			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.component_root.input.context_node())
-				.then(context => context?.properties.attributes.get(this.entry))
-
-				.then(context => context?.properties.type.cast('property').properties.type.cast('state group')).result!, true))
-		}
-	}
 }
-export namespace Cnode_selection_path {
-	export class Dhas_steps<T extends
-		{ name: 'no', node:Cno__has_steps__node_selection_path, init:Tno__has_steps__node_selection_path}|
-		{ name: 'yes', node:Cyes__has_steps__node_selection_path, init:Tyes__has_steps__node_selection_path}> extends StateGroup<T> {
+export namespace Ctext__type__property {
+	export class Dhas_constraint<T extends
+		{ name: 'no', node:Cno__has_constraint__text__type__property, init:Tno__has_constraint__text__type__property}|
+		{ name: 'yes', node:Cyes__has_constraint__text__type__property, init:Tyes__has_constraint__text__type__property}> extends StateGroup<T> {
 		protected initializer(state:T['name']) {
 			switch (state) {
-				case 'no': return (init:Tno__has_steps__node_selection_path, parent:Cnode_selection_path) => new Cno__has_steps__node_selection_path(init, parent);
-				case 'yes': return (init:Tyes__has_steps__node_selection_path, parent:Cnode_selection_path) => new Cyes__has_steps__node_selection_path(init, parent);
+				case 'no': return (init:Tno__has_constraint__text__type__property, parent:Ctext__type__property) => new Cno__has_constraint__text__type__property(init, parent);
+				case 'yes': return (init:Tyes__has_constraint__text__type__property, parent:Ctext__type__property) => new Cyes__has_constraint__text__type__property(init, parent);
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
 		protected resolver(state:T['name']) {
 			switch (state) {
-				case 'no': return resolve_no__has_steps__node_selection_path;
-				case 'yes': return resolve_yes__has_steps__node_selection_path;
+				case 'no': return resolve_no__has_constraint__text__type__property;
+				case 'yes': return resolve_yes__has_constraint__text__type__property;
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		constructor(data:Tnode_selection_path['has steps'], parent:Cnode_selection_path) {
+		constructor(data:Ttext__type__property['has constraint'], parent:Ctext__type__property) {
 			super(data, parent);
 		}
 	}
 }
-export namespace Cyes__has_steps__node_selection_path {
-	export class Dtail extends Cnode_selection_path {
-		constructor(data:Tyes__has_steps__node_selection_path['tail'], parent:Cyes__has_steps__node_selection_path) {
+export namespace Cyes__has_constraint__text__type__property {
+	export class Dreferencer extends Creferencer {
+		constructor(data:Tyes__has_constraint__text__type__property['referencer'], parent:Cyes__has_constraint__text__type__property) {
 			super(data, parent, {
+				this: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.parent)
+						.then(context => context?.parent)
+						.then(context => context?.parent)
+						.then(context => context?.parent)
+						.then(context => context?.definitions.object)
+						.result!
+					).result!, false)
+			})
+		}
+	}
+}
+export namespace Cnode_path {
+	export class Dhead extends Ccontext_node_path {
+		constructor(data:Tnode_path['head'], parent:Cnode_path) {
+			super(data, parent, {
+				context_constraint: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(() => interface_.Ccontext_constraint.Pnone)
+						.result!
+					).result!, false),
+				context_direction: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.component_root.input.context_direction())
+						.result!
+					).result!, false),
 				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.properties.type.state.node.output.result_interface_node())
+						.then(context => context?.component_root.input.context_node())
+						.result!
+					).result!, false),
+				this: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.component_root.input.this())
+						.result!
+					).result!, false)
+			})
+		}
+	}
+	export class Dtail extends Cnode_path_tail {
+		constructor(data:Tnode_path['tail'], parent:Cnode_path) {
+			super(data, parent, {
+				context_direction: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.properties.head)
+						.then(context => context?.component_root.output.direction())
+						.result!
+					).result!, false),
+				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.properties.head)
+						.then(context => context?.component_root.output.node())
+						.result!
+					).result!, false),
+				dependency: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.component_root.input.dependency())
+						.result!
+					).result!, false),
+				participation: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.component_root.input.participation())
+						.result!
+					).result!, false)
+			})
+		}
+	}
+}
+export namespace Cnode_path_tail {
+	export class Dhas_steps<T extends
+		{ name: 'no', node:Cno__has_steps__node_path_tail, init:Tno__has_steps__node_path_tail}|
+		{ name: 'yes', node:Cyes__has_steps__node_path_tail, init:Tyes__has_steps__node_path_tail}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'no': return (init:Tno__has_steps__node_path_tail, parent:Cnode_path_tail) => new Cno__has_steps__node_path_tail(init, parent);
+				case 'yes': return (init:Tyes__has_steps__node_path_tail, parent:Cnode_path_tail) => new Cyes__has_steps__node_path_tail(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected resolver(state:T['name']) {
+			switch (state) {
+				case 'no': return resolve_no__has_steps__node_path_tail;
+				case 'yes': return resolve_yes__has_steps__node_path_tail;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Tnode_path_tail['has steps'], parent:Cnode_path_tail) {
+			super(data, parent);
+		}
+	}
+}
+export namespace Cyes__has_steps__node_path_tail {
+	export class Dtail extends Cnode_path_tail {
+		constructor(data:Tyes__has_steps__node_path_tail['tail'], parent:Cyes__has_steps__node_path_tail) {
+			super(data, parent, {
+				context_direction: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.properties.type.state.node.output.direction())
+						.result!
+					).result!, false),
+				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.properties.type.state.node.output.node())
+						.result!
+					).result!, false),
+				dependency: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.properties.type.state.node.output.dependency())
+						.result!
+					).result!, false),
+				participation: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.component_root.input.participation())
 						.result!
 					).result!, false)
 			})
 		}
 	}
 	export class Dtype<T extends
-		{ name: 'collection parent', node:Ccollection_parent, init:Tcollection_parent}|
-		{ name: 'group', node:Cgroup__type__yes__has_steps__node_selection_path, init:Tgroup__type__yes__has_steps__node_selection_path}|
-		{ name: 'group parent', node:Cgroup_parent, init:Tgroup_parent}|
-		{ name: 'matrix key', node:Cmatrix_key, init:Tmatrix_key}|
+		{ name: 'group', node:Cgroup__type__yes__has_steps__node_path_tail, init:Tgroup__type__yes__has_steps__node_path_tail}|
+		{ name: 'parent', node:Cparent__type__yes__has_steps__node_path_tail, init:Tparent__type__yes__has_steps__node_path_tail}|
 		{ name: 'reference', node:Creference__type__yes, init:Treference__type__yes}|
-		{ name: 'state group output parameter', node:Cstate_group_output_parameter, init:Tstate_group_output_parameter}|
-		{ name: 'state parent', node:Cstate_parent__type__yes__has_steps__node_selection_path, init:Tstate_parent__type__yes__has_steps__node_selection_path}> extends StateGroup<T> {
+		{ name: 'reference rule', node:Creference_rule, init:Treference_rule}|
+		{ name: 'state', node:Cstate__type, init:Tstate__type}|
+		{ name: 'state context rule', node:Cstate_context_rule__type__yes, init:Tstate_context_rule__type__yes}> extends StateGroup<T> {
 		protected initializer(state:T['name']) {
 			switch (state) {
-				case 'collection parent': return (init:Tcollection_parent, parent:Cyes__has_steps__node_selection_path) => new Ccollection_parent(init, parent);
-				case 'group': return (init:Tgroup__type__yes__has_steps__node_selection_path, parent:Cyes__has_steps__node_selection_path) => new Cgroup__type__yes__has_steps__node_selection_path(init, parent);
-				case 'group parent': return (init:Tgroup_parent, parent:Cyes__has_steps__node_selection_path) => new Cgroup_parent(init, parent);
-				case 'matrix key': return (init:Tmatrix_key, parent:Cyes__has_steps__node_selection_path) => new Cmatrix_key(init, parent);
-				case 'reference': return (init:Treference__type__yes, parent:Cyes__has_steps__node_selection_path) => new Creference__type__yes(init, parent);
-				case 'state group output parameter': return (init:Tstate_group_output_parameter, parent:Cyes__has_steps__node_selection_path) => new Cstate_group_output_parameter(init, parent);
-				case 'state parent': return (init:Tstate_parent__type__yes__has_steps__node_selection_path, parent:Cyes__has_steps__node_selection_path) => new Cstate_parent__type__yes__has_steps__node_selection_path(init, parent);
+				case 'group': return (init:Tgroup__type__yes__has_steps__node_path_tail, parent:Cyes__has_steps__node_path_tail) => new Cgroup__type__yes__has_steps__node_path_tail(init, parent);
+				case 'parent': return (init:Tparent__type__yes__has_steps__node_path_tail, parent:Cyes__has_steps__node_path_tail) => new Cparent__type__yes__has_steps__node_path_tail(init, parent);
+				case 'reference': return (init:Treference__type__yes, parent:Cyes__has_steps__node_path_tail) => new Creference__type__yes(init, parent);
+				case 'reference rule': return (init:Treference_rule, parent:Cyes__has_steps__node_path_tail) => new Creference_rule(init, parent);
+				case 'state': return (init:Tstate__type, parent:Cyes__has_steps__node_path_tail) => new Cstate__type(init, parent);
+				case 'state context rule': return (init:Tstate_context_rule__type__yes, parent:Cyes__has_steps__node_path_tail) => new Cstate_context_rule__type__yes(init, parent);
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
 		protected resolver(state:T['name']) {
 			switch (state) {
-				case 'collection parent': return resolve_collection_parent;
-				case 'group': return resolve_group__type__yes__has_steps__node_selection_path;
-				case 'group parent': return resolve_group_parent;
-				case 'matrix key': return resolve_matrix_key;
+				case 'group': return resolve_group__type__yes__has_steps__node_path_tail;
+				case 'parent': return resolve_parent__type__yes__has_steps__node_path_tail;
 				case 'reference': return resolve_reference__type__yes;
-				case 'state group output parameter': return resolve_state_group_output_parameter;
-				case 'state parent': return resolve_state_parent__type__yes__has_steps__node_selection_path;
+				case 'reference rule': return resolve_reference_rule;
+				case 'state': return resolve_state__type;
+				case 'state context rule': return resolve_state_context_rule__type__yes;
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		constructor(data:Tyes__has_steps__node_selection_path['type'], parent:Cyes__has_steps__node_selection_path) {
+		constructor(data:Tyes__has_steps__node_path_tail['type'], parent:Cyes__has_steps__node_path_tail) {
 			super(data, parent);
 		}
 	}
 }
-export namespace Cgroup__type__yes__has_steps__node_selection_path {
+export namespace Cgroup__type__yes__has_steps__node_path_tail {
 	export class Dgroup extends Reference<interface_.Cgroup__type__property,string> {
 
-		constructor(data:string, $this:Cgroup__type__yes__has_steps__node_selection_path) {
+		constructor(data:string, $this:Cgroup__type__yes__has_steps__node_path_tail) {
 			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.component_root.input.context_node())
 				.then(context => context?.properties.attributes.get(this.entry))
 
@@ -3178,133 +4144,75 @@ export namespace Cgroup__type__yes__has_steps__node_selection_path {
 	}
 }
 export namespace Creference__type__yes {
-	export class Dreference extends Reference<interface_.Creference__type__property,string> {
+	export class Dreference extends Reference<interface_.Cyes__has_constraint__text__type__property,string> {
+		public readonly inferences:{
+			direction: () => interface_.Cdirection
+		}
 
 		constructor(data:string, $this:Creference__type__yes) {
 			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.component_root.input.context_node())
 				.then(context => context?.properties.attributes.get(this.entry))
 
-				.then(context => context?.properties.type.cast('property').properties.type.cast('reference')).result!, true))
+				.then(context => context?.properties.type.cast('property').properties.type.cast('text').properties.has_constraint.cast('yes')).result!, true))
+			this.inferences = {
+				direction: cache(() => resolve($this.properties.reference.ref).then(context => evaluate__navigation_step_direction(
+						{
+						current: () => resolve(context).then(() => $this).then(context => context?.component_root.input.context_direction())
+							.result
+						,
+						step: () => resolve(context).then(context => context)
+							.then(context => context?.properties.referencer)
+							.then(context => context?.component_root.output.direction())
+							.result
+
+						}))
+					.result!, true)
+			}
 		}
 	}
 }
-export namespace Cstate_group_output_parameter {
-	export class Doutput_parameter extends Reference<interface_.Coutput_parameters,string> {
+export namespace Creference_rule {
+	export class Dreference extends Reference<interface_.Cyes__has_constraint__text__type__property,string> {
 
-		constructor(data:string, $this:Cstate_group_output_parameter) {
-			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.properties.state_group.ref)
-				.then(context => context?.properties.output_parameters.get(this.entry))
+		constructor(data:string, $this:Creference_rule) {
+			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.component_root.input.context_node())
+				.then(context => context?.properties.attributes.get(this.entry))
+
+				.then(context => context?.properties.type.cast('property').properties.type.cast('text').properties.has_constraint.cast('yes')).result!, true))
+		}
+	}
+	export class Drule extends Reference<interface_.Crules,string> {
+		public readonly inferences:{
+			direction: () => interface_.Cdirection
+		}
+
+		constructor(data:string, $this:Creference_rule) {
+			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.properties.reference.ref)
+				.then(context => context?.properties.referencer)
+				.then(context => context?.properties.rules)
+				.then(context => context?.properties.rules.get(this.entry))
 				.result!, true))
-		}
-	}
-	export class Dstate_group extends Reference<interface_.Cstate_group__type__property,string> {
+			this.inferences = {
+				direction: cache(() => resolve($this.properties.rule.ref).then(context => evaluate__navigation_step_direction(
+						{
+						current: () => resolve(context).then(() => $this).then(context => context?.component_root.input.context_direction())
+							.result
+						,
+						step: () => resolve(context).then(context => context)
+							.then(context => context?.properties.tail)
+							.then(context => context?.component_root.output.direction())
+							.result
 
-		constructor(data:string, $this:Cstate_group_output_parameter) {
-			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.component_root.input.context_node())
-				.then(context => context?.properties.attributes.get(this.entry))
-
-				.then(context => context?.properties.type.cast('property').properties.type.cast('state group')).result!, true))
-		}
-	}
-}
-export namespace Cnode_type_path {
-	export class Dsteps extends Cnode_type_path_step {
-		constructor(data:Tnode_type_path['steps'], parent:Cnode_type_path) {
-			super(data, parent, {
-				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.root)
-						.then(context => context?.properties.root)
-						.result!
-					).result!, false)
-			})
-		}
-	}
-}
-export namespace Cnode_type_path_step {
-	export class Dhas_steps<T extends
-		{ name: 'no', node:Cno__has_steps__node_type_path_step, init:Tno__has_steps__node_type_path_step}|
-		{ name: 'yes', node:Cyes__has_steps__node_type_path_step, init:Tyes__has_steps__node_type_path_step}> extends StateGroup<T> {
-		protected initializer(state:T['name']) {
-			switch (state) {
-				case 'no': return (init:Tno__has_steps__node_type_path_step, parent:Cnode_type_path_step) => new Cno__has_steps__node_type_path_step(init, parent);
-				case 'yes': return (init:Tyes__has_steps__node_type_path_step, parent:Cnode_type_path_step) => new Cyes__has_steps__node_type_path_step(init, parent);
-				default: throw new Error(`Unexpected state ${state}.`);
+						}))
+					.result!, true)
 			}
 		}
-		protected resolver(state:T['name']) {
-			switch (state) {
-				case 'no': return resolve_no__has_steps__node_type_path_step;
-				case 'yes': return resolve_yes__has_steps__node_type_path_step;
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		constructor(data:Tnode_type_path_step['has steps'], parent:Cnode_type_path_step) {
-			super(data, parent);
-		}
 	}
 }
-export namespace Cyes__has_steps__node_type_path_step {
-	export class Dtail extends Cnode_type_path_step {
-		constructor(data:Tyes__has_steps__node_type_path_step['tail'], parent:Cyes__has_steps__node_type_path_step) {
-			super(data, parent, {
-				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.properties.type.state.node.output.result_interface_node())
-						.result!
-					).result!, false)
-			})
-		}
-	}
-	export class Dtype<T extends
-		{ name: 'collection', node:Ccollection__type__yes, init:Tcollection__type__yes}|
-		{ name: 'group', node:Cgroup__type__yes__has_steps__node_type_path_step, init:Tgroup__type__yes__has_steps__node_type_path_step}|
-		{ name: 'state', node:Cstate__type__yes__has_steps__node_type_path_step, init:Tstate__type__yes__has_steps__node_type_path_step}> extends StateGroup<T> {
-		protected initializer(state:T['name']) {
-			switch (state) {
-				case 'collection': return (init:Tcollection__type__yes, parent:Cyes__has_steps__node_type_path_step) => new Ccollection__type__yes(init, parent);
-				case 'group': return (init:Tgroup__type__yes__has_steps__node_type_path_step, parent:Cyes__has_steps__node_type_path_step) => new Cgroup__type__yes__has_steps__node_type_path_step(init, parent);
-				case 'state': return (init:Tstate__type__yes__has_steps__node_type_path_step, parent:Cyes__has_steps__node_type_path_step) => new Cstate__type__yes__has_steps__node_type_path_step(init, parent);
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		protected resolver(state:T['name']) {
-			switch (state) {
-				case 'collection': return resolve_collection__type__yes;
-				case 'group': return resolve_group__type__yes__has_steps__node_type_path_step;
-				case 'state': return resolve_state__type__yes__has_steps__node_type_path_step;
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		constructor(data:Tyes__has_steps__node_type_path_step['type'], parent:Cyes__has_steps__node_type_path_step) {
-			super(data, parent);
-		}
-	}
-}
-export namespace Ccollection__type__yes {
-	export class Dcollection extends Reference<interface_.Ccollection__type__property,string> {
-
-		constructor(data:string, $this:Ccollection__type__yes) {
-			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.component_root.input.context_node())
-				.then(context => context?.properties.attributes.get(this.entry))
-
-				.then(context => context?.properties.type.cast('property').properties.type.cast('collection')).result!, true))
-		}
-	}
-}
-export namespace Cgroup__type__yes__has_steps__node_type_path_step {
-	export class Dgroup extends Reference<interface_.Cgroup__type__property,string> {
-
-		constructor(data:string, $this:Cgroup__type__yes__has_steps__node_type_path_step) {
-			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.component_root.input.context_node())
-				.then(context => context?.properties.attributes.get(this.entry))
-
-				.then(context => context?.properties.type.cast('property').properties.type.cast('group')).result!, true))
-		}
-	}
-}
-export namespace Cstate__type__yes__has_steps__node_type_path_step {
+export namespace Cstate__type {
 	export class Dstate extends Reference<interface_.Cstates__state_group__type__property,string> {
 
-		constructor(data:string, $this:Cstate__type__yes__has_steps__node_type_path_step) {
+		constructor(data:string, $this:Cstate__type) {
 			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.properties.state_group.ref)
 				.then(context => context?.properties.states.get(this.entry))
 				.result!, true))
@@ -3312,7 +4220,7 @@ export namespace Cstate__type__yes__has_steps__node_type_path_step {
 	}
 	export class Dstate_group extends Reference<interface_.Cstate_group__type__property,string> {
 
-		constructor(data:string, $this:Cstate__type__yes__has_steps__node_type_path_step) {
+		constructor(data:string, $this:Cstate__type) {
 			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.component_root.input.context_node())
 				.then(context => context?.properties.attributes.get(this.entry))
 
@@ -3320,36 +4228,714 @@ export namespace Cstate__type__yes__has_steps__node_type_path_step {
 		}
 	}
 }
+export namespace Cstate_context_rule__type__yes {
+	export class Dcontext_rule extends Reference<interface_.Crules,string> {
+		public readonly inferences:{
+			direction: () => interface_.Cdirection
+		}
+
+		constructor(data:string, $this:Cstate_context_rule__type__yes) {
+			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.inferences.state()).then(context => context?.properties.context_rules)
+				.then(context => context?.properties.rules.get(this.entry))
+				.result!, true))
+			this.inferences = {
+				direction: cache(() => resolve($this.properties.context_rule.ref).then(context => evaluate__navigation_step_direction(
+						{
+						current: () => resolve(context).then(() => $this).then(context => context?.component_root.input.context_direction())
+							.result
+						,
+						step: () => resolve(context).then(context => context)
+							.then(context => context?.properties.tail)
+							.then(context => context?.component_root.output.direction())
+							.result
+
+						}))
+					.result!, true)
+			}
+		}
+	}
+}
+export namespace Cnumber_type {
+	export class Ddecimal_places<T extends
+		{ name: 'no', node:Cno__decimal_places, init:Tno__decimal_places}|
+		{ name: 'yes', node:Cyes__decimal_places, init:Tyes__decimal_places}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'no': return (init:Tno__decimal_places, parent:Cnumber_type) => new Cno__decimal_places(init, parent);
+				case 'yes': return (init:Tyes__decimal_places, parent:Cnumber_type) => new Cyes__decimal_places(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected resolver(state:T['name']) {
+			switch (state) {
+				case 'no': return resolve_no__decimal_places;
+				case 'yes': return resolve_yes__decimal_places;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Tnumber_type['decimal places'], parent:Cnumber_type) {
+			super(data, parent);
+		}
+	}
+	export class Dset<T extends
+		{ name: 'integer', node:Cinteger, init:Tinteger}|
+		{ name: 'natural', node:Cnatural, init:Tnatural}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'integer': return (init:Tinteger, parent:Cnumber_type) => new Cinteger(init, parent);
+				case 'natural': return (init:Tnatural, parent:Cnumber_type) => new Cnatural(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected resolver(state:T['name']) {
+			switch (state) {
+				case 'integer': return resolve_integer;
+				case 'natural': return resolve_natural;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Tnumber_type['set'], parent:Cnumber_type) {
+			super(data, parent);
+		}
+	}
+	export class Dtype extends Reference<interface_.Cnumerical_types,string> {
+
+		constructor(data:string, $this:Cnumber_type) {
+			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.root)
+				.then(context => context?.properties.numerical_types.get(this.entry))
+				.result!, true))
+		}
+	}
+}
+export namespace Cyes__decimal_places {
+}
+export namespace Cparameter_definition__interface {
+	export class Dproperties extends AlanDictionary<{ node:Cproperties, init:Tproperties},Cparameter_definition__interface> {
+		protected graph_iterator(graph:string):(node:Cproperties) => Cproperties { throw new Error(`Dictionary has no graph iterators.`); }
+		protected initialize(parent:Cparameter_definition__interface, key:string, entry_init:Tproperties) { return new Cproperties(key, entry_init, parent); }
+		protected resolve = resolve_properties
+		protected get path() { return `${this.parent.path}/properties`; }
+		constructor(data:Tparameter_definition__interface['properties'], parent:Cparameter_definition__interface) {
+			super(data, parent);
+		}
+	}
+}
+export namespace Cproperties {
+	export class Dtype<T extends
+		{ name: 'collection', node:Ccollection__type__properties, init:Tcollection__type__properties}|
+		{ name: 'file', node:Cfile__type__properties, init:Tfile__type__properties}|
+		{ name: 'group', node:Cgroup__type__properties, init:Tgroup__type__properties}|
+		{ name: 'number', node:Cnumber__type__properties, init:Tnumber__type__properties}|
+		{ name: 'state group', node:Cstate_group__type__properties, init:Tstate_group__type__properties}|
+		{ name: 'text', node:Ctext__type__properties, init:Ttext__type__properties}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'collection': return (init:Tcollection__type__properties, parent:Cproperties) => new Ccollection__type__properties(init, parent);
+				case 'file': return (init:Tfile__type__properties, parent:Cproperties) => new Cfile__type__properties(init, parent);
+				case 'group': return (init:Tgroup__type__properties, parent:Cproperties) => new Cgroup__type__properties(init, parent);
+				case 'number': return (init:Tnumber__type__properties, parent:Cproperties) => new Cnumber__type__properties(init, parent);
+				case 'state group': return (init:Tstate_group__type__properties, parent:Cproperties) => new Cstate_group__type__properties(init, parent);
+				case 'text': return (init:Ttext__type__properties, parent:Cproperties) => new Ctext__type__properties(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected resolver(state:T['name']) {
+			switch (state) {
+				case 'collection': return resolve_collection__type__properties;
+				case 'file': return resolve_file__type__properties;
+				case 'group': return resolve_group__type__properties;
+				case 'number': return resolve_number__type__properties;
+				case 'state group': return resolve_state_group__type__properties;
+				case 'text': return resolve_text__type__properties;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Tproperties['type'], parent:Cproperties) {
+			super(data, parent);
+		}
+	}
+}
+export namespace Ccollection__type__properties {
+	export class Dkey_property extends Reference<interface_.Ctext__type__properties,string> {
+
+		constructor(data:string, $this:Ccollection__type__properties) {
+			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.properties.parameters)
+				.then(context => context?.properties.properties.get(this.entry))
+
+				.then(context => context?.properties.type.cast('text')).result!, true))
+		}
+	}
+	export class Dparameters extends Cparameter_definition__interface {
+		constructor(data:Tcollection__type__properties['parameters'], parent:Ccollection__type__properties) {
+			super(data, parent, {
+				entity: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.definitions.collection)
+						.then(context => context?.definitions.entity)
+						.result!
+					).result!, false),
+				location: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.definitions.parameter_location)
+						.result!
+					).result!, false),
+				parent: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.parent)
+						.then(context => context?.parent)
+						.then(context => context?.definitions.parameter_parent)
+						.result!
+					).result!, false),
+				this_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.component_root.input.this_node())
+						.result!
+					).result!, false)
+			})
+		}
+	}
+	export class Dtype<T extends
+		{ name: 'dense map', node:Cdense_map, init:Tdense_map}|
+		{ name: 'simple', node:Csimple, init:Tsimple}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'dense map': return (init:Tdense_map, parent:Ccollection__type__properties) => new Cdense_map(init, parent);
+				case 'simple': return (init:Tsimple, parent:Ccollection__type__properties) => new Csimple(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected resolver(state:T['name']) {
+			switch (state) {
+				case 'dense map': return resolve_dense_map;
+				case 'simple': return resolve_simple;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Tcollection__type__properties['type'], parent:Ccollection__type__properties) {
+			super(data, parent);
+		}
+	}
+}
+export namespace Cgroup__type__properties {
+	export class Dparameters extends Cparameter_definition__interface {
+		constructor(data:Tgroup__type__properties['parameters'], parent:Cgroup__type__properties) {
+			super(data, parent, {
+				entity: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.component_root.input.entity())
+						.result!
+					).result!, false),
+				location: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.definitions.parameter_location)
+						.result!
+					).result!, false),
+				parent: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.parent)
+						.then(context => context?.parent)
+						.then(context => context?.definitions.parameter_parent)
+						.result!
+					).result!, false),
+				this_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.component_root.input.this_node())
+						.result!
+					).result!, false)
+			})
+		}
+	}
+}
+export namespace Cnumber__type__properties {
+	export class Dtype extends Cnumber_type {
+		constructor(data:Tnumber__type__properties['type'], parent:Cnumber__type__properties) {
+			super(data, parent)
+		}
+	}
+}
+export namespace Cstate_group__type__properties {
+	export class Dfirst_state extends Reference<interface_.Cstates__state_group__type__properties,string> {
+
+		constructor(data:string, $this:Cstate_group__type__properties) {
+			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.properties.states.get(this.entry))
+				.result!, true))
+		}
+	}
+	export class Dstates extends AlanDictionary<{ node:Cstates__state_group__type__properties, init:Tstates__state_group__type__properties},Cstate_group__type__properties,'order'> {
+		protected graph_iterator(graph:('order')):(node:Cstates__state_group__type__properties) => Cstates__state_group__type__properties {
+			switch (graph) {
+				case 'order': return (entry:Cstates__state_group__type__properties) => resolve(entry)
+					.then(context => context?.properties.has_successor.state.name === 'yes' ? context.properties.has_successor.state.node as Cyes__has_successor__states__state_group__type__properties : undefined)
+					.then(context => context?.properties.successor.ref).result!
+				default: throw new Error(`${graph} is not a valid graph iterator!`);
+			}
+		}
+		protected initialize(parent:Cstate_group__type__properties, key:string, entry_init:Tstates__state_group__type__properties) { return new Cstates__state_group__type__properties(key, entry_init, parent); }
+		protected resolve = resolve_states__state_group__type__properties
+		protected get path() { return `${this.parent.path}/states`; }
+		constructor(data:Tstate_group__type__properties['states'], parent:Cstate_group__type__properties) {
+			super(data, parent);
+		}
+	}
+}
+export namespace Cstates__state_group__type__properties {
+	export class Dcontext_rules extends Cwhere_clause {
+		constructor(data:Tstates__state_group__type__properties['context rules'], parent:Cstates__state_group__type__properties) {
+			super(data, parent, {
+				context_constraint: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(() => interface_.Ccontext_constraint.Pnone)
+						.result!
+					).result!, false),
+				context_direction: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(() => interface_.Cdirection.Pself)
+						.result!
+					).result!, false),
+				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.component_root.input.this_node())
+						.result!
+					).result!, false),
+				this: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.parent)
+						.then(context => context?.parent)
+						.then(context => context?.parent)
+						.then(context => context?.definitions.object)
+						.result!
+					).result!, false)
+			})
+		}
+	}
+	export class Dhas_successor<T extends
+		{ name: 'no', node:Cno__has_successor__states__state_group__type__properties, init:Tno__has_successor__states__state_group__type__properties}|
+		{ name: 'yes', node:Cyes__has_successor__states__state_group__type__properties, init:Tyes__has_successor__states__state_group__type__properties}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'no': return (init:Tno__has_successor__states__state_group__type__properties, parent:Cstates__state_group__type__properties) => new Cno__has_successor__states__state_group__type__properties(init, parent);
+				case 'yes': return (init:Tyes__has_successor__states__state_group__type__properties, parent:Cstates__state_group__type__properties) => new Cyes__has_successor__states__state_group__type__properties(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected resolver(state:T['name']) {
+			switch (state) {
+				case 'no': return resolve_no__has_successor__states__state_group__type__properties;
+				case 'yes': return resolve_yes__has_successor__states__state_group__type__properties;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Tstates__state_group__type__properties['has successor'], parent:Cstates__state_group__type__properties) {
+			super(data, parent);
+		}
+	}
+	export class Dparameters extends Cparameter_definition__interface {
+		constructor(data:Tstates__state_group__type__properties['parameters'], parent:Cstates__state_group__type__properties) {
+			super(data, parent, {
+				entity: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.component_root.input.entity())
+						.result!
+					).result!, false),
+				location: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.definitions.parameter_location)
+						.result!
+					).result!, false),
+				parent: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.parent)
+						.then(context => context?.parent)
+						.then(context => context?.parent)
+						.then(context => context?.definitions.parameter_parent)
+						.result!
+					).result!, false),
+				this_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.component_root.input.this_node())
+						.result!
+					).result!, false)
+			})
+		}
+	}
+}
+export namespace Cyes__has_successor__states__state_group__type__properties {
+	export class Dsuccessor extends Reference<interface_.Cstates__state_group__type__properties,string> {
+
+		constructor(data:string, $this:Cyes__has_successor__states__state_group__type__properties) {
+			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.parent)
+				.then(context => context?.parent.properties.states.get(this.entry))
+				.result!, true))
+		}
+	}
+}
+export namespace Ctext__type__properties {
+	export class Dhas_constraint<T extends
+		{ name: 'no', node:Cno__has_constraint__text__type__properties, init:Tno__has_constraint__text__type__properties}|
+		{ name: 'yes', node:Cyes__has_constraint__text__type__properties, init:Tyes__has_constraint__text__type__properties}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'no': return (init:Tno__has_constraint__text__type__properties, parent:Ctext__type__properties) => new Cno__has_constraint__text__type__properties(init, parent);
+				case 'yes': return (init:Tyes__has_constraint__text__type__properties, parent:Ctext__type__properties) => new Cyes__has_constraint__text__type__properties(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected resolver(state:T['name']) {
+			switch (state) {
+				case 'no': return resolve_no__has_constraint__text__type__properties;
+				case 'yes': return resolve_yes__has_constraint__text__type__properties;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Ttext__type__properties['has constraint'], parent:Ctext__type__properties) {
+			super(data, parent);
+		}
+	}
+}
+export namespace Cyes__has_constraint__text__type__properties {
+	export class Dreferencer extends Creferencer {
+		constructor(data:Tyes__has_constraint__text__type__properties['referencer'], parent:Cyes__has_constraint__text__type__properties) {
+			super(data, parent, {
+				this: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.parent)
+						.then(context => context?.parent)
+						.then(context => context?.parent)
+						.then(context => context?.definitions.object)
+						.result!
+					).result!, false)
+			})
+		}
+	}
+	export class Dtype<T extends
+		{ name: 'existing', node:Cexisting, init:Texisting}|
+		{ name: 'new', node:Cnew, init:Tnew}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'existing': return (init:Texisting, parent:Cyes__has_constraint__text__type__properties) => new Cexisting(init, parent);
+				case 'new': return (init:Tnew, parent:Cyes__has_constraint__text__type__properties) => new Cnew(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected resolver(state:T['name']) {
+			switch (state) {
+				case 'existing': return resolve_existing;
+				case 'new': return resolve_new;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Tyes__has_constraint__text__type__properties['type'], parent:Cyes__has_constraint__text__type__properties) {
+			super(data, parent);
+		}
+	}
+}
 export namespace Creferencer {
+	export class Dhas_tail<T extends
+		{ name: 'no', node:Cno__has_tail, init:Tno__has_tail}|
+		{ name: 'yes', node:Cyes__has_tail, init:Tyes__has_tail}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'no': return (init:Tno__has_tail, parent:Creferencer) => new Cno__has_tail(init, parent);
+				case 'yes': return (init:Tyes__has_tail, parent:Creferencer) => new Cyes__has_tail(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected resolver(state:T['name']) {
+			switch (state) {
+				case 'no': return resolve_no__has_tail;
+				case 'yes': return resolve_yes__has_tail;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Treferencer['has tail'], parent:Creferencer) {
+			super(data, parent);
+		}
+	}
+	export class Dhead extends Cnode_path {
+		constructor(data:Treferencer['head'], parent:Creferencer) {
+			super(data, parent, {
+				context_direction: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(() => interface_.Cdirection.Pself)
+						.result!
+					).result!, false),
+				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.component_root.input.this())
+						.then(context => context?.component_root.output.this_node())
+						.result!
+					).result!, false),
+				dependency: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(() => interface_.Cdependency.Pallowed)
+						.result!
+					).result!, false),
+				participation: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(() => interface_.Cparticipation.Psingular)
+						.result!
+					).result!, false),
+				this: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.component_root.input.this())
+						.result!
+					).result!, false)
+			})
+		}
+	}
+	export class Drules extends Cwhere_clause {
+		constructor(data:Treferencer['rules'], parent:Creferencer) {
+			super(data, parent, {
+				context_constraint: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(() => interface_.Ccontext_constraint.Pcontext_node)
+						.result!
+					).result!, false),
+				context_direction: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.properties.has_tail.state.node.output.direction())
+						.result!
+					).result!, false),
+				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.properties.has_tail.state.node.output.node())
+						.result!
+					).result!, false),
+				this: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.component_root.input.this())
+						.result!
+					).result!, false)
+			})
+		}
+	}
+	export class Dtype<T extends
+		{ name: 'sibling', node:Csibling, init:Tsibling}|
+		{ name: 'unrestricted', node:Cunrestricted, init:Tunrestricted}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'sibling': return (init:Tsibling, parent:Creferencer) => new Csibling(init, parent);
+				case 'unrestricted': return (init:Tunrestricted, parent:Creferencer) => new Cunrestricted(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected resolver(state:T['name']) {
+			switch (state) {
+				case 'sibling': return resolve_sibling;
+				case 'unrestricted': return resolve_unrestricted;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Treferencer['type'], parent:Creferencer) {
+			super(data, parent);
+		}
+	}
+}
+export namespace Cyes__has_tail {
+	export class Dtail extends Cnode_path_tail {
+		constructor(data:Tyes__has_tail['tail'], parent:Cyes__has_tail) {
+			super(data, parent, {
+				context_direction: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.parent)
+						.then(context => context?.properties.head)
+						.then(context => context?.component_root.output.direction())
+						.result!
+					).result!, false),
+				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.parent)
+						.then(context => context?.properties.type.state.node.output.collection())
+						.then(context => context?.properties.node)
+						.result!
+					).result!, false),
+				dependency: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(() => interface_.Cdependency.Pdisallowed)
+						.result!
+					).result!, false),
+				participation: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(() => interface_.Cparticipation.Pconditional)
+						.result!
+					).result!, false)
+			})
+		}
+	}
+}
+export namespace Csibling {
+	export class Dgraph_participation<T extends
+		{ name: 'no', node:Cno__graph_participation, init:Tno__graph_participation}|
+		{ name: 'yes', node:Cyes__graph_participation, init:Tyes__graph_participation}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'no': return (init:Tno__graph_participation, parent:Csibling) => new Cno__graph_participation(init, parent);
+				case 'yes': return (init:Tyes__graph_participation, parent:Csibling) => new Cyes__graph_participation(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected resolver(state:T['name']) {
+			switch (state) {
+				case 'no': return resolve_no__graph_participation;
+				case 'yes': return resolve_yes__graph_participation;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Tsibling['graph participation'], parent:Csibling) {
+			super(data, parent);
+		}
+	}
+}
+export namespace Cyes__graph_participation {
+	export class Dgraphs extends AlanDictionary<{ node:Cgraphs__yes, init:Tgraphs__yes},Cyes__graph_participation> {
+		protected graph_iterator(graph:string):(node:Cgraphs__yes) => Cgraphs__yes { throw new Error(`Dictionary has no graph iterators.`); }
+		protected initialize(parent:Cyes__graph_participation, key:string) { return new Cgraphs__yes(key, {}, parent); }
+		protected resolve = resolve_graphs__yes
+		protected get path() { return `${this.parent.path}/graphs`; }
+		constructor(data:Tyes__graph_participation['graphs'], parent:Cyes__graph_participation) {
+			super(data, parent);
+		}
+	}
+}
+export namespace Cunrestricted {
 	export class Dcollection extends Reference<interface_.Ccollection__type__property,string> {
 
-		constructor(data:string, $this:Creferencer) {
-			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.properties.head)
-				.then(context => context?.component_root.output.result_interface_node())
+		constructor(data:string, $this:Cunrestricted) {
+			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.parent)
+				.then(context => context?.properties.head)
+				.then(context => context?.component_root.output.node())
 				.then(context => context?.properties.attributes.get(this.entry))
 
 				.then(context => context?.properties.type.cast('property').properties.type.cast('collection')).result!, true))
 		}
 	}
-	export class Dhead extends Cnode_selection_path {
-		constructor(data:Treferencer['head'], parent:Creferencer) {
+}
+export namespace Cwhere_clause {
+	export class Dhas_rule<T extends
+		{ name: 'no', node:Cno__has_rule, init:Tno__has_rule}|
+		{ name: 'yes', node:Cyes__has_rule, init:Tyes__has_rule}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'no': return (init:Tno__has_rule, parent:Cwhere_clause) => new Cno__has_rule(init, parent);
+				case 'yes': return (init:Tyes__has_rule, parent:Cwhere_clause) => new Cyes__has_rule(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected resolver(state:T['name']) {
+			switch (state) {
+				case 'no': return resolve_no__has_rule;
+				case 'yes': return resolve_yes__has_rule;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Twhere_clause['has rule'], parent:Cwhere_clause) {
+			super(data, parent);
+		}
+	}
+	export class Drules extends AlanDictionary<{ node:Crules, init:Trules},Cwhere_clause,|'order'> {
+		protected graph_iterator(graph:(|'order')):(node:Crules) => Crules {
+			switch (graph) {
+				case 'order': return (entry:Crules) => resolve(entry)
+					.then(context => context?.properties.has_successor.state.name === 'yes' ? context.properties.has_successor.state.node as Cyes__has_successor__rules : undefined)
+					.then(context => context?.properties.successor.ref).result!
+				default: throw new Error(`${graph} is not a valid graph iterator!`);
+			}
+		}
+		protected initialize(parent:Cwhere_clause, key:string, entry_init:Trules) { return new Crules(key, entry_init, parent); }
+		protected resolve = resolve_rules
+		protected get path() { return `${this.parent.path}/rules`; }
+		constructor(data:Twhere_clause['rules'], parent:Cwhere_clause) {
+			super(data, parent);
+		}
+	}
+}
+export namespace Cyes__has_rule {
+	export class Dfirst extends Reference<interface_.Crules,string> {
+
+		constructor(data:string, $this:Cyes__has_rule) {
+			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.parent)
+				.then(context => context?.properties.rules.get(this.entry))
+				.result!, true))
+		}
+	}
+}
+export namespace Crules {
+	export class Dcontext<T extends
+		{ name: 'context', node:Ccontext, init:Tcontext}|
+		{ name: 'sibling rule', node:Csibling_rule, init:Tsibling_rule}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'context': return (init:Tcontext, parent:Crules) => new Ccontext(init, parent);
+				case 'sibling rule': return (init:Tsibling_rule, parent:Crules) => new Csibling_rule(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected resolver(state:T['name']) {
+			switch (state) {
+				case 'context': return resolve_context;
+				case 'sibling rule': return resolve_sibling_rule;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Trules['context'], parent:Crules) {
+			super(data, parent);
+		}
+	}
+	export class Dhas_successor<T extends
+		{ name: 'no', node:Cno__has_successor__rules, init:Tno__has_successor__rules}|
+		{ name: 'yes', node:Cyes__has_successor__rules, init:Tyes__has_successor__rules}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'no': return (init:Tno__has_successor__rules, parent:Crules) => new Cno__has_successor__rules(init, parent);
+				case 'yes': return (init:Tyes__has_successor__rules, parent:Crules) => new Cyes__has_successor__rules(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected resolver(state:T['name']) {
+			switch (state) {
+				case 'no': return resolve_no__has_successor__rules;
+				case 'yes': return resolve_yes__has_successor__rules;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Trules['has successor'], parent:Crules) {
+			super(data, parent);
+		}
+	}
+	export class Dtail extends Cnode_path_tail {
+		constructor(data:Trules['tail'], parent:Crules) {
 			super(data, parent, {
+				context_direction: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.properties.context.state.node.output.direction())
+						.result!
+					).result!, false),
 				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.component_root.input.context_node())
+						.then(context => context?.properties.context.state.node.output.node())
+						.result!
+					).result!, false),
+				dependency: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(() => interface_.Cdependency.Pallowed)
+						.result!
+					).result!, false),
+				participation: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(() => interface_.Cparticipation.Pconditional)
 						.result!
 					).result!, false)
 			})
 		}
 	}
-	export class Dtail extends Cnode_content_path {
-		constructor(data:Treferencer['tail'], parent:Creferencer) {
+}
+export namespace Ccontext {
+	export class Dpath extends Ccontext_node_path {
+		constructor(data:Tcontext['path'], parent:Ccontext) {
 			super(data, parent, {
+				context_constraint: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.component_root.input.context_constraint())
+						.result!
+					).result!, false),
+				context_direction: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.component_root.input.context_direction())
+						.result!
+					).result!, false),
 				context_node: cache(() => resolve(parent).then(this_context => resolve(this_context)
-						.then(context => context?.properties.collection.ref)
-						.then(context => context?.properties.node)
+						.then(context => context?.component_root.input.context_node())
+						.result!
+					).result!, false),
+				this: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.component_root.input.this())
 						.result!
 					).result!, false)
 			})
+		}
+	}
+}
+export namespace Csibling_rule {
+	export class Drule extends Reference<interface_.Crules,string> {
+
+		constructor(data:string, $this:Csibling_rule) {
+			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.parent)
+				.then(context => context?.parent.properties.rules.get(this.entry))
+				.result!, true))
+		}
+	}
+}
+export namespace Cyes__has_successor__rules {
+	export class Dsuccessor extends Reference<interface_.Crules,string> {
+
+		constructor(data:string, $this:Cyes__has_successor__rules) {
+			super(data, cache(() => resolve($this).then(() => $this).then(context => context?.parent)
+				.then(context => context?.parent.properties.rules.get(this.entry))
+				.result!, true))
 		}
 	}
 }
@@ -3365,7 +4951,7 @@ export namespace Cinterface {
 	}
 	export class Dnumerical_types extends AlanDictionary<{ node:Cnumerical_types, init:Tnumerical_types},Cinterface> {
 		protected graph_iterator(graph:string):(node:Cnumerical_types) => Cnumerical_types { throw new Error(`Dictionary has no graph iterators.`); }
-		protected initialize(parent:Cinterface, key:string, entry_init:Tnumerical_types) { return new Cnumerical_types(key, entry_init, parent); }
+		protected initialize(parent:Cinterface, key:string) { return new Cnumerical_types(key, {}, parent); }
 		protected resolve = resolve_numerical_types
 		protected get path() { return `${this.parent.path}/numerical types`; }
 		constructor(data:Tinterface['numerical types'], parent:Cinterface) {
@@ -3375,6 +4961,10 @@ export namespace Cinterface {
 	export class Droot extends Cnode {
 		constructor(data:Tinterface['root'], parent:Cinterface) {
 			super(data, parent, {
+				entity: cache(() => resolve(parent).then(this_context => resolve(this_context)
+						.then(context => context?.definitions.entity)
+						.result!
+					).result!, false),
 				location: cache(() => resolve(parent).then(this_context => resolve(this_context)
 						.then(context => context?.definitions.node_location)
 						.result!
@@ -3387,169 +4977,107 @@ export namespace Cinterface {
 		}
 	}
 }
-export namespace Cnumerical_types {
-	export class Dhas_factor<T extends
-		{ name: 'no', node:Cno__has_factor, init:Tno__has_factor}|
-		{ name: 'yes', node:Cyes__has_factor, init:Tyes__has_factor}> extends StateGroup<T> {
-		protected initializer(state:T['name']) {
-			switch (state) {
-				case 'no': return (init:Tno__has_factor, parent:Cnumerical_types) => new Cno__has_factor(init, parent);
-				case 'yes': return (init:Tyes__has_factor, parent:Cnumerical_types) => new Cyes__has_factor(init, parent);
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		protected resolver(state:T['name']) {
-			switch (state) {
-				case 'no': return resolve_no__has_factor;
-				case 'yes': return resolve_yes__has_factor;
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		constructor(data:Tnumerical_types['has factor'], parent:Cnumerical_types) {
-			super(data, parent);
-		}
-	}
-}
-export namespace Cyes__has_factor {
-}
 /* de(resolution) */
 function auto_defer<T extends (...args:any) => void>(root:Cinterface, callback:T):T {
 	return callback;
 }
-function resolve_no__has_steps__ancestor_parameters_selection(obj:Cno__has_steps__ancestor_parameters_selection, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-}
-function resolve_matrix_parent(obj:Cmatrix_parent, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-}
-function resolve_state_parent__type__yes__has_steps__ancestor_parameters_selection(obj:Cstate_parent__type__yes__has_steps__ancestor_parameters_selection, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-}
-function resolve_yes__has_steps__ancestor_parameters_selection(obj:Cyes__has_steps__ancestor_parameters_selection, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	assert((<(detach?:boolean) => interface_.Ccommand_parameters>obj.inferences.parent_parameter)(detach) !== undefined || detach);
-	resolve_ancestor_parameters_selection(obj.properties.tail, detach);
-	obj.properties.type.switch({
-		'matrix parent': node => resolve_matrix_parent(node, detach),
-		'state parent': node => resolve_state_parent__type__yes__has_steps__ancestor_parameters_selection(node, detach)
-	});
-}
-function resolve_ancestor_parameters_selection(obj:Cancestor_parameters_selection, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	obj.properties.has_steps.switch({
-		'no': node => resolve_no__has_steps__ancestor_parameters_selection(node, detach),
-		'yes': node => resolve_yes__has_steps__ancestor_parameters_selection(node, detach)
-	});
-}
-function resolve_key(obj:Ckey, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	assert((<(detach?:boolean) => interface_.Cmatrix__type__properties>obj.inferences.matrix)(detach) !== undefined || detach);
-}
-function resolve_reference__type__command_parameter(obj:Creference__type__command_parameter, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	assert((<(detach?:boolean) => interface_.Creference__type__properties>(obj.properties.reference as any).resolve)(detach) !== undefined || detach);
-}
-function resolve_command_parameter(obj:Ccommand_parameter, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	resolve_ancestor_parameters_selection(obj.properties.ancestor_selection, detach);
-	obj.properties.type.switch({
-		'key': node => resolve_key(node, detach),
-		'reference': node => resolve_reference__type__command_parameter(node, detach)
-	});
-}
 function resolve_context_node(obj:Ccontext_node, detach:boolean = false) {
 	if (obj.destroyed) { return; };
 }
-function resolve_command_parameter_referencer(obj:Ccommand_parameter_referencer, detach:boolean = false) {
+function resolve_reference__type__parameter_definition(obj:Creference__type__parameter_definition, detach:boolean = false) {
 	if (obj.destroyed) { return; };
-	assert((<(detach?:boolean) => interface_.Ccollection__type__property>(obj.properties.collection as any).resolve)(detach) !== undefined || detach);
-	obj.properties.context_type.switch({
-		'command parameter': node => resolve_command_parameter(node, detach),
-		'context node': node => resolve_context_node(node, detach)
-	});
-	resolve_node_selection_path(obj.properties.head, detach);
-	resolve_node_content_path(obj.properties.tail, detach);
+	assert((<(detach?:boolean) => interface_.Cyes__has_constraint__text__type__properties>(obj.properties.reference as any).resolve)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cexisting>obj.properties.reference.inferences.existing_entry_reference)(detach) !== undefined || detach);
 }
-function resolve_file__type__properties(obj:Cfile__type__properties, detach:boolean = false) {
+function resolve_state_context_rule__type__parameter_definition(obj:Cstate_context_rule__type__parameter_definition, detach:boolean = false) {
 	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Cstates__state_group__type__properties>obj.inferences.state)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Crules>(obj.properties.rule as any).resolve)(detach) !== undefined || detach);
 }
-function resolve_dense(obj:Cdense, detach:boolean = false) {
+function resolve_parameter_definition__context(obj:Cparameter_definition__context, detach:boolean = false) {
 	if (obj.destroyed) { return; };
-}
-function resolve_sparse(obj:Csparse, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-}
-function resolve_matrix__type__properties(obj:Cmatrix__type__properties, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	resolve_command_parameters(obj.properties.parameters, detach);
-	resolve_command_parameter_referencer(obj.properties.referencer, detach);
+	assert((<(detach?:boolean) => interface_.Cparameter_definition__interface>obj.inferences.context_parameter)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Ccontext_constraint>obj.inferences.unbounded_navigation)(detach) !== undefined || detach);
+	resolve_context_parameter_path(obj.properties.head, detach);
 	obj.properties.type.switch({
-		'dense': node => resolve_dense(node, detach),
-		'sparse': node => resolve_sparse(node, detach)
+		'reference': node => resolve_reference__type__parameter_definition(node, detach),
+		'state context rule': node => resolve_state_context_rule__type__parameter_definition(node, detach)
 	});
 }
-function resolve_integer__set__number__type__properties(obj:Cinteger__set__number__type__properties, detach:boolean = false) {
+function resolve_root(obj:Croot, detach:boolean = false) {
 	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Ccontext_constraint>obj.inferences.unbounded_navigation)(detach) !== undefined || detach);
 }
-function resolve_natural__set__number__type__properties(obj:Cnatural__set__number__type__properties, detach:boolean = false) {
+function resolve_this_node(obj:Cthis_node, detach:boolean = false) {
 	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Ccontext_constraint>obj.inferences.unbounded_navigation)(detach) !== undefined || detach);
 }
-function resolve_number__type__properties(obj:Cnumber__type__properties, detach:boolean = false) {
+function resolve_context_node_path(obj:Ccontext_node_path, detach:boolean = false) {
 	if (obj.destroyed) { return; };
-	assert((<(detach?:boolean) => interface_.Cnumerical_types>(obj.properties.numerical_type as any).resolve)(detach) !== undefined || detach);
-	obj.properties.set.switch({
-		'integer': node => resolve_integer__set__number__type__properties(node, detach),
-		'natural': node => resolve_natural__set__number__type__properties(node, detach)
+	obj.properties.context.switch({
+		'context node': node => resolve_context_node(node, detach),
+		'parameter definition': node => resolve_parameter_definition__context(node, detach),
+		'root': node => resolve_root(node, detach),
+		'this node': node => resolve_this_node(node, detach)
 	});
 }
-function resolve_reference__type__properties(obj:Creference__type__properties, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	resolve_command_parameter_referencer(obj.properties.referencer, detach);
-}
-function resolve_states__state_group__type__properties(obj:Cstates__state_group__type__properties, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	resolve_command_parameters(obj.properties.parameters, detach);
-}
-function resolve_state_group__type__properties(obj:Cstate_group__type__properties, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	obj.properties.states.forEach(entry => resolve_states__state_group__type__properties(entry, detach));
-}
-function resolve_text__type__properties(obj:Ctext__type__properties, detach:boolean = false) {
+function resolve_no__has_steps__context_parameter_path(obj:Cno__has_steps__context_parameter_path, detach:boolean = false) {
 	if (obj.destroyed) { return; };
 }
-function resolve_properties(obj:Cproperties, detach:boolean = false) {
+function resolve_group__type__yes__has_steps__context_parameter_path(obj:Cgroup__type__yes__has_steps__context_parameter_path, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Cgroup__type__properties>(obj.properties.group as any).resolve)(detach) !== undefined || detach);
+}
+function resolve_parent__type__yes__has_steps__context_parameter_path(obj:Cparent__type__yes__has_steps__context_parameter_path, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Cparameter_definition__interface>obj.inferences.parent_parameter)(detach) !== undefined || detach);
+}
+function resolve_yes__has_steps__context_parameter_path(obj:Cyes__has_steps__context_parameter_path, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	resolve_context_parameter_path(obj.properties.tail, detach);
+	obj.properties.type.switch({
+		'group': node => resolve_group__type__yes__has_steps__context_parameter_path(node, detach),
+		'parent': node => resolve_parent__type__yes__has_steps__context_parameter_path(node, detach)
+	});
+}
+function resolve_context_parameter_path(obj:Ccontext_parameter_path, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	obj.properties.has_steps.switch({
+		'no': node => resolve_no__has_steps__context_parameter_path(node, detach),
+		'yes': node => resolve_yes__has_steps__context_parameter_path(node, detach)
+	});
+}
+function resolve_acyclic(obj:Cacyclic, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+}
+function resolve_ordered(obj:Cordered, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Cproperty>(obj.properties.ordering_property as any).resolve)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cyes__graph_participation>obj.properties.ordering_property.inferences.graph_participation)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cgraphs__yes>obj.properties.ordering_property.inferences.participates_in_this_graph)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cyes__has_constraint__text__type__property>obj.properties.ordering_property.inferences.reference)(detach) !== undefined || detach);
+	resolve_node_path_tail(obj.properties.path, detach);
+}
+function resolve_graphs__graphs_definition(obj:Cgraphs__graphs_definition, detach:boolean = false) {
 	if (obj.destroyed) { return; };
 	obj.properties.type.switch({
-		'file': node => resolve_file__type__properties(node, detach),
-		'matrix': node => resolve_matrix__type__properties(node, detach),
-		'number': node => resolve_number__type__properties(node, detach),
-		'reference': node => resolve_reference__type__properties(node, detach),
-		'state group': node => resolve_state_group__type__properties(node, detach),
-		'text': node => resolve_text__type__properties(node, detach)
+		'acyclic': node => resolve_acyclic(node, detach),
+		'ordered': node => resolve_ordered(node, detach)
 	});
 }
-function resolve_command_parameters(obj:Ccommand_parameters, detach:boolean = false) {
+function resolve_graphs_definition(obj:Cgraphs_definition, detach:boolean = false) {
 	if (obj.destroyed) { return; };
-	obj.properties.properties.forEach(entry => resolve_properties(entry, detach));
+	obj.properties.graphs.forEach(entry => resolve_graphs__graphs_definition(entry, detach));
 }
 function resolve_command(obj:Ccommand, detach:boolean = false) {
 	if (obj.destroyed) { return; };
-	resolve_command_parameters(obj.properties.parameters, detach);
-}
-function resolve_dictionary(obj:Cdictionary, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-}
-function resolve_matrix__type__collection(obj:Cmatrix__type__collection, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	resolve_referencer(obj.properties.referencer, detach);
+	resolve_parameter_definition__interface(obj.properties.parameters, detach);
 }
 function resolve_collection__type__property(obj:Ccollection__type__property, detach:boolean = false) {
 	if (obj.destroyed) { return; };
+	resolve_graphs_definition(obj.properties.graphs, detach);
+	assert((<(detach?:boolean) => interface_.Ctext__type__property>(obj.properties.key_property as any).resolve)(detach) !== undefined || detach);
 	resolve_node(obj.properties.node, detach);
-	obj.properties.type.switch({
-		'dictionary': node => resolve_dictionary(node, detach),
-		'matrix': node => resolve_matrix__type__collection(node, detach)
-	});
 }
 function resolve_file__type__property(obj:Cfile__type__property, detach:boolean = false) {
 	if (obj.destroyed) { return; };
@@ -3558,55 +5086,53 @@ function resolve_group__type__property(obj:Cgroup__type__property, detach:boolea
 	if (obj.destroyed) { return; };
 	resolve_node(obj.properties.node, detach);
 }
-function resolve_integer__set__number__type__property(obj:Cinteger__set__number__type__property, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-}
-function resolve_natural__set__number__type__property(obj:Cnatural__set__number__type__property, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-}
 function resolve_number__type__property(obj:Cnumber__type__property, detach:boolean = false) {
 	if (obj.destroyed) { return; };
-	obj.properties.set.switch({
-		'integer': node => resolve_integer__set__number__type__property(node, detach),
-		'natural': node => resolve_natural__set__number__type__property(node, detach)
-	});
-	assert((<(detach?:boolean) => interface_.Cnumerical_types>(obj.properties.type as any).resolve)(detach) !== undefined || detach);
+	resolve_number_type(obj.properties.type, detach);
 }
-function resolve_reference__type__property(obj:Creference__type__property, detach:boolean = false) {
+function resolve_no__has_successor__states__state_group__type__property(obj:Cno__has_successor__states__state_group__type__property, detach:boolean = false) {
 	if (obj.destroyed) { return; };
-	resolve_referencer(obj.properties.referencer, detach);
 }
-function resolve_output_parameters(obj:Coutput_parameters, detach:boolean = false) {
+function resolve_yes__has_successor__states__state_group__type__property(obj:Cyes__has_successor__states__state_group__type__property, detach:boolean = false) {
 	if (obj.destroyed) { return; };
-	resolve_node_type_path(obj.properties.node_selection, detach);
-}
-function resolve_output_arguments(obj:Coutput_arguments, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	assert((<(detach?:boolean) => interface_.Coutput_parameters>(obj.key as any).resolve)(detach) !== undefined || detach);
-	assert((<(detach?:boolean) => interface_.Cnode>obj.properties.path.inferences.constraint)(detach) !== undefined || detach);
-	resolve_node_selection_path(obj.properties.path, detach);
+	assert((<(detach?:boolean) => interface_.Cstates__state_group__type__property>(obj.properties.successor as any).resolve)(detach) !== undefined || detach);
 }
 function resolve_states__state_group__type__property(obj:Cstates__state_group__type__property, detach:boolean = false) {
 	if (obj.destroyed) { return; };
+	resolve_where_clause(obj.properties.context_rules, detach);
+	obj.properties.has_successor.switch({
+		'no': node => resolve_no__has_successor__states__state_group__type__property(node, detach),
+		'yes': node => resolve_yes__has_successor__states__state_group__type__property(node, detach)
+	});
 	resolve_node(obj.properties.node, detach);
-	obj.properties.output_arguments.forEach(entry => resolve_output_arguments(entry, detach));
 }
 function resolve_state_group__type__property(obj:Cstate_group__type__property, detach:boolean = false) {
 	if (obj.destroyed) { return; };
-	obj.properties.output_parameters.forEach(entry => resolve_output_parameters(entry, detach));
+	assert((<(detach?:boolean) => interface_.Cstates__state_group__type__property>(obj.properties.first_state as any).resolve)(detach) !== undefined || detach);
 	obj.properties.states.forEach(entry => resolve_states__state_group__type__property(entry, detach));
+}
+function resolve_no__has_constraint__text__type__property(obj:Cno__has_constraint__text__type__property, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+}
+function resolve_yes__has_constraint__text__type__property(obj:Cyes__has_constraint__text__type__property, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	resolve_referencer(obj.properties.referencer, detach);
 }
 function resolve_text__type__property(obj:Ctext__type__property, detach:boolean = false) {
 	if (obj.destroyed) { return; };
+	obj.properties.has_constraint.switch({
+		'no': node => resolve_no__has_constraint__text__type__property(node, detach),
+		'yes': node => resolve_yes__has_constraint__text__type__property(node, detach)
+	});
 }
 function resolve_property(obj:Cproperty, detach:boolean = false) {
 	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Cmember_type>obj.inferences.member_type)(detach) !== undefined || detach);
 	obj.properties.type.switch({
 		'collection': node => resolve_collection__type__property(node, detach),
 		'file': node => resolve_file__type__property(node, detach),
 		'group': node => resolve_group__type__property(node, detach),
 		'number': node => resolve_number__type__property(node, detach),
-		'reference': node => resolve_reference__type__property(node, detach),
 		'state group': node => resolve_state_group__type__property(node, detach),
 		'text': node => resolve_text__type__property(node, detach)
 	});
@@ -3622,143 +5148,270 @@ function resolve_node(obj:Cnode, detach:boolean = false) {
 	if (obj.destroyed) { return; };
 	obj.properties.attributes.forEach(entry => resolve_attributes(entry, detach));
 }
-function resolve_no__has_steps__node_content_path(obj:Cno__has_steps__node_content_path, detach:boolean = false) {
+function resolve_node_path(obj:Cnode_path, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	resolve_context_node_path(obj.properties.head, detach);
+	resolve_node_path_tail(obj.properties.tail, detach);
+}
+function resolve_no__has_steps__node_path_tail(obj:Cno__has_steps__node_path_tail, detach:boolean = false) {
 	if (obj.destroyed) { return; };
 }
-function resolve_group__type__yes__has_steps__node_content_path(obj:Cgroup__type__yes__has_steps__node_content_path, detach:boolean = false) {
+function resolve_group__type__yes__has_steps__node_path_tail(obj:Cgroup__type__yes__has_steps__node_path_tail, detach:boolean = false) {
 	if (obj.destroyed) { return; };
 	assert((<(detach?:boolean) => interface_.Cgroup__type__property>(obj.properties.group as any).resolve)(detach) !== undefined || detach);
 }
-function resolve_state__type__yes__has_steps__node_content_path(obj:Cstate__type__yes__has_steps__node_content_path, detach:boolean = false) {
+function resolve_parent__type__yes__has_steps__node_path_tail(obj:Cparent__type__yes__has_steps__node_path_tail, detach:boolean = false) {
 	if (obj.destroyed) { return; };
-	assert((<(detach?:boolean) => interface_.Cstates__state_group__type__property>(obj.properties.state as any).resolve)(detach) !== undefined || detach);
-	assert((<(detach?:boolean) => interface_.Cstate_group__type__property>(obj.properties.state_group as any).resolve)(detach) !== undefined || detach);
-}
-function resolve_yes__has_steps__node_content_path(obj:Cyes__has_steps__node_content_path, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	resolve_node_content_path(obj.properties.tail, detach);
-	obj.properties.type.switch({
-		'group': node => resolve_group__type__yes__has_steps__node_content_path(node, detach),
-		'state': node => resolve_state__type__yes__has_steps__node_content_path(node, detach)
-	});
-}
-function resolve_node_content_path(obj:Cnode_content_path, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	obj.properties.has_steps.switch({
-		'no': node => resolve_no__has_steps__node_content_path(node, detach),
-		'yes': node => resolve_yes__has_steps__node_content_path(node, detach)
-	});
-}
-function resolve_no__has_steps__node_selection_path(obj:Cno__has_steps__node_selection_path, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-}
-function resolve_collection_parent(obj:Ccollection_parent, detach:boolean = false) {
-	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Centity>obj.inferences.context_entity)(detach) !== undefined || detach);
 	assert((<(detach?:boolean) => interface_.Cnode>obj.inferences.parent_node)(detach) !== undefined || detach);
-}
-function resolve_group__type__yes__has_steps__node_selection_path(obj:Cgroup__type__yes__has_steps__node_selection_path, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	assert((<(detach?:boolean) => interface_.Cgroup__type__property>(obj.properties.group as any).resolve)(detach) !== undefined || detach);
-}
-function resolve_group_parent(obj:Cgroup_parent, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	assert((<(detach?:boolean) => interface_.Cnode>obj.inferences.parent_node)(detach) !== undefined || detach);
-}
-function resolve_matrix_key(obj:Cmatrix_key, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	assert((<(detach?:boolean) => interface_.Ccollection__type__property>obj.inferences.collection)(detach) !== undefined || detach);
-	assert((<(detach?:boolean) => interface_.Cmatrix__type__collection>obj.inferences.matrix)(detach) !== undefined || detach);
 }
 function resolve_reference__type__yes(obj:Creference__type__yes, detach:boolean = false) {
 	if (obj.destroyed) { return; };
-	assert((<(detach?:boolean) => interface_.Creference__type__property>(obj.properties.reference as any).resolve)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cdependency>obj.inferences.dependency_allowed)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cyes__has_constraint__text__type__property>(obj.properties.reference as any).resolve)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cdirection>obj.properties.reference.inferences.direction)(detach) !== undefined || detach);
 }
-function resolve_state_group_output_parameter(obj:Cstate_group_output_parameter, detach:boolean = false) {
+function resolve_reference_rule(obj:Creference_rule, detach:boolean = false) {
 	if (obj.destroyed) { return; };
-	assert((<(detach?:boolean) => interface_.Coutput_parameters>(obj.properties.output_parameter as any).resolve)(detach) !== undefined || detach);
-	assert((<(detach?:boolean) => interface_.Cstate_group__type__property>(obj.properties.state_group as any).resolve)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cdependency>obj.inferences.dependency_allowed)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cyes__has_constraint__text__type__property>(obj.properties.reference as any).resolve)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Crules>(obj.properties.rule as any).resolve)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cdirection>obj.properties.rule.inferences.direction)(detach) !== undefined || detach);
 }
-function resolve_state_parent__type__yes__has_steps__node_selection_path(obj:Cstate_parent__type__yes__has_steps__node_selection_path, detach:boolean = false) {
+function resolve_state__type(obj:Cstate__type, detach:boolean = false) {
 	if (obj.destroyed) { return; };
-	assert((<(detach?:boolean) => interface_.Cnode>obj.inferences.parent_node)(detach) !== undefined || detach);
-}
-function resolve_yes__has_steps__node_selection_path(obj:Cyes__has_steps__node_selection_path, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	resolve_node_selection_path(obj.properties.tail, detach);
-	obj.properties.type.switch({
-		'collection parent': node => resolve_collection_parent(node, detach),
-		'group': node => resolve_group__type__yes__has_steps__node_selection_path(node, detach),
-		'group parent': node => resolve_group_parent(node, detach),
-		'matrix key': node => resolve_matrix_key(node, detach),
-		'reference': node => resolve_reference__type__yes(node, detach),
-		'state group output parameter': node => resolve_state_group_output_parameter(node, detach),
-		'state parent': node => resolve_state_parent__type__yes__has_steps__node_selection_path(node, detach)
-	});
-}
-function resolve_node_selection_path(obj:Cnode_selection_path, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	obj.properties.has_steps.switch({
-		'no': node => resolve_no__has_steps__node_selection_path(node, detach),
-		'yes': node => resolve_yes__has_steps__node_selection_path(node, detach)
-	});
-}
-function resolve_node_type_path(obj:Cnode_type_path, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	resolve_node_type_path_step(obj.properties.steps, detach);
-}
-function resolve_no__has_steps__node_type_path_step(obj:Cno__has_steps__node_type_path_step, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-}
-function resolve_collection__type__yes(obj:Ccollection__type__yes, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	assert((<(detach?:boolean) => interface_.Ccollection__type__property>(obj.properties.collection as any).resolve)(detach) !== undefined || detach);
-}
-function resolve_group__type__yes__has_steps__node_type_path_step(obj:Cgroup__type__yes__has_steps__node_type_path_step, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-	assert((<(detach?:boolean) => interface_.Cgroup__type__property>(obj.properties.group as any).resolve)(detach) !== undefined || detach);
-}
-function resolve_state__type__yes__has_steps__node_type_path_step(obj:Cstate__type__yes__has_steps__node_type_path_step, detach:boolean = false) {
-	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Cparticipation>obj.inferences.conditional_result)(detach) !== undefined || detach);
 	assert((<(detach?:boolean) => interface_.Cstates__state_group__type__property>(obj.properties.state as any).resolve)(detach) !== undefined || detach);
 	assert((<(detach?:boolean) => interface_.Cstate_group__type__property>(obj.properties.state_group as any).resolve)(detach) !== undefined || detach);
 }
-function resolve_yes__has_steps__node_type_path_step(obj:Cyes__has_steps__node_type_path_step, detach:boolean = false) {
+function resolve_state_context_rule__type__yes(obj:Cstate_context_rule__type__yes, detach:boolean = false) {
 	if (obj.destroyed) { return; };
-	resolve_node_type_path_step(obj.properties.tail, detach);
+	assert((<(detach?:boolean) => interface_.Cstates__state_group__type__property>obj.inferences.state)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Crules>(obj.properties.context_rule as any).resolve)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cdirection>obj.properties.context_rule.inferences.direction)(detach) !== undefined || detach);
+}
+function resolve_yes__has_steps__node_path_tail(obj:Cyes__has_steps__node_path_tail, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	resolve_node_path_tail(obj.properties.tail, detach);
 	obj.properties.type.switch({
-		'collection': node => resolve_collection__type__yes(node, detach),
-		'group': node => resolve_group__type__yes__has_steps__node_type_path_step(node, detach),
-		'state': node => resolve_state__type__yes__has_steps__node_type_path_step(node, detach)
+		'group': node => resolve_group__type__yes__has_steps__node_path_tail(node, detach),
+		'parent': node => resolve_parent__type__yes__has_steps__node_path_tail(node, detach),
+		'reference': node => resolve_reference__type__yes(node, detach),
+		'reference rule': node => resolve_reference_rule(node, detach),
+		'state': node => resolve_state__type(node, detach),
+		'state context rule': node => resolve_state_context_rule__type__yes(node, detach)
 	});
 }
-function resolve_node_type_path_step(obj:Cnode_type_path_step, detach:boolean = false) {
+function resolve_node_path_tail(obj:Cnode_path_tail, detach:boolean = false) {
 	if (obj.destroyed) { return; };
 	obj.properties.has_steps.switch({
-		'no': node => resolve_no__has_steps__node_type_path_step(node, detach),
-		'yes': node => resolve_yes__has_steps__node_type_path_step(node, detach)
+		'no': node => resolve_no__has_steps__node_path_tail(node, detach),
+		'yes': node => resolve_yes__has_steps__node_path_tail(node, detach)
 	});
+}
+function resolve_no__decimal_places(obj:Cno__decimal_places, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+}
+function resolve_yes__decimal_places(obj:Cyes__decimal_places, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+}
+function resolve_integer(obj:Cinteger, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+}
+function resolve_natural(obj:Cnatural, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+}
+function resolve_number_type(obj:Cnumber_type, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	obj.properties.decimal_places.switch({
+		'no': node => resolve_no__decimal_places(node, detach),
+		'yes': node => resolve_yes__decimal_places(node, detach)
+	});
+	obj.properties.set.switch({
+		'integer': node => resolve_integer(node, detach),
+		'natural': node => resolve_natural(node, detach)
+	});
+	assert((<(detach?:boolean) => interface_.Cnumerical_types>(obj.properties.type as any).resolve)(detach) !== undefined || detach);
+}
+function resolve_dense_map(obj:Cdense_map, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Cyes__has_constraint__text__type__properties>obj.inferences.key_constraint)(detach) !== undefined || detach);
+}
+function resolve_simple(obj:Csimple, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+}
+function resolve_collection__type__properties(obj:Ccollection__type__properties, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Ctext__type__properties>(obj.properties.key_property as any).resolve)(detach) !== undefined || detach);
+	resolve_parameter_definition__interface(obj.properties.parameters, detach);
+	obj.properties.type.switch({
+		'dense map': node => resolve_dense_map(node, detach),
+		'simple': node => resolve_simple(node, detach)
+	});
+}
+function resolve_file__type__properties(obj:Cfile__type__properties, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+}
+function resolve_group__type__properties(obj:Cgroup__type__properties, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	resolve_parameter_definition__interface(obj.properties.parameters, detach);
+}
+function resolve_number__type__properties(obj:Cnumber__type__properties, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	resolve_number_type(obj.properties.type, detach);
+}
+function resolve_no__has_successor__states__state_group__type__properties(obj:Cno__has_successor__states__state_group__type__properties, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+}
+function resolve_yes__has_successor__states__state_group__type__properties(obj:Cyes__has_successor__states__state_group__type__properties, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Cstates__state_group__type__properties>(obj.properties.successor as any).resolve)(detach) !== undefined || detach);
+}
+function resolve_states__state_group__type__properties(obj:Cstates__state_group__type__properties, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	resolve_where_clause(obj.properties.context_rules, detach);
+	obj.properties.has_successor.switch({
+		'no': node => resolve_no__has_successor__states__state_group__type__properties(node, detach),
+		'yes': node => resolve_yes__has_successor__states__state_group__type__properties(node, detach)
+	});
+	resolve_parameter_definition__interface(obj.properties.parameters, detach);
+}
+function resolve_state_group__type__properties(obj:Cstate_group__type__properties, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Cstates__state_group__type__properties>(obj.properties.first_state as any).resolve)(detach) !== undefined || detach);
+	obj.properties.states.forEach(entry => resolve_states__state_group__type__properties(entry, detach));
+}
+function resolve_no__has_constraint__text__type__properties(obj:Cno__has_constraint__text__type__properties, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+}
+function resolve_existing(obj:Cexisting, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+}
+function resolve_new(obj:Cnew, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+}
+function resolve_yes__has_constraint__text__type__properties(obj:Cyes__has_constraint__text__type__properties, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	resolve_referencer(obj.properties.referencer, detach);
+	obj.properties.type.switch({
+		'existing': node => resolve_existing(node, detach),
+		'new': node => resolve_new(node, detach)
+	});
+}
+function resolve_text__type__properties(obj:Ctext__type__properties, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Cmember_type>obj.inferences.member_type)(detach) !== undefined || detach);
+	obj.properties.has_constraint.switch({
+		'no': node => resolve_no__has_constraint__text__type__properties(node, detach),
+		'yes': node => resolve_yes__has_constraint__text__type__properties(node, detach)
+	});
+}
+function resolve_properties(obj:Cproperties, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	obj.properties.type.switch({
+		'collection': node => resolve_collection__type__properties(node, detach),
+		'file': node => resolve_file__type__properties(node, detach),
+		'group': node => resolve_group__type__properties(node, detach),
+		'number': node => resolve_number__type__properties(node, detach),
+		'state group': node => resolve_state_group__type__properties(node, detach),
+		'text': node => resolve_text__type__properties(node, detach)
+	});
+}
+function resolve_parameter_definition__interface(obj:Cparameter_definition__interface, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	obj.properties.properties.forEach(entry => resolve_properties(entry, detach));
+}
+function resolve_no__has_tail(obj:Cno__has_tail, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+}
+function resolve_yes__has_tail(obj:Cyes__has_tail, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	resolve_node_path_tail(obj.properties.tail, detach);
+}
+function resolve_no__graph_participation(obj:Cno__graph_participation, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+}
+function resolve_graphs__yes(obj:Cgraphs__yes, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Cgraphs__graphs_definition>(obj.key as any).resolve)(detach) !== undefined || detach);
+}
+function resolve_yes__graph_participation(obj:Cyes__graph_participation, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Cdirection>obj.inferences.self_navigation)(detach) !== undefined || detach);
+	obj.properties.graphs.forEach(entry => resolve_graphs__yes(entry, detach));
+}
+function resolve_sibling(obj:Csibling, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Ccollection__type__property>obj.inferences.collection)(detach) !== undefined || detach);
+	obj.properties.graph_participation.switch({
+		'no': node => resolve_no__graph_participation(node, detach),
+		'yes': node => resolve_yes__graph_participation(node, detach)
+	});
+}
+function resolve_unrestricted(obj:Cunrestricted, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Ccollection__type__property>(obj.properties.collection as any).resolve)(detach) !== undefined || detach);
 }
 function resolve_referencer(obj:Creferencer, detach:boolean = false) {
 	if (obj.destroyed) { return; };
-	assert((<(detach?:boolean) => interface_.Ccollection__type__property>(obj.properties.collection as any).resolve)(detach) !== undefined || detach);
-	resolve_node_selection_path(obj.properties.head, detach);
-	resolve_node_content_path(obj.properties.tail, detach);
+	obj.properties.has_tail.switch({
+		'no': node => resolve_no__has_tail(node, detach),
+		'yes': node => resolve_yes__has_tail(node, detach)
+	});
+	resolve_node_path(obj.properties.head, detach);
+	resolve_where_clause(obj.properties.rules, detach);
+	obj.properties.type.switch({
+		'sibling': node => resolve_sibling(node, detach),
+		'unrestricted': node => resolve_unrestricted(node, detach)
+	});
+}
+function resolve_no__has_rule(obj:Cno__has_rule, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+}
+function resolve_yes__has_rule(obj:Cyes__has_rule, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Crules>(obj.properties.first as any).resolve)(detach) !== undefined || detach);
+}
+function resolve_context(obj:Ccontext, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	resolve_context_node_path(obj.properties.path, detach);
+}
+function resolve_sibling_rule(obj:Csibling_rule, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Crules>(obj.properties.rule as any).resolve)(detach) !== undefined || detach);
+}
+function resolve_no__has_successor__rules(obj:Cno__has_successor__rules, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+}
+function resolve_yes__has_successor__rules(obj:Cyes__has_successor__rules, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	assert((<(detach?:boolean) => interface_.Crules>(obj.properties.successor as any).resolve)(detach) !== undefined || detach);
+}
+function resolve_rules(obj:Crules, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	obj.properties.context.switch({
+		'context': node => resolve_context(node, detach),
+		'sibling rule': node => resolve_sibling_rule(node, detach)
+	});
+	obj.properties.has_successor.switch({
+		'no': node => resolve_no__has_successor__rules(node, detach),
+		'yes': node => resolve_yes__has_successor__rules(node, detach)
+	});
+	resolve_node_path_tail(obj.properties.tail, detach);
+}
+function resolve_where_clause(obj:Cwhere_clause, detach:boolean = false) {
+	if (obj.destroyed) { return; };
+	obj.properties.has_rule.switch({
+		'no': node => resolve_no__has_rule(node, detach),
+		'yes': node => resolve_yes__has_rule(node, detach)
+	});
+	obj.properties.rules.forEach(entry => resolve_rules(entry, detach));
 }
 function resolve_context_keys(obj:Ccontext_keys, detach:boolean = false) {
 	if (obj.destroyed) { return; };
 }
-function resolve_no__has_factor(obj:Cno__has_factor, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-}
-function resolve_yes__has_factor(obj:Cyes__has_factor, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-}
 function resolve_numerical_types(obj:Cnumerical_types, detach:boolean = false) {
 	if (obj.destroyed) { return; };
-	obj.properties.has_factor.switch({
-		'no': node => resolve_no__has_factor(node, detach),
-		'yes': node => resolve_yes__has_factor(node, detach)
-	});
 }
 function resolve_interface(obj:Cinterface, detach:boolean = false) {
 	if (obj.destroyed) { return; };

@@ -24,6 +24,7 @@ function cache<T extends AlanObject>(callback:() => T, update_ref_count = false)
 		}
 		if (detach && update_ref_count && cached_value !== undefined) {
 			--cached_value.reference_count;
+			(cached_value as any) = undefined;
 		} else if (cached_value === undefined) {
 			resolving = true;
 			cached_value = callback();
@@ -254,97 +255,31 @@ export abstract class AlanNode extends AlanObject {
 
 export type Tapplication_protocol_hand = {
 	'interface version':string;
-	'subscribe':'no'|['no', {}]|['yes', Tyes];
 };
 export class Capplication_protocol_hand extends AlanNode {
 	public key?:string;
 	public get root() { return this; }
 	public readonly properties:{
-		readonly interface_version:string,
-		readonly subscribe:Capplication_protocol_hand.Dsubscribe<
-			{ name: 'no', node:Cno, init:Tno}|
-			{ name: 'yes', node:Cyes, init:Tyes}>
+		readonly interface_version:string
 	};
 	constructor(init:Tapplication_protocol_hand, public lazy_eval:boolean) {
 		super();
 		const $this = this;
 		this.properties = {
-			interface_version: init['interface version'],
-			subscribe: new Capplication_protocol_hand.Dsubscribe(init['subscribe'], $this)
+			interface_version: init['interface version']
 		};
 	}
 	public get path() { return ``; }
 }
-export type Tno = {
-};
-export class Cno extends AlanNode {
-	constructor(init:Tno, public parent:Capplication_protocol_hand) {
-		super();
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent; }
-	public get path() { return `${this.parent.path}/subscribe?no`; }
-}
-export type Tyes = {
-	'subscription':string;
-};
-export class Cyes extends AlanNode {
-	public readonly properties:{
-		readonly subscription:string
-	};
-	constructor(init:Tyes, public parent:Capplication_protocol_hand) {
-		super();
-		const $this = this;
-		this.properties = {
-			subscription: init['subscription']
-		};
-	}
-	public get root() { return this.component_root.root; }
-	public get component_root() { return this.parent; }
-	public get path() { return `${this.parent.path}/subscribe?yes`; }
-}
 
 /* property classes */export namespace Capplication_protocol_hand {
-	export class Dsubscribe<T extends
-		{ name: 'no', node:Cno, init:Tno}|
-		{ name: 'yes', node:Cyes, init:Tyes}> extends StateGroup<T> {
-		protected initializer(state:T['name']) {
-			switch (state) {
-				case 'no': return (init:Tno, parent:Capplication_protocol_hand) => new Cno(init, parent);
-				case 'yes': return (init:Tyes, parent:Capplication_protocol_hand) => new Cyes(init, parent);
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		protected resolver(state:T['name']) {
-			switch (state) {
-				case 'no': return resolve_no;
-				case 'yes': return resolve_yes;
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		constructor(data:Tapplication_protocol_hand['subscribe'], parent:Capplication_protocol_hand) {
-			super(data, parent);
-		}
-	}
-}
-export namespace Cyes {
 }
 /* de(resolution) */
 function auto_defer<T extends (...args:any) => void>(root:Capplication_protocol_hand, callback:T):T {
 	return callback;
 }
-function resolve_no(obj:Cno, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-}
-function resolve_yes(obj:Cyes, detach:boolean = false) {
-	if (obj.destroyed) { return; };
-}
 function resolve_application_protocol_hand(obj:Capplication_protocol_hand, detach:boolean = false) {
 	if (obj.destroyed) { return; };
-	obj.properties.subscribe.switch({
-		'no': node => resolve_no(node, detach),
-		'yes': node => resolve_yes(node, detach)
-	});
 }
 
 export namespace Capplication_protocol_hand {
