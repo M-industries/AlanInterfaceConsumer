@@ -61,7 +61,7 @@ let serialize_command_arguments = (
 													function ($:read_api.Cinteger) { 
 														let $_integer= $;
 														var raw_data:{[key:string]:any} = {};
-														raw_data["value"] = $_integer.properties.value;
+														raw_data["value"] = $_integer.properties.value.value;
 														return raw_data;
 													}
 												(<any>$_number.properties.type.state.node))];
@@ -71,7 +71,7 @@ let serialize_command_arguments = (
 													function ($:read_api.Cnatural) { 
 														let $_natural= $;
 														var raw_data:{[key:string]:any} = {};
-														raw_data["value"] = $_natural.properties.value;
+														raw_data["value"] = $_natural.properties.value.value;
 														return raw_data;
 													}
 												(<any>$_number.properties.type.state.node))];

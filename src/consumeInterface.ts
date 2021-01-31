@@ -57,8 +57,8 @@ export function consumeInterface(
 	var consumeInterface: any;
 
 	readFiles(custom_project_package_path, function (pkg) {
-		$interface = new api_interface.Cinterface(JSON.parse(pkg["package"]["interface.alan.json"].toString("utf8")), false);
-		interface_hash = new api_manifest.Cmanifest(JSON.parse(pkg[".manifest"].toString("utf8")), false).properties.root
+		$interface = new api_interface.Cinterface(JSON.parse(pkg["package"]["interface.alan.json"].toString("utf8")));
+		interface_hash = new api_manifest.Cmanifest(JSON.parse(pkg[".manifest"].toString("utf8"))).properties.root
 			.properties.type.cast("directory").properties.children.get("interface.alan")?.properties.inode.properties.type.cast("file").properties.hash || "";
 		onInterfaceLoaded({
 			createSubscriptionConnection: function (subscription_request_jso, notifyHandler, onError:(error_message:string) => void) {
@@ -89,8 +89,7 @@ export function consumeInterface(
 			if (validate_subscription_requests_replies === true) {
 				subscription_request_decorated = new api_interface_subscription.Cinterface_subscription(
 					subscription_request_jso,
-					{ "interface": $interface },
-					false
+					{ "interface": $interface }
 				);
 			} else {
 				subscription_request_raw = subscription_request_jso;
@@ -127,7 +126,7 @@ export function consumeInterface(
 				case INIT:
 					throw new Error("Receiving data when no hand sent yet");
 				case EXPECT_SHAKE:
-					new api_application_protocol_shake.Capplication_protocol_shake(JSON.parse(raw_msg.toString("utf8")), false);
+					new api_application_protocol_shake.Capplication_protocol_shake(JSON.parse(raw_msg.toString("utf8")));
 					if (subscription_request_jso === null) {
 						connection_receive_state = EXPECT_NOTHING;
 					} else {
@@ -140,14 +139,14 @@ export function consumeInterface(
 									: subscription_request_raw
 								)
 							} ]
-						}, false))), "utf8"));
+						}))), "utf8"));
 						child.stdin.write(Buffer.from([ 0 ]));
 
 						connection_receive_state = EXPECT_NOTIFY;
 					}
 					break;
 				case EXPECT_NOTIFY:
-					var notify_reply = new api_application_protocol_notify.Capplication_protocol_notify(JSON.parse(raw_msg.toString("utf8")), false);
+					var notify_reply = new api_application_protocol_notify.Capplication_protocol_notify(JSON.parse(raw_msg.toString("utf8")));
 					notify_reply.properties.result.switch({
 						"notification": function ($) {
 							//TODO: pass $.properties.id to event handler
@@ -157,8 +156,7 @@ export function consumeInterface(
 										JSON.parse($.properties.notification),
 										{
 											"interface": $interface
-										},
-										false
+										}
 									)
 									: $.properties.notification
 							);
@@ -231,7 +229,7 @@ export function consumeInterface(
 		});
 		child.stdin.write(Buffer.from(JSON.stringify(serializer_application_protocol_hand.serialize(new api_application_protocol_hand.Capplication_protocol_hand({
 			"interface version": interface_hash,
-		}, false))), "utf8"));
+		}))), "utf8"));
 		child.stdin.write(Buffer.from([ 0 ]));
 		connection_receive_state = EXPECT_SHAKE;
 
@@ -243,7 +241,7 @@ export function consumeInterface(
 							"type": [ "invoke", {
 								"command": JSON.stringify(command_jso)
 							} ]
-						}, false))), "utf8"));
+						}))), "utf8"));
 						child.stdin.write(Buffer.from([ 0 ]));
 						break;
 					case CLOSED:
