@@ -13,9 +13,6 @@ function resolve<T>(context:T) {
 		result: context
 	};
 }
-function depend<T>(detach:boolean, obj:T):T {
-	return obj;
-}
 export type dictionary_type<T> = {[key:string]:T};
 
 
@@ -23,6 +20,7 @@ enum ResolutionStatus {
 	Resolved,
 	Resolving,
 	Unresolved,
+	Detached,
 }
 function cache<T extends AlanObject>(callback:(detach:boolean) => T) {
 	let cached_value:T;
@@ -31,11 +29,17 @@ function cache<T extends AlanObject>(callback:(detach:boolean) => T) {
 		switch (status) {
 			case ResolutionStatus.Resolving:
 				throw new Error(`Cyclic dependency detected!`);
+			case ResolutionStatus.Detached: {
+				if (detach) break;
+				(cached_value as any) = undefined;
+				status = ResolutionStatus.Resolving;
+				cached_value = callback(detach);
+				status = ResolutionStatus.Resolved;
+			} break;
 			case ResolutionStatus.Resolved: {
 				if (!detach) break;
 				callback(detach);
-				(cached_value as any) = undefined;
-				status = ResolutionStatus.Unresolved;
+				status = ResolutionStatus.Detached;
 			} break;
 			case ResolutionStatus.Unresolved: {
 				if (detach) break;
@@ -55,11 +59,17 @@ function maybe_cache<T extends AlanObject>(callback:(detach:boolean) => T|undefi
 		switch (status) {
 			case ResolutionStatus.Resolving:
 				throw new Error(`Cyclic dependency detected!`);
+			case ResolutionStatus.Detached: {
+				if (detach) break;
+				cached_value = undefined;
+				status = ResolutionStatus.Resolving;
+				cached_value = callback(detach);
+				status = ResolutionStatus.Resolved;
+			} break;
 			case ResolutionStatus.Resolved: {
 				if (!detach) break;
 				callback(detach);
-				cached_value = undefined;
-				status = ResolutionStatus.Unresolved;
+				status = ResolutionStatus.Detached;
 			} break;
 			case ResolutionStatus.Unresolved: {
 				if (detach) break;
@@ -102,7 +112,7 @@ export abstract class AlanInteger extends AlanObject {
 export abstract class AlanDictionary<T extends {node: AlanDictionaryEntry, init: any }, P extends AlanNode> extends AlanObject {
 	protected _entries:Map<string,((parent:P) => T['node'])|T['node']>;
 
-	private load_entry(key:string, entry:((parent:P) => T['node'])|T['node']):T['node'] {
+	protected load_entry(key:string, entry:((parent:P) => T['node'])|T['node']):T['node'] {
 		if (typeof entry === 'function') {
 			const loaded_entry = entry(this.parent);
 			this._entries.set(key, loaded_entry);
@@ -119,7 +129,7 @@ export abstract class AlanDictionary<T extends {node: AlanDictionaryEntry, init:
 	}
 
 	protected abstract initialize(parent:P, key:string, obj:T['init']):T['node'];
-	protected abstract resolve(obj:T['node'],detach?:boolean):void;
+	protected abstract finalize(obj:T['node'],detach?:boolean):void;
 
 	get size() { return this._entries.size; }
 	[Symbol.iterator]():IterableIterator<[string,T['node']]> {
@@ -172,7 +182,7 @@ export abstract class AlanDictionary<T extends {node: AlanDictionaryEntry, init:
 			return isFunction(onExists) ? onExists(this.load_entry(key, entry)) : onExists;
 		}
 	}
-}
+}	
 
 export abstract class AlanSet<T extends {node: AlanNode, init: any }, P extends AlanNode> extends AlanObject {
 	private _entries:Set<T['node']>;
@@ -184,7 +194,7 @@ export abstract class AlanSet<T extends {node: AlanNode, init: any }, P extends 
 	}
 
 	protected abstract initialize(parent:P, obj:T['init']):T['node'];
-	protected abstract resolve(obj:T['node'],detach?:boolean):void;
+	protected abstract finalize(obj:T['node'],detach?:boolean):void;
 
 	get size() { return this._entries.size; }
 	[Symbol.iterator]() {
@@ -214,7 +224,7 @@ export abstract class StateGroup<T extends {name:string, node:AlanNode & {parent
 	}
 
 	protected abstract initializer(state_name:T['name']): ($:T['init'], parent:AlanNode) => T['node'];
-	protected abstract resolver(state:T['name']): ($:T['node'], detach?:boolean) => void;
+	protected abstract finalizer(state:T['name']): ($:T['node'], detach?:boolean) => void;
 
 	switch<TS> (cases:{[K in T['name']]:(($:Extract<T, {name:K}>['node']) => TS) | (() => TS) | Exclude<TS, Function>}):TS {
 		const handler = cases[this.state.name as T['name']];
@@ -259,10 +269,13 @@ abstract class AlanGraphVertex extends AlanDictionaryEntry {
 export abstract class AlanTopology<T extends { node:AlanGraphVertex, init:any }, P extends AlanNode, G extends string> extends AlanDictionary<T,P> {
 	protected abstract _graphs: { [key: string ]: T['node'][] };
 	topo_forEach(graph:G, walk_function: ($:T['node']) => void) {
-		Array.from(this.topo_entries(graph)).forEach(entry => walk_function(entry));
+		for (let entry of this.topo_entries(graph)) { walk_function(entry); }
 	}
 	topo_entries(graph:G):IterableIterator<T['node']> {
 		return this._graphs[graph][Symbol.iterator]();
+	}
+	topo_toArray(graph:G):T['node'][] {
+		return Array.from(this.topo_entries(graph));
 	}
 	topo_sort(g:G) {
 		const $this = this;
@@ -298,6 +311,7 @@ export abstract class AlanTopology<T extends { node:AlanGraphVertex, init:any },
 	totally_ordered(g:G) {
 		if (this._graphs[g].length < 2) return;
 		this._graphs[g].reduce((prev, curr) => {
+			if (prev._edges[g].size === 0) { return curr; }
 			let connected = false;
 			prev._edges[g].forEach(e => { connected = (connected || e.ref.entity === curr) });
 			if (!connected)
@@ -339,8 +353,8 @@ export class Kproperties__update_node extends Reference<interface_.Cproperty, st
 				return resolve(entry)
 				.then(context => {
 					if (context?.properties.type.state.name === 'property') {
-						return depend(detach, context.properties.type.state.node as interface_.Cproperty);} else {
-						depend(detach, context?.properties.type);
+						return context.properties.type.state.node as interface_.Cproperty;
+					} else {
 						return undefined;
 					}
 				}).result;
@@ -390,12 +404,11 @@ export class Ccollection__type__properties__update_node extends AlanNode {
 			const interface_notification__update_node__properties__type__collection_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
-				.then(context => depend(detach, context?.key)?.ref)
+				.then(context => context?.key?.ref)
 				.then(context => {
 					if (context?.properties.type.state.name === 'collection') {
-						return resolve(depend(detach, context.properties.type.state.node as interface_.Ccollection)).result;
+						return resolve(context.properties.type.state.node as interface_.Ccollection).result;
 					} else {
-						depend(detach, context?.properties.type);
 						return undefined;
 					}
 				}).result!;
@@ -512,12 +525,11 @@ export class Cfile__type__properties__update_node extends AlanNode {
 			const interface_notification__update_node__properties__type__file_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
-				.then(context => depend(detach, context?.key)?.ref)
+				.then(context => context?.key?.ref)
 				.then(context => {
 					if (context?.properties.type.state.name === 'file') {
-						return resolve(depend(detach, context.properties.type.state.node as interface_.Cfile)).result;
+						return resolve(context.properties.type.state.node as interface_.Cfile).result;
 					} else {
-						depend(detach, context?.properties.type);
 						return undefined;
 					}
 				}).result!;
@@ -551,12 +563,11 @@ export class Cgroup__type__properties__update_node extends AlanNode {
 			const interface_notification__update_node__properties__type__group_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
-				.then(context => depend(detach, context?.key)?.ref)
+				.then(context => context?.key?.ref)
 				.then(context => {
 					if (context?.properties.type.state.name === 'group') {
-						return resolve(depend(detach, context.properties.type.state.node as interface_.Cgroup__type__property)).result;
+						return resolve(context.properties.type.state.node as interface_.Cgroup__type__property).result;
 					} else {
-						depend(detach, context?.properties.type);
 						return undefined;
 					}
 				}).result!;
@@ -591,12 +602,11 @@ export class Cnumber__type__properties__update_node extends AlanNode {
 			const interface_notification__update_node__properties__type__number_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
-				.then(context => depend(detach, context?.key)?.ref)
+				.then(context => context?.key?.ref)
 				.then(context => {
 					if (context?.properties.type.state.name === 'number') {
-						return resolve(depend(detach, context.properties.type.state.node as interface_.Cnumber)).result;
+						return resolve(context.properties.type.state.node as interface_.Cnumber).result;
 					} else {
-						depend(detach, context?.properties.type);
 						return undefined;
 					}
 				}).result!;
@@ -633,9 +643,8 @@ export class Cinteger__type__number__type__properties__update_node extends AlanN
 				.then(context => context?.properties.type)
 				.then(context => {
 					if (context?.properties.set.state.name === 'integer') {
-						return resolve(depend(detach, context.properties.set.state.node as interface_.Cinteger__set)).result;
+						return resolve(context.properties.set.state.node as interface_.Cinteger__set).result;
 					} else {
-						depend(detach, context?.properties.set);
 						return undefined;
 					}
 				}).result!;
@@ -672,9 +681,8 @@ export class Cnatural__type__number__type__properties__update_node extends AlanN
 				.then(context => context?.properties.type)
 				.then(context => {
 					if (context?.properties.set.state.name === 'natural') {
-						return resolve(depend(detach, context.properties.set.state.node as interface_.Cnatural__set)).result;
+						return resolve(context.properties.set.state.node as interface_.Cnatural__set).result;
 					} else {
-						depend(detach, context?.properties.set);
 						return undefined;
 					}
 				}).result!;
@@ -711,12 +719,11 @@ export class Cstate_group__type__properties__update_node extends AlanNode {
 			const interface_notification__update_node__properties__type__state_group_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
-				.then(context => depend(detach, context?.key)?.ref)
+				.then(context => context?.key?.ref)
 				.then(context => {
 					if (context?.properties.type.state.name === 'state group') {
-						return resolve(depend(detach, context.properties.type.state.node as interface_.Cstate_group)).result;
+						return resolve(context.properties.type.state.node as interface_.Cstate_group).result;
 					} else {
-						depend(detach, context?.properties.type);
 						return undefined;
 					}
 				}).result!;
@@ -788,12 +795,11 @@ export class Ctext__type__properties__update_node extends AlanNode {
 			const interface_notification__update_node__properties__type__text_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
-				.then(context => depend(detach, context?.key)?.ref)
+				.then(context => context?.key?.ref)
 				.then(context => {
 					if (context?.properties.type.state.name === 'text') {
-						return resolve(depend(detach, context.properties.type.state.node as interface_.Ctext)).result;
+						return resolve(context.properties.type.state.node as interface_.Ctext).result;
 					} else {
-						depend(detach, context?.properties.type);
 						return undefined;
 					}
 				}).result!;
@@ -843,8 +849,8 @@ export class Kproperties__initialize_node extends Reference<interface_.Cproperty
 				return resolve(entry)
 				.then(context => {
 					if (context?.properties.type.state.name === 'property') {
-						return depend(detach, context.properties.type.state.node as interface_.Cproperty);} else {
-						depend(detach, context?.properties.type);
+						return context.properties.type.state.node as interface_.Cproperty;
+					} else {
 						return undefined;
 					}
 				}).result;
@@ -894,12 +900,11 @@ export class Ccollection__type__properties__initialize_node extends AlanNode {
 			const interface_notification__initialize_node__properties__type__collection_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
-				.then(context => depend(detach, context?.key)?.ref)
+				.then(context => context?.key?.ref)
 				.then(context => {
 					if (context?.properties.type.state.name === 'collection') {
-						return resolve(depend(detach, context.properties.type.state.node as interface_.Ccollection)).result;
+						return resolve(context.properties.type.state.node as interface_.Ccollection).result;
 					} else {
-						depend(detach, context?.properties.type);
 						return undefined;
 					}
 				}).result!;
@@ -953,12 +958,11 @@ export class Cfile__type__properties__initialize_node extends AlanNode {
 			const interface_notification__initialize_node__properties__type__file_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
-				.then(context => depend(detach, context?.key)?.ref)
+				.then(context => context?.key?.ref)
 				.then(context => {
 					if (context?.properties.type.state.name === 'file') {
-						return resolve(depend(detach, context.properties.type.state.node as interface_.Cfile)).result;
+						return resolve(context.properties.type.state.node as interface_.Cfile).result;
 					} else {
-						depend(detach, context?.properties.type);
 						return undefined;
 					}
 				}).result!;
@@ -992,12 +996,11 @@ export class Cgroup__type__properties__initialize_node extends AlanNode {
 			const interface_notification__initialize_node__properties__type__group_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
-				.then(context => depend(detach, context?.key)?.ref)
+				.then(context => context?.key?.ref)
 				.then(context => {
 					if (context?.properties.type.state.name === 'group') {
-						return resolve(depend(detach, context.properties.type.state.node as interface_.Cgroup__type__property)).result;
+						return resolve(context.properties.type.state.node as interface_.Cgroup__type__property).result;
 					} else {
-						depend(detach, context?.properties.type);
 						return undefined;
 					}
 				}).result!;
@@ -1032,12 +1035,11 @@ export class Cnumber__type__properties__initialize_node extends AlanNode {
 			const interface_notification__initialize_node__properties__type__number_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
-				.then(context => depend(detach, context?.key)?.ref)
+				.then(context => context?.key?.ref)
 				.then(context => {
 					if (context?.properties.type.state.name === 'number') {
-						return resolve(depend(detach, context.properties.type.state.node as interface_.Cnumber)).result;
+						return resolve(context.properties.type.state.node as interface_.Cnumber).result;
 					} else {
-						depend(detach, context?.properties.type);
 						return undefined;
 					}
 				}).result!;
@@ -1074,9 +1076,8 @@ export class Cinteger__type__number__type__properties__initialize_node extends A
 				.then(context => context?.properties.type)
 				.then(context => {
 					if (context?.properties.set.state.name === 'integer') {
-						return resolve(depend(detach, context.properties.set.state.node as interface_.Cinteger__set)).result;
+						return resolve(context.properties.set.state.node as interface_.Cinteger__set).result;
 					} else {
-						depend(detach, context?.properties.set);
 						return undefined;
 					}
 				}).result!;
@@ -1113,9 +1114,8 @@ export class Cnatural__type__number__type__properties__initialize_node extends A
 				.then(context => context?.properties.type)
 				.then(context => {
 					if (context?.properties.set.state.name === 'natural') {
-						return resolve(depend(detach, context.properties.set.state.node as interface_.Cnatural__set)).result;
+						return resolve(context.properties.set.state.node as interface_.Cnatural__set).result;
 					} else {
-						depend(detach, context?.properties.set);
 						return undefined;
 					}
 				}).result!;
@@ -1150,12 +1150,11 @@ export class Cstate_group__type__properties__initialize_node extends AlanNode {
 			const interface_notification__initialize_node__properties__type__state_group_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
-				.then(context => depend(detach, context?.key)?.ref)
+				.then(context => context?.key?.ref)
 				.then(context => {
 					if (context?.properties.type.state.name === 'state group') {
-						return resolve(depend(detach, context.properties.type.state.node as interface_.Cstate_group)).result;
+						return resolve(context.properties.type.state.node as interface_.Cstate_group).result;
 					} else {
-						depend(detach, context?.properties.type);
 						return undefined;
 					}
 				}).result!;
@@ -1189,12 +1188,11 @@ export class Ctext__type__properties__initialize_node extends AlanNode {
 			const interface_notification__initialize_node__properties__type__text_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
-				.then(context => depend(detach, context?.key)?.ref)
+				.then(context => context?.key?.ref)
 				.then(context => {
 					if (context?.properties.type.state.name === 'text') {
-						return resolve(depend(detach, context.properties.type.state.node as interface_.Ctext)).result;
+						return resolve(context.properties.type.state.node as interface_.Ctext).result;
 					} else {
-						depend(detach, context?.properties.type);
 						return undefined;
 					}
 				}).result!;
@@ -1214,7 +1212,6 @@ export class Ctext__type__properties__initialize_node extends AlanNode {
 	public get entity() { return this.parent.entity; }
 }
 
-
 export type Tinterface_notification = {
 	'type':['create', Tcreate__type__interface_notification]|'remove'|['remove', {}]|['update', Tupdate__type__interface_notification];
 };
@@ -1228,7 +1225,7 @@ export class Cinterface_notification extends AlanNode {
 			{ name: 'update', node:Cupdate__type__interface_notification, init:Tupdate__type__interface_notification}>
 	};
 	constructor(init:Tinterface_notification, public readonly input: {
-	'interface':interface_.Cinterface}) {
+	'interface_':interface_.Cinterface}) {
 		super();
 		const $this = this;
 		this.properties = {
@@ -1292,7 +1289,7 @@ export class Cupdate__type__interface_notification extends AlanNode {
 export namespace Cinitialize_node {
 	export class Dproperties extends AlanDictionary<{ node:Cproperties__initialize_node, init:Tproperties__initialize_node},Cinitialize_node> {
 		protected initialize(parent:Cinitialize_node, key:string, entry_init:Tproperties__initialize_node) { return new Cproperties__initialize_node(key, entry_init, parent); }
-		protected resolve = finalize_properties__initialize_node
+		protected finalize = finalize_properties__initialize_node
 		protected eval_required_keys(detach:boolean = false):void {
 			let this_obj = this.parent;
 			function do_include(interface_notification__initialize_node__properties_key_nval:interface_.Cproperty):boolean {
@@ -1306,8 +1303,8 @@ export namespace Cinitialize_node {
 					let tail_obj = resolve(val)
 					.then(context => {
 						if (context?.properties.type.state.name === 'property') {
-							return depend(detach, context.properties.type.state.node as interface_.Cproperty);} else {
-							depend(detach, context?.properties.type);
+							return context.properties.type.state.node as interface_.Cproperty;
+						} else {
 							return undefined;
 						}
 					}).result;
@@ -1343,7 +1340,7 @@ export namespace Cproperties__initialize_node {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'collection': return finalize_collection__type__properties__initialize_node;
 				case 'file': return finalize_file__type__properties__initialize_node;
@@ -1363,7 +1360,7 @@ export namespace Cproperties__initialize_node {
 export namespace Ccollection__type__properties__initialize_node {
 	export class Dentries extends AlanSet<{ node:Centries__collection__type__properties__initialize_node, init:Tentries__collection__type__properties__initialize_node},Ccollection__type__properties__initialize_node> {
 		protected initialize(parent:Ccollection__type__properties__initialize_node, entry_init:Tentries__collection__type__properties__initialize_node) { return new Centries__collection__type__properties__initialize_node(entry_init, parent); }
-		protected resolve = finalize_entries__collection__type__properties__initialize_node
+		protected finalize = finalize_entries__collection__type__properties__initialize_node
 		public get path() { return `${this.parent.path}/entries`; }
 		constructor(data:Tcollection__type__properties__initialize_node['entries'], parent:Ccollection__type__properties__initialize_node) {
 			super(data, parent);
@@ -1408,7 +1405,7 @@ export namespace Cnumber__type__properties__initialize_node {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'integer': return finalize_integer__type__number__type__properties__initialize_node;
 				case 'natural': return finalize_natural__type__number__type__properties__initialize_node;
@@ -1442,7 +1439,7 @@ export namespace Cstate_group__type__properties__initialize_node {
 			super(data, parent, {
 				context_node: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
-					.then(context => depend(detach, context?.properties.state)?.ref)
+					.then(context => context?.properties.state?.ref)
 					.then(context => context?.properties.node).result!)
 			})
 		}
@@ -1466,7 +1463,7 @@ export namespace Ctext__type__properties__initialize_node {
 export namespace Cupdate_node {
 	export class Dproperties extends AlanDictionary<{ node:Cproperties__update_node, init:Tproperties__update_node},Cupdate_node> {
 		protected initialize(parent:Cupdate_node, key:string, entry_init:Tproperties__update_node) { return new Cproperties__update_node(key, entry_init, parent); }
-		protected resolve = finalize_properties__update_node
+		protected finalize = finalize_properties__update_node
 		public get path() { return `${this.parent.path}/properties`; }
 		constructor(data:Tupdate_node['properties'], parent:Cupdate_node) {
 			super(data, parent);
@@ -1492,7 +1489,7 @@ export namespace Cproperties__update_node {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'collection': return finalize_collection__type__properties__update_node;
 				case 'file': return finalize_file__type__properties__update_node;
@@ -1512,7 +1509,7 @@ export namespace Cproperties__update_node {
 export namespace Ccollection__type__properties__update_node {
 	export class Dentries extends AlanSet<{ node:Centries__collection__type__properties__update_node, init:Tentries__collection__type__properties__update_node},Ccollection__type__properties__update_node> {
 		protected initialize(parent:Ccollection__type__properties__update_node, entry_init:Tentries__collection__type__properties__update_node) { return new Centries__collection__type__properties__update_node(entry_init, parent); }
-		protected resolve = finalize_entries__collection__type__properties__update_node
+		protected finalize = finalize_entries__collection__type__properties__update_node
 		public get path() { return `${this.parent.path}/entries`; }
 		constructor(data:Tcollection__type__properties__update_node['entries'], parent:Ccollection__type__properties__update_node) {
 			super(data, parent);
@@ -1532,7 +1529,7 @@ export namespace Centries__collection__type__properties__update_node {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'create': return finalize_create__type__entries;
 				case 'remove': return finalize_remove__type__entries;
@@ -1601,7 +1598,7 @@ export namespace Cnumber__type__properties__update_node {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'integer': return finalize_integer__type__number__type__properties__update_node;
 				case 'natural': return finalize_natural__type__number__type__properties__update_node;
@@ -1653,7 +1650,7 @@ export namespace Cstate_group__type__properties__update_node {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'set': return finalize_set;
 				case 'update': return finalize_update__type__state_group;
@@ -1673,7 +1670,7 @@ export namespace Cset {
 				context_node: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
 					.then(context => context?.parent)
-					.then(context => depend(detach, context?.properties.state)?.ref)
+					.then(context => context?.properties.state?.ref)
 					.then(context => context?.properties.node).result!)
 			})
 		}
@@ -1686,7 +1683,7 @@ export namespace Cupdate__type__state_group {
 				context_node: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
 					.then(context => context?.parent)
-					.then(context => depend(detach, context?.properties.state)?.ref)
+					.then(context => context?.properties.state?.ref)
 					.then(context => context?.properties.node).result!)
 			})
 		}
@@ -1707,7 +1704,7 @@ export namespace Cinterface_notification {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'create': return finalize_create__type__interface_notification;
 				case 'remove': return finalize_remove__type__interface_notification;
@@ -1727,7 +1724,7 @@ export namespace Ccreate__type__interface_notification {
 			super(data, parent, {
 				context_node: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
-					.then(context => context?.root.input.interface)
+					.then(context => context?.root.input.interface_)
 					.then(context => context?.properties.root).result!)
 			})
 		}
@@ -1739,15 +1736,11 @@ export namespace Cupdate__type__interface_notification {
 			super(data, parent, {
 				context_node: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
-					.then(context => context?.root.input.interface)
+					.then(context => context?.root.input.interface_)
 					.then(context => context?.properties.root).result!)
 			})
 		}
 	}
-}
-/* de(resolution) */
-function auto_defer_validator<T extends (...args:any) => void>(root:Cinterface_notification, callback:T):T {
-	return callback;
 }
 function finalize_entries__collection__type__properties__initialize_node(obj:Centries__collection__type__properties__initialize_node, detach:boolean = false) {
 	finalize_initialize_node(obj.properties.node, detach);
@@ -1905,11 +1898,9 @@ function finalize_interface_notification(obj:Cinterface_notification, detach:boo
 
 export namespace Cinterface_notification {
 	export function create(init:Tinterface_notification, input: {
-		'interface':interface_.Cinterface
-	}):Cinterface_notification {
+	'interface_':interface_.Cinterface}):Cinterface_notification {
 		const instance = new Cinterface_notification(init, input as any);
 		finalize_interface_notification(instance);
-		;
 		return instance;
 	};
 }

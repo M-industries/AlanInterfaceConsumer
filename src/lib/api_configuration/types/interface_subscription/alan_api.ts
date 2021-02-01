@@ -13,9 +13,6 @@ function resolve<T>(context:T) {
 		result: context
 	};
 }
-function depend<T>(detach:boolean, obj:T):T {
-	return obj;
-}
 export type dictionary_type<T> = {[key:string]:T};
 
 
@@ -23,6 +20,7 @@ enum ResolutionStatus {
 	Resolved,
 	Resolving,
 	Unresolved,
+	Detached,
 }
 function cache<T extends AlanObject>(callback:(detach:boolean) => T) {
 	let cached_value:T;
@@ -31,11 +29,17 @@ function cache<T extends AlanObject>(callback:(detach:boolean) => T) {
 		switch (status) {
 			case ResolutionStatus.Resolving:
 				throw new Error(`Cyclic dependency detected!`);
+			case ResolutionStatus.Detached: {
+				if (detach) break;
+				(cached_value as any) = undefined;
+				status = ResolutionStatus.Resolving;
+				cached_value = callback(detach);
+				status = ResolutionStatus.Resolved;
+			} break;
 			case ResolutionStatus.Resolved: {
 				if (!detach) break;
 				callback(detach);
-				(cached_value as any) = undefined;
-				status = ResolutionStatus.Unresolved;
+				status = ResolutionStatus.Detached;
 			} break;
 			case ResolutionStatus.Unresolved: {
 				if (detach) break;
@@ -55,11 +59,17 @@ function maybe_cache<T extends AlanObject>(callback:(detach:boolean) => T|undefi
 		switch (status) {
 			case ResolutionStatus.Resolving:
 				throw new Error(`Cyclic dependency detected!`);
+			case ResolutionStatus.Detached: {
+				if (detach) break;
+				cached_value = undefined;
+				status = ResolutionStatus.Resolving;
+				cached_value = callback(detach);
+				status = ResolutionStatus.Resolved;
+			} break;
 			case ResolutionStatus.Resolved: {
 				if (!detach) break;
 				callback(detach);
-				cached_value = undefined;
-				status = ResolutionStatus.Unresolved;
+				status = ResolutionStatus.Detached;
 			} break;
 			case ResolutionStatus.Unresolved: {
 				if (detach) break;
@@ -102,7 +112,7 @@ export abstract class AlanInteger extends AlanObject {
 export abstract class AlanDictionary<T extends {node: AlanDictionaryEntry, init: any }, P extends AlanNode> extends AlanObject {
 	protected _entries:Map<string,((parent:P) => T['node'])|T['node']>;
 
-	private load_entry(key:string, entry:((parent:P) => T['node'])|T['node']):T['node'] {
+	protected load_entry(key:string, entry:((parent:P) => T['node'])|T['node']):T['node'] {
 		if (typeof entry === 'function') {
 			const loaded_entry = entry(this.parent);
 			this._entries.set(key, loaded_entry);
@@ -119,7 +129,7 @@ export abstract class AlanDictionary<T extends {node: AlanDictionaryEntry, init:
 	}
 
 	protected abstract initialize(parent:P, key:string, obj:T['init']):T['node'];
-	protected abstract resolve(obj:T['node'],detach?:boolean):void;
+	protected abstract finalize(obj:T['node'],detach?:boolean):void;
 
 	get size() { return this._entries.size; }
 	[Symbol.iterator]():IterableIterator<[string,T['node']]> {
@@ -172,7 +182,7 @@ export abstract class AlanDictionary<T extends {node: AlanDictionaryEntry, init:
 			return isFunction(onExists) ? onExists(this.load_entry(key, entry)) : onExists;
 		}
 	}
-}
+}	
 
 export abstract class AlanSet<T extends {node: AlanNode, init: any }, P extends AlanNode> extends AlanObject {
 	private _entries:Set<T['node']>;
@@ -184,7 +194,7 @@ export abstract class AlanSet<T extends {node: AlanNode, init: any }, P extends 
 	}
 
 	protected abstract initialize(parent:P, obj:T['init']):T['node'];
-	protected abstract resolve(obj:T['node'],detach?:boolean):void;
+	protected abstract finalize(obj:T['node'],detach?:boolean):void;
 
 	get size() { return this._entries.size; }
 	[Symbol.iterator]() {
@@ -214,7 +224,7 @@ export abstract class StateGroup<T extends {name:string, node:AlanNode & {parent
 	}
 
 	protected abstract initializer(state_name:T['name']): ($:T['init'], parent:AlanNode) => T['node'];
-	protected abstract resolver(state:T['name']): ($:T['node'], detach?:boolean) => void;
+	protected abstract finalizer(state:T['name']): ($:T['node'], detach?:boolean) => void;
 
 	switch<TS> (cases:{[K in T['name']]:(($:Extract<T, {name:K}>['node']) => TS) | (() => TS) | Exclude<TS, Function>}):TS {
 		const handler = cases[this.state.name as T['name']];
@@ -259,10 +269,13 @@ abstract class AlanGraphVertex extends AlanDictionaryEntry {
 export abstract class AlanTopology<T extends { node:AlanGraphVertex, init:any }, P extends AlanNode, G extends string> extends AlanDictionary<T,P> {
 	protected abstract _graphs: { [key: string ]: T['node'][] };
 	topo_forEach(graph:G, walk_function: ($:T['node']) => void) {
-		Array.from(this.topo_entries(graph)).forEach(entry => walk_function(entry));
+		for (let entry of this.topo_entries(graph)) { walk_function(entry); }
 	}
 	topo_entries(graph:G):IterableIterator<T['node']> {
 		return this._graphs[graph][Symbol.iterator]();
+	}
+	topo_toArray(graph:G):T['node'][] {
+		return Array.from(this.topo_entries(graph));
 	}
 	topo_sort(g:G) {
 		const $this = this;
@@ -298,6 +311,7 @@ export abstract class AlanTopology<T extends { node:AlanGraphVertex, init:any },
 	totally_ordered(g:G) {
 		if (this._graphs[g].length < 2) return;
 		this._graphs[g].reduce((prev, curr) => {
+			if (prev._edges[g].size === 0) { return curr; }
 			let connected = false;
 			prev._edges[g].forEach(e => { connected = (connected || e.ref.entity === curr) });
 			if (!connected)
@@ -331,7 +345,7 @@ export class Kcontext_keys__context_keys extends Reference<interface_.Ccontext_k
 	constructor(key:string, $this:Ccontext_keys__context_keys) {
 		super(key, cache((detach:boolean) => resolve($this.parent)
 			.then(() => $this.parent)
-			.then(context => context?.root.input.interface)
+			.then(context => context?.root.input.interface_)
 			.then(context => {
 				const entry = context?.properties.context_keys.get(this.entry)!;
 				return resolve(entry).result;
@@ -362,7 +376,6 @@ export class Ccontext_keys__context_keys extends AlanDictionaryEntry {
 	public get entity() { return this; }
 }
 
-
 export type Tinterface_subscription = {
 	'context keys':Tcontext_keys__interface_subscription;
 	'send initialization data':'no'|['no', {}]|'yes'|['yes', {}];
@@ -377,7 +390,7 @@ export class Cinterface_subscription extends AlanNode {
 			{ name: 'yes', node:Cyes, init:Tyes}>
 	};
 	constructor(init:Tinterface_subscription, public readonly input: {
-	'interface':interface_.Cinterface}) {
+	'interface_':interface_.Cinterface}) {
 		super();
 		const $this = this;
 		this.properties = {
@@ -415,7 +428,7 @@ export class Cyes extends AlanNode {
 export namespace Ccontext_keys__interface_subscription {
 	export class Dcontext_keys extends AlanDictionary<{ node:Ccontext_keys__context_keys, init:Tcontext_keys__context_keys},Ccontext_keys__interface_subscription> {
 		protected initialize(parent:Ccontext_keys__interface_subscription, key:string, entry_init:Tcontext_keys__context_keys) { return new Ccontext_keys__context_keys(key, entry_init, parent); }
-		protected resolve = finalize_context_keys__context_keys
+		protected finalize = finalize_context_keys__context_keys
 		protected eval_required_keys(detach:boolean = false):void {
 			let this_obj = this.parent;
 			function do_include(interface_subscription__context_keys__context_keys_key_nval:interface_.Ccontext_keys):boolean {
@@ -423,7 +436,7 @@ export namespace Ccontext_keys__interface_subscription {
 			};
 			resolve(this.parent)
 			.then(() => this.parent)
-			.then(context => context?.root.input.interface)
+			.then(context => context?.root.input.interface_)
 			.then(context => {
 				for (let [key,val] of context?.properties.context_keys) {
 					let tail_obj = resolve(val).result;
@@ -458,7 +471,7 @@ export namespace Cinterface_subscription {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'no': return finalize_no;
 				case 'yes': return finalize_yes;
@@ -470,10 +483,6 @@ export namespace Cinterface_subscription {
 		}
 		public get path() { return `<unknown>/send initialization data`; }
 	}
-}
-/* de(resolution) */
-function auto_defer_validator<T extends (...args:any) => void>(root:Cinterface_subscription, callback:T):T {
-	return callback;
 }
 function finalize_context_keys__context_keys(obj:Ccontext_keys__context_keys, detach:boolean = false) {
 	assert((<(detach?:boolean) => interface_.Ccontext_keys>(obj.key as any).resolve)(detach) !== undefined || detach);
@@ -500,11 +509,9 @@ function finalize_interface_subscription(obj:Cinterface_subscription, detach:boo
 
 export namespace Cinterface_subscription {
 	export function create(init:Tinterface_subscription, input: {
-		'interface':interface_.Cinterface
-	}):Cinterface_subscription {
+	'interface_':interface_.Cinterface}):Cinterface_subscription {
 		const instance = new Cinterface_subscription(init, input as any);
 		finalize_interface_subscription(instance);
-		;
 		return instance;
 	};
 }

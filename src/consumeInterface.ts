@@ -89,7 +89,7 @@ export function consumeInterface(
 			if (validate_subscription_requests_replies === true) {
 				subscription_request_decorated = new api_interface_subscription.Cinterface_subscription(
 					subscription_request_jso,
-					{ "interface": $interface }
+					{ "interface_": $interface }
 				);
 			} else {
 				subscription_request_raw = subscription_request_jso;
@@ -155,7 +155,7 @@ export function consumeInterface(
 									?  new api_interface_notification.Cinterface_notification(
 										JSON.parse($.properties.notification),
 										{
-											"interface": $interface
+											"interface_": $interface
 										}
 									)
 									: $.properties.notification

@@ -12,9 +12,6 @@ function resolve<T>(context:T) {
 		result: context
 	};
 }
-function depend<T>(detach:boolean, obj:T):T {
-	return obj;
-}
 export type dictionary_type<T> = {[key:string]:T};
 
 
@@ -22,6 +19,7 @@ enum ResolutionStatus {
 	Resolved,
 	Resolving,
 	Unresolved,
+	Detached,
 }
 function cache<T extends AlanObject>(callback:(detach:boolean) => T) {
 	let cached_value:T;
@@ -30,11 +28,17 @@ function cache<T extends AlanObject>(callback:(detach:boolean) => T) {
 		switch (status) {
 			case ResolutionStatus.Resolving:
 				throw new Error(`Cyclic dependency detected!`);
+			case ResolutionStatus.Detached: {
+				if (detach) break;
+				(cached_value as any) = undefined;
+				status = ResolutionStatus.Resolving;
+				cached_value = callback(detach);
+				status = ResolutionStatus.Resolved;
+			} break;
 			case ResolutionStatus.Resolved: {
 				if (!detach) break;
 				callback(detach);
-				(cached_value as any) = undefined;
-				status = ResolutionStatus.Unresolved;
+				status = ResolutionStatus.Detached;
 			} break;
 			case ResolutionStatus.Unresolved: {
 				if (detach) break;
@@ -54,11 +58,17 @@ function maybe_cache<T extends AlanObject>(callback:(detach:boolean) => T|undefi
 		switch (status) {
 			case ResolutionStatus.Resolving:
 				throw new Error(`Cyclic dependency detected!`);
+			case ResolutionStatus.Detached: {
+				if (detach) break;
+				cached_value = undefined;
+				status = ResolutionStatus.Resolving;
+				cached_value = callback(detach);
+				status = ResolutionStatus.Resolved;
+			} break;
 			case ResolutionStatus.Resolved: {
 				if (!detach) break;
 				callback(detach);
-				cached_value = undefined;
-				status = ResolutionStatus.Unresolved;
+				status = ResolutionStatus.Detached;
 			} break;
 			case ResolutionStatus.Unresolved: {
 				if (detach) break;
@@ -101,7 +111,7 @@ export abstract class AlanInteger extends AlanObject {
 export abstract class AlanDictionary<T extends {node: AlanDictionaryEntry, init: any }, P extends AlanNode> extends AlanObject {
 	protected _entries:Map<string,((parent:P) => T['node'])|T['node']>;
 
-	private load_entry(key:string, entry:((parent:P) => T['node'])|T['node']):T['node'] {
+	protected load_entry(key:string, entry:((parent:P) => T['node'])|T['node']):T['node'] {
 		if (typeof entry === 'function') {
 			const loaded_entry = entry(this.parent);
 			this._entries.set(key, loaded_entry);
@@ -118,7 +128,7 @@ export abstract class AlanDictionary<T extends {node: AlanDictionaryEntry, init:
 	}
 
 	protected abstract initialize(parent:P, key:string, obj:T['init']):T['node'];
-	protected abstract resolve(obj:T['node'],detach?:boolean):void;
+	protected abstract finalize(obj:T['node'],detach?:boolean):void;
 
 	get size() { return this._entries.size; }
 	[Symbol.iterator]():IterableIterator<[string,T['node']]> {
@@ -183,7 +193,7 @@ export abstract class AlanSet<T extends {node: AlanNode, init: any }, P extends 
 	}
 
 	protected abstract initialize(parent:P, obj:T['init']):T['node'];
-	protected abstract resolve(obj:T['node'],detach?:boolean):void;
+	protected abstract finalize(obj:T['node'],detach?:boolean):void;
 
 	get size() { return this._entries.size; }
 	[Symbol.iterator]() {
@@ -213,7 +223,7 @@ export abstract class StateGroup<T extends {name:string, node:AlanNode & {parent
 	}
 
 	protected abstract initializer(state_name:T['name']): ($:T['init'], parent:AlanNode) => T['node'];
-	protected abstract resolver(state:T['name']): ($:T['node'], detach?:boolean) => void;
+	protected abstract finalizer(state:T['name']): ($:T['node'], detach?:boolean) => void;
 
 	switch<TS> (cases:{[K in T['name']]:(($:Extract<T, {name:K}>['node']) => TS) | (() => TS) | Exclude<TS, Function>}):TS {
 		const handler = cases[this.state.name as T['name']];
@@ -258,10 +268,13 @@ abstract class AlanGraphVertex extends AlanDictionaryEntry {
 export abstract class AlanTopology<T extends { node:AlanGraphVertex, init:any }, P extends AlanNode, G extends string> extends AlanDictionary<T,P> {
 	protected abstract _graphs: { [key: string ]: T['node'][] };
 	topo_forEach(graph:G, walk_function: ($:T['node']) => void) {
-		Array.from(this.topo_entries(graph)).forEach(entry => walk_function(entry));
+		for (let entry of this.topo_entries(graph)) { walk_function(entry); }
 	}
 	topo_entries(graph:G):IterableIterator<T['node']> {
 		return this._graphs[graph][Symbol.iterator]();
+	}
+	topo_toArray(graph:G):T['node'][] {
+		return Array.from(this.topo_entries(graph));
 	}
 	topo_sort(g:G) {
 		const $this = this;
@@ -297,6 +310,7 @@ export abstract class AlanTopology<T extends { node:AlanGraphVertex, init:any },
 	totally_ordered(g:G) {
 		if (this._graphs[g].length < 2) return;
 		this._graphs[g].reduce((prev, curr) => {
+			if (prev._edges[g].size === 0) { return curr; }
 			let connected = false;
 			prev._edges[g].forEach(e => { connected = (connected || e.ref.entity === curr) });
 			if (!connected)
@@ -307,7 +321,6 @@ export abstract class AlanTopology<T extends { node:AlanGraphVertex, init:any },
 }
 
 /* alan objects */
-
 
 export type Tapplication_protocol_request = {
 	'type':['invoke', Tinvoke]|['subscribe', Tsubscribe]|['unsubscribe', Tunsubscribe];
@@ -406,7 +419,7 @@ export namespace Capplication_protocol_request {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'invoke': return finalize_invoke;
 				case 'subscribe': return finalize_subscribe;
@@ -426,10 +439,6 @@ export namespace Csubscribe {
 }
 export namespace Cunsubscribe {
 }
-/* de(resolution) */
-function auto_defer_validator<T extends (...args:any) => void>(root:Capplication_protocol_request, callback:T):T {
-	return callback;
-}
 function finalize_invoke(obj:Cinvoke, detach:boolean = false) {
 }
 function finalize_subscribe(obj:Csubscribe, detach:boolean = false) {
@@ -448,7 +457,6 @@ export namespace Capplication_protocol_request {
 	export function create(init:Tapplication_protocol_request):Capplication_protocol_request {
 		const instance = new Capplication_protocol_request(init);
 		finalize_application_protocol_request(instance);
-		;
 		return instance;
 	};
 }

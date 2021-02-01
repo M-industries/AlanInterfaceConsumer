@@ -12,9 +12,6 @@ function resolve<T>(context:T) {
 		result: context
 	};
 }
-function depend<T>(detach:boolean, obj:T):T {
-	return obj;
-}
 export type dictionary_type<T> = {[key:string]:T};
 
 
@@ -22,6 +19,7 @@ enum ResolutionStatus {
 	Resolved,
 	Resolving,
 	Unresolved,
+	Detached,
 }
 function cache<T extends AlanObject>(callback:(detach:boolean) => T) {
 	let cached_value:T;
@@ -30,11 +28,17 @@ function cache<T extends AlanObject>(callback:(detach:boolean) => T) {
 		switch (status) {
 			case ResolutionStatus.Resolving:
 				throw new Error(`Cyclic dependency detected!`);
+			case ResolutionStatus.Detached: {
+				if (detach) break;
+				(cached_value as any) = undefined;
+				status = ResolutionStatus.Resolving;
+				cached_value = callback(detach);
+				status = ResolutionStatus.Resolved;
+			} break;
 			case ResolutionStatus.Resolved: {
 				if (!detach) break;
 				callback(detach);
-				(cached_value as any) = undefined;
-				status = ResolutionStatus.Unresolved;
+				status = ResolutionStatus.Detached;
 			} break;
 			case ResolutionStatus.Unresolved: {
 				if (detach) break;
@@ -54,11 +58,17 @@ function maybe_cache<T extends AlanObject>(callback:(detach:boolean) => T|undefi
 		switch (status) {
 			case ResolutionStatus.Resolving:
 				throw new Error(`Cyclic dependency detected!`);
+			case ResolutionStatus.Detached: {
+				if (detach) break;
+				cached_value = undefined;
+				status = ResolutionStatus.Resolving;
+				cached_value = callback(detach);
+				status = ResolutionStatus.Resolved;
+			} break;
 			case ResolutionStatus.Resolved: {
 				if (!detach) break;
 				callback(detach);
-				cached_value = undefined;
-				status = ResolutionStatus.Unresolved;
+				status = ResolutionStatus.Detached;
 			} break;
 			case ResolutionStatus.Unresolved: {
 				if (detach) break;
@@ -101,7 +111,7 @@ export abstract class AlanInteger extends AlanObject {
 export abstract class AlanDictionary<T extends {node: AlanDictionaryEntry, init: any }, P extends AlanNode> extends AlanObject {
 	protected _entries:Map<string,((parent:P) => T['node'])|T['node']>;
 
-	private load_entry(key:string, entry:((parent:P) => T['node'])|T['node']):T['node'] {
+	protected load_entry(key:string, entry:((parent:P) => T['node'])|T['node']):T['node'] {
 		if (typeof entry === 'function') {
 			const loaded_entry = entry(this.parent);
 			this._entries.set(key, loaded_entry);
@@ -118,7 +128,7 @@ export abstract class AlanDictionary<T extends {node: AlanDictionaryEntry, init:
 	}
 
 	protected abstract initialize(parent:P, key:string, obj:T['init']):T['node'];
-	protected abstract resolve(obj:T['node'],detach?:boolean):void;
+	protected abstract finalize(obj:T['node'],detach?:boolean):void;
 
 	get size() { return this._entries.size; }
 	[Symbol.iterator]():IterableIterator<[string,T['node']]> {
@@ -171,7 +181,7 @@ export abstract class AlanDictionary<T extends {node: AlanDictionaryEntry, init:
 			return isFunction(onExists) ? onExists(this.load_entry(key, entry)) : onExists;
 		}
 	}
-}
+}	
 
 export abstract class AlanSet<T extends {node: AlanNode, init: any }, P extends AlanNode> extends AlanObject {
 	private _entries:Set<T['node']>;
@@ -183,7 +193,7 @@ export abstract class AlanSet<T extends {node: AlanNode, init: any }, P extends 
 	}
 
 	protected abstract initialize(parent:P, obj:T['init']):T['node'];
-	protected abstract resolve(obj:T['node'],detach?:boolean):void;
+	protected abstract finalize(obj:T['node'],detach?:boolean):void;
 
 	get size() { return this._entries.size; }
 	[Symbol.iterator]() {
@@ -213,7 +223,7 @@ export abstract class StateGroup<T extends {name:string, node:AlanNode & {parent
 	}
 
 	protected abstract initializer(state_name:T['name']): ($:T['init'], parent:AlanNode) => T['node'];
-	protected abstract resolver(state:T['name']): ($:T['node'], detach?:boolean) => void;
+	protected abstract finalizer(state:T['name']): ($:T['node'], detach?:boolean) => void;
 
 	switch<TS> (cases:{[K in T['name']]:(($:Extract<T, {name:K}>['node']) => TS) | (() => TS) | Exclude<TS, Function>}):TS {
 		const handler = cases[this.state.name as T['name']];
@@ -258,10 +268,13 @@ abstract class AlanGraphVertex extends AlanDictionaryEntry {
 export abstract class AlanTopology<T extends { node:AlanGraphVertex, init:any }, P extends AlanNode, G extends string> extends AlanDictionary<T,P> {
 	protected abstract _graphs: { [key: string ]: T['node'][] };
 	topo_forEach(graph:G, walk_function: ($:T['node']) => void) {
-		Array.from(this.topo_entries(graph)).forEach(entry => walk_function(entry));
+		for (let entry of this.topo_entries(graph)) { walk_function(entry); }
 	}
 	topo_entries(graph:G):IterableIterator<T['node']> {
 		return this._graphs[graph][Symbol.iterator]();
+	}
+	topo_toArray(graph:G):T['node'][] {
+		return Array.from(this.topo_entries(graph));
 	}
 	topo_sort(g:G) {
 		const $this = this;
@@ -297,6 +310,7 @@ export abstract class AlanTopology<T extends { node:AlanGraphVertex, init:any },
 	totally_ordered(g:G) {
 		if (this._graphs[g].length < 2) return;
 		this._graphs[g].reduce((prev, curr) => {
+			if (prev._edges[g].size === 0) { return curr; }
 			let connected = false;
 			prev._edges[g].forEach(e => { connected = (connected || e.ref.entity === curr) });
 			if (!connected)
@@ -452,7 +466,7 @@ export class Csibling_rule extends AlanNode {
 	} = {
 		context: cache((detach:boolean) => resolve(this)
 			.then(() => this)
-			.then(context => depend(detach, context?.properties.rule)?.ref)
+			.then(context => context?.properties.rule?.ref)
 			.then(context => context?.properties.tail)
 			.then(context => context?.component_root.output.context())
 			.then(context => context?.component_root.output.node())
@@ -462,7 +476,7 @@ export class Csibling_rule extends AlanNode {
 			}).result!),
 		phase: cache((detach:boolean) => resolve(this)
 			.then(() => this)
-			.then(context => depend(detach, context?.properties.rule)?.inferences.evaluation()).result!)
+			.then(context => context?.properties.rule?.inferences.evaluation()).result!)
 	}
 	constructor(init:Tsibling_rule, public parent:Crules) {
 		super();
@@ -820,7 +834,7 @@ export class Cunrestricted extends AlanNode {
 	} = {
 		collection: cache((detach:boolean) => resolve(this)
 			.then(() => this)
-			.then(context => depend(detach, context?.properties.collection_step)?.inferences.collection()).result!)
+			.then(context => context?.properties.collection_step?.inferences.collection()).result!)
 	}
 	constructor(init:Tunrestricted, public parent:Creferencer) {
 		super();
@@ -850,7 +864,7 @@ export class Creference_property_step extends AlanNode {
 	} = {
 		referencer: cache((detach:boolean) => resolve(this)
 			.then(() => this)
-			.then(context => depend(detach, context?.properties.property)?.inferences.reference())
+			.then(context => context?.properties.property?.inferences.reference())
 			.then(context => context?.properties.referencer).result!)
 	};
 	constructor(init:Treference_property_step, public location:AlanNode, public input: {
@@ -880,7 +894,7 @@ export class Cproperty_step extends AlanNode {
 	} = {
 		property: cache((detach:boolean) => resolve(this)
 			.then(() => this)
-			.then(context => depend(detach, context?.properties.property)?.ref).result!)
+			.then(context => context?.properties.property?.ref).result!)
 	};
 	constructor(init:Tproperty_step, public location:AlanNode, public input: {
 		context: () => interface_.Cnavigation_context,
@@ -1005,7 +1019,7 @@ export class Coptional_evaluation_annotation extends AlanNode {
 	} = {
 		phase: cache((detach:boolean) => resolve(this)
 			.then(() => this)
-			.then(context => depend(detach, context?.properties.phase)?.state.node.output.phase()).result!)
+			.then(context => context?.properties.phase?.state.node.output.phase()).result!)
 	};
 	constructor(init:Toptional_evaluation_annotation, public location:AlanNode, public input: {
 		context: () => interface_.Coptional_navigation_context,
@@ -1216,10 +1230,10 @@ export class Cnode_path_tail extends AlanNode {
 	} = {
 		context: cache((detach:boolean) => resolve(this)
 			.then(() => this)
-			.then(context => depend(detach, context?.properties.has_steps)?.state.node.output.context()).result!),
+			.then(context => context?.properties.has_steps?.state.node.output.context()).result!),
 		context_phase: cache((detach:boolean) => resolve(this)
 			.then(() => this)
-			.then(context => depend(detach, context?.properties.has_steps)?.state.node.output.context_phase()).result!)
+			.then(context => context?.properties.has_steps?.state.node.output.context_phase()).result!)
 	};
 	constructor(init:Tnode_path_tail, public location:AlanNode, public input: {
 		context: () => interface_.Cnavigation_context,
@@ -1317,7 +1331,7 @@ export class Cgroup__type__yes extends AlanNode {
 	} = {
 		context: cache((detach:boolean) => resolve(this)
 			.then(() => this)
-			.then(context => depend(detach, context?.properties.group_step)?.inferences.group())
+			.then(context => context?.properties.group_step?.inferences.group())
 			.then(context => context?.properties.node)
 			.then(context => {
 				const conv_context = resolve(context).result!;
@@ -1374,7 +1388,7 @@ export class Cparent extends AlanNode {
 						case 'attribute': {
 							const interface__node_path_tail__has_steps__yes__type__parent_inf___parent_context___attribute_nval = context.cast('attribute');
 							return resolve(context)
-								.then(context => depend(detach, interface__node_path_tail__has_steps__yes__type__parent_inf___parent_context___attribute_nval))
+								.then(context => interface__node_path_tail__has_steps__yes__type__parent_inf___parent_context___attribute_nval)
 								.then(context => context?.component_root.output.location())
 								.then(context => context?.component_root.output.member())
 								.then(context => context?.variant.name === 'attribute' ? context.variant.definition as interface_.Cattributes : undefined)
@@ -1386,7 +1400,7 @@ export class Cparent extends AlanNode {
 						case 'node': {
 							const interface__node_path_tail__has_steps__yes__type__parent_inf___parent_context___node_nval = context.cast('node');
 							return resolve(context)
-								.then(context => depend(detach, interface__node_path_tail__has_steps__yes__type__parent_inf___parent_context___node_nval))
+								.then(context => interface__node_path_tail__has_steps__yes__type__parent_inf___parent_context___node_nval)
 								.then(context => context?.component_root.output.location())
 								.then(context => context?.component_root.output.node())
 								.then(context => context?.variant.name === 'node' ? context.variant.definition as interface_.Cnode : undefined)
@@ -1469,7 +1483,7 @@ export class Creference__type extends AlanNode {
 			}).result!),
 		context_phase: cache((detach:boolean) => resolve(this)
 			.then(() => this)
-			.then(context => depend(detach, context?.properties.reference)?.inferences.evaluation()).result!),
+			.then(context => context?.properties.reference?.inferences.evaluation()).result!),
 		dependency_step: cache((detach:boolean) => resolve(this)
 			.then(() => this)
 			.then(context => context?.component_root.input.dependency_step()).result!)
@@ -1514,7 +1528,7 @@ export class Creference_rule extends AlanNode {
 	} = {
 		context: cache((detach:boolean) => resolve(this)
 			.then(() => this)
-			.then(context => depend(detach, context?.properties.rule)?.ref)
+			.then(context => context?.properties.rule?.ref)
 			.then(context => context?.properties.tail)
 			.then(context => context?.component_root.output.context())
 			.then(context => context?.component_root.output.node())
@@ -1524,7 +1538,7 @@ export class Creference_rule extends AlanNode {
 			}).result!),
 		context_phase: cache((detach:boolean) => resolve(this)
 			.then(() => this)
-			.then(context => depend(detach, context?.properties.rule)?.inferences.evaluation()).result!),
+			.then(context => context?.properties.rule?.inferences.evaluation()).result!),
 		dependency_step: cache((detach:boolean) => resolve(this)
 			.then(() => this)
 			.then(context => context?.component_root.input.dependency_step()).result!)
@@ -1572,7 +1586,7 @@ export class Cstate extends AlanNode {
 	} = {
 		context: cache((detach:boolean) => resolve(this)
 			.then(() => this)
-			.then(context => depend(detach, context?.properties.state)?.ref)
+			.then(context => context?.properties.state?.ref)
 			.then(context => context?.properties.node)
 			.then(context => {
 				const conv_context = resolve(context).result!;
@@ -1624,7 +1638,7 @@ export class Cstate_context_rule extends AlanNode {
 	} = {
 		context: cache((detach:boolean) => resolve(this)
 			.then(() => this)
-			.then(context => depend(detach, context?.properties.context_rule)?.ref)
+			.then(context => context?.properties.context_rule?.ref)
 			.then(context => context?.properties.tail)
 			.then(context => context?.component_root.output.context())
 			.then(context => context?.component_root.output.node())
@@ -1634,7 +1648,7 @@ export class Cstate_context_rule extends AlanNode {
 			}).result!),
 		context_phase: cache((detach:boolean) => resolve(this)
 			.then(() => this)
-			.then(context => depend(detach, context?.properties.context_rule)?.inferences.evaluation()).result!),
+			.then(context => context?.properties.context_rule?.inferences.evaluation()).result!),
 		dependency_step: cache((detach:boolean) => resolve(this)
 			.then(() => this)
 			.then(context => context?.component_root.input.dependency_step()).result!)
@@ -1698,7 +1712,7 @@ type Vmember = { name: 'attribute', definition: Cattributes}|{ name: 'root', def
 export class Cmember extends AlanStruct {
 	public static Proot:Cmember = new class PrimitiveInstance extends Cmember {
 		constructor () {
-			super({name: 'root', definition: undefined as unknown as Cmember}, {
+			super({name: 'root', definition: undefined as unknown as Cmember}, { 
 				context_root_member: () => resolve(this)
 				.then(() => interface_.Cmember.Proot).result,member_type: () => resolve(this)
 				.then(() => interface_.Cmember_type.Psimple).result}
@@ -1828,7 +1842,7 @@ export class Cattributes extends AlanGraphVertex {
 						case 'attribute': {
 							const interface__node__attributes_var___member_in___context_root_member___attribute_nval = context.cast('attribute');
 							return resolve(context)
-								.then(context => depend(detach, interface__node__attributes_var___member_in___context_root_member___attribute_nval))
+								.then(context => interface__node__attributes_var___member_in___context_root_member___attribute_nval)
 								.then(context => context?.definitions.member).result;
 						}
 						case 'root': {
@@ -1848,14 +1862,14 @@ export class Cattributes extends AlanGraphVertex {
 						case 'collection': {
 							const interface__node__attributes_var___member_in___member_type___collection_nval = context.cast('collection');
 							return resolve(context)
-								.then(match_context => {
+								.then(match_context => { 
 									const expression_context = resolve(match_context)
 									.then(context => {
 										const left = resolve(context)
 											.then(() => this).result;
 										const right = resolve(context)
-											.then(context => depend(detach, interface__node__attributes_var___member_in___member_type___collection_nval))
-											.then(context => depend(detach, context?.properties.key_property)?.ref)
+											.then(context => interface__node__attributes_var___member_in___member_type___collection_nval)
+											.then(context => context?.properties.key_property?.ref)
 											.then(context => context?.parent)
 											.then(context => context?.parent).result;
 										return left?.is(right) ? left : undefined
@@ -2069,12 +2083,11 @@ export class Cdense_map extends AlanNode {
 			const interface__node__attributes__type__property__type__collection__type__dense_map_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
-				.then(context => depend(detach, context?.properties.key_property)?.ref)
+				.then(context => context?.properties.key_property?.ref)
 				.then(context => {
 					if (context?.properties.has_constraint.state.name === 'yes') {
-						return resolve(depend(detach, context.properties.has_constraint.state.node as interface_.Cyes__has_constraint)).result;
+						return resolve(context.properties.has_constraint.state.node as interface_.Cyes__has_constraint).result;
 					} else {
-						depend(detach, context?.properties.has_constraint);
 						return undefined;
 					}
 				}).result!;
@@ -2362,13 +2375,13 @@ export class Cnavigation_context extends AlanStruct {
 					case 'attribute': {
 						const interface__navigation_context_out___node___attribute_nval = context.cast('attribute');
 						return resolve(context)
-							.then(context => depend(detach, interface__navigation_context_out___node___attribute_nval))
+							.then(context => interface__navigation_context_out___node___attribute_nval)
 							.then(context => context?.parent).result;
 					}
 					case 'node': {
 						const interface__navigation_context_out___node___node_nval = context.cast('node');
 						return resolve(context)
-							.then(context => depend(detach, interface__navigation_context_out___node___node_nval)).result;
+							.then(context => interface__navigation_context_out___node___node_nval).result;
 					}
 					case undefined: return undefined;
 					default: throw new Error(`Unexpected subtype '${(<any>context).variant.name}'`);
@@ -2521,7 +2534,7 @@ export class Cexplicit_evaluation_annotation extends AlanNode {
 	} = {
 		phase: cache((detach:boolean) => resolve(this)
 			.then(() => this)
-			.then(context => depend(detach, context?.properties.phase)?.state.node.output.phase()).result!)
+			.then(context => context?.properties.phase?.state.node.output.phase()).result!)
 	};
 	constructor(init:Texplicit_evaluation_annotation, public location:AlanNode) {
 		super();
@@ -2660,10 +2673,10 @@ export class Ccontext_node_path extends AlanNode {
 	} = {
 		context: cache((detach:boolean) => resolve(this)
 			.then(() => this)
-			.then(context => depend(detach, context?.properties.context)?.state.node.output.context()).result!),
+			.then(context => context?.properties.context?.state.node.output.context()).result!),
 		phase: cache((detach:boolean) => resolve(this)
 			.then(() => this)
-			.then(context => depend(detach, context?.properties.context)?.state.node.output.phase()).result!)
+			.then(context => context?.properties.context?.state.node.output.phase()).result!)
 	};
 	constructor(init:Tcontext_node_path, public location:AlanNode, public input: {
 		context: () => interface_.Coptional_navigation_context,
@@ -2718,7 +2731,7 @@ export class Cdataset_root extends AlanNode {
 						case 'attribute': {
 							const interface__context_node_path__context__dataset_root_inf___root_context___attribute_nval = context.cast('attribute');
 							return resolve(context)
-								.then(context => depend(detach, interface__context_node_path__context__dataset_root_inf___root_context___attribute_nval))
+								.then(context => interface__context_node_path__context__dataset_root_inf___root_context___attribute_nval)
 								.then(context => {
 									const conv_context = resolve(context).result!;
 									return new Cnavigation_context({name: 'attribute', definition: conv_context});
@@ -2825,7 +2838,7 @@ export class Cthis_dataset_node extends AlanNode {
 						case 'command': {
 							const interface__context_node_path__context__this_dataset_node_inf___data_attribute___command_nval = context.cast('command');
 							return resolve(context)
-								.then(context => depend(detach, interface__context_node_path__context__this_dataset_node_inf___data_attribute___command_nval))
+								.then(context => interface__context_node_path__context__this_dataset_node_inf___data_attribute___command_nval)
 								.then(context => context?.parent).result;
 						}
 						case 'dataset': {
@@ -2896,7 +2909,6 @@ export class Cthis_parameter_node extends AlanNode {
 	public get path() { return `${this.parent.path}/context?this parameter node`; }
 	public get entity() { return this.parent.entity; }
 }
-
 
 export type Tinterface = {
 	'context keys':Record<string, {}>;
@@ -2977,7 +2989,7 @@ export namespace Ccontext_node_path {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'dataset root': return finalize_dataset_root;
 				case 'expression context': return finalize_expression_context;
@@ -3003,7 +3015,7 @@ export namespace Cexplicit_evaluation_annotation {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'downstream': return finalize_downstream__phase__explicit_evaluation_annotation;
 				case 'upstream': return finalize_upstream;
@@ -3019,7 +3031,7 @@ export namespace Cexplicit_evaluation_annotation {
 export namespace Cgraphs_definition {
 	export class Dgraphs extends AlanDictionary<{ node:Cgraphs__graphs_definition, init:Tgraphs__graphs_definition},Cgraphs_definition> {
 		protected initialize(parent:Cgraphs_definition, key:string, entry_init:Tgraphs__graphs_definition) { return new Cgraphs__graphs_definition(key, entry_init, parent); }
-		protected resolve = finalize_graphs__graphs_definition
+		protected finalize = finalize_graphs__graphs_definition
 		public get path() { return `${this.parent.path}/graphs`; }
 		constructor(data:Tgraphs_definition['graphs'], parent:Cgraphs_definition) {
 			super(data, parent);
@@ -3037,7 +3049,7 @@ export namespace Cgraphs__graphs_definition {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'acyclic': return finalize_acyclic;
 				case 'ordered': return finalize_ordered;
@@ -3069,8 +3081,8 @@ export namespace Cordered {
 					return resolve(entry)
 					.then(context => {
 						if (context?.properties.type.state.name === 'property') {
-							return depend(detach, context.properties.type.state.node as interface_.Cproperty);} else {
-							depend(detach, context?.properties.type);
+							return context.properties.type.state.node as interface_.Cproperty;
+						} else {
 							return undefined;
 						}
 					}).result;
@@ -3083,16 +3095,15 @@ export namespace Cordered {
 						.then(context => context?.properties.referencer)
 						.then(context => {
 							if (context?.properties.type.state.name === 'sibling') {
-								return resolve(depend(detach, context.properties.type.state.node as interface_.Csibling))
+								return resolve(context.properties.type.state.node as interface_.Csibling)
 								.then(context => {
 									if (context?.properties.graph_participation.state.name === 'yes') {
-										return depend(detach, context.properties.graph_participation.state.node as interface_.Cyes__graph_participation);} else {
-										depend(detach, context?.properties.graph_participation);
+										return context.properties.graph_participation.state.node as interface_.Cyes__graph_participation;
+									} else {
 										return undefined;
 									}
 								}).result;
 							} else {
-								depend(detach, context?.properties.type);
 								return undefined;
 							}
 						}).result!;
@@ -3107,32 +3118,25 @@ export namespace Cordered {
 							const key_object = resolve(context)
 								.then(() => $this)
 								.then(context => context?.parent).result;
-							const entry = col_object.properties.graphs.get(key_object?.key);
-							if (entry === undefined) {
-								depend(detach, col_object.properties.graphs);
-								return undefined;
-							} else {
-								return resolve(depend(detach, entry)).result;
-							}
+							return resolve(col_object.properties.graphs.get(key_object?.key)).result;
 						}).result!;
 				})
 				,
 				reference: cache((detach:boolean) => {
 					const interface__graphs_definition__graphs__type__ordered__ordering_property_nval = $this.properties.ordering_property.ref;
 					return resolve($this.properties.ordering_property.ref)
-						.then(context => depend(detach, interface__graphs_definition__graphs__type__ordered__ordering_property_nval))
+						.then(context => interface__graphs_definition__graphs__type__ordered__ordering_property_nval)
 						.then(context => {
 							if (context?.properties.type.state.name === 'text') {
-								return resolve(depend(detach, context.properties.type.state.node as interface_.Ctext))
+								return resolve(context.properties.type.state.node as interface_.Ctext)
 								.then(context => {
 									if (context?.properties.has_constraint.state.name === 'yes') {
-										return depend(detach, context.properties.has_constraint.state.node as interface_.Cyes__has_constraint);} else {
-										depend(detach, context?.properties.has_constraint);
+										return context.properties.has_constraint.state.node as interface_.Cyes__has_constraint;
+									} else {
 										return undefined;
 									}
 								}).result;
 							} else {
-								depend(detach, context?.properties.type);
 								return undefined;
 							}
 						}).result!;
@@ -3177,7 +3181,7 @@ export namespace Cnode {
 			'upstream attributes': []
 		}
 		protected initialize(parent:Cnode, key:string, entry_init:Tattributes) { return new Cattributes(key, entry_init, parent); }
-		protected resolve = finalize_attributes
+		protected finalize = finalize_attributes
 		public get path() { return `${this.parent.path}/attributes`; }
 		constructor(data:Tnode['attributes'], parent:Cnode) {
 			super(data, parent);
@@ -3195,7 +3199,7 @@ export namespace Cattributes {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'no': return finalize_no__has_predecessor;
 				case 'yes': return finalize_yes__has_predecessor;
@@ -3217,7 +3221,7 @@ export namespace Cattributes {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'command': return finalize_command;
 				case 'property': return finalize_property;
@@ -3283,7 +3287,7 @@ export namespace Cproperty {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'collection': return finalize_collection;
 				case 'file': return finalize_file;
@@ -3320,15 +3324,15 @@ export namespace Ccollection {
 					return resolve(entry)
 					.then(context => {
 						if (context?.properties.type.state.name === 'property') {
-							return depend(detach, context.properties.type.state.node as interface_.Cproperty);} else {
-							depend(detach, context?.properties.type);
+							return context.properties.type.state.node as interface_.Cproperty;
+						} else {
 							return undefined;
 						}
 					})
 					.then(context => {
 						if (context?.properties.type.state.name === 'text') {
-							return depend(detach, context.properties.type.state.node as interface_.Ctext);} else {
-							depend(detach, context?.properties.type);
+							return context.properties.type.state.node as interface_.Ctext;
+						} else {
 							return undefined;
 						}
 					}).result;
@@ -3358,7 +3362,7 @@ export namespace Ccollection {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'dense map': return finalize_dense_map;
 				case 'simple': return finalize_simple__type;
@@ -3395,7 +3399,7 @@ export namespace Cnumber {
 export namespace Cstate_group {
 	export class Dstates extends AlanDictionary<{ node:Cstates, init:Tstates},Cstate_group> {
 		protected initialize(parent:Cstate_group, key:string, entry_init:Tstates) { return new Cstates(key, entry_init, parent); }
-		protected resolve = finalize_states
+		protected finalize = finalize_states
 		public get path() { return `${this.parent.path}/states`; }
 		constructor(data:Tstate_group['states'], parent:Cstate_group) {
 			super(data, parent);
@@ -3449,7 +3453,7 @@ export namespace Ctext {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'no': return finalize_no__has_constraint;
 				case 'yes': return finalize_yes__has_constraint;
@@ -3484,7 +3488,7 @@ export namespace Cyes__has_constraint {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'existing': return finalize_existing;
 				case 'nonexisting': return finalize_nonexisting;
@@ -3508,7 +3512,7 @@ export namespace Cnode_path_tail {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'no': return finalize_no__has_steps;
 				case 'yes': return finalize_yes__has_steps;
@@ -3527,13 +3531,13 @@ export namespace Cyes__has_steps {
 			super(data, parent, {
 				context: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
-					.then(context => depend(detach, context?.properties.type)?.state.node.output.context()).result!),
+					.then(context => context?.properties.type?.state.node.output.context()).result!),
 				context_phase: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
-					.then(context => depend(detach, context?.properties.type)?.state.node.output.context_phase()).result!),
+					.then(context => context?.properties.type?.state.node.output.context_phase()).result!),
 				dependency_step: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
-					.then(context => depend(detach, context?.properties.type)?.state.node.output.dependency_step()).result!),
+					.then(context => context?.properties.type?.state.node.output.dependency_step()).result!),
 				participation: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
 					.then(context => context?.component_root.input.participation()).result!)
@@ -3558,7 +3562,7 @@ export namespace Cyes__has_steps {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'group': return finalize_group__type__yes;
 				case 'parent': return finalize_parent;
@@ -3593,13 +3597,12 @@ export namespace Cgroup__type__yes {
 				group: cache((detach:boolean) => {
 					const interface__node_path_tail__has_steps__yes__type__group__group_step_nval = this;
 					return resolve(this)
-						.then(context => depend(detach, interface__node_path_tail__has_steps__yes__type__group__group_step_nval))
+						.then(context => interface__node_path_tail__has_steps__yes__type__group__group_step_nval)
 						.then(context => context?.component_root.output.property())
 						.then(context => {
 							if (context?.properties.type.state.name === 'group') {
-								return resolve(depend(detach, context.properties.type.state.node as interface_.Cgroup__type__property)).result;
+								return resolve(context.properties.type.state.node as interface_.Cgroup__type__property).result;
 							} else {
-								depend(detach, context?.properties.type);
 								return undefined;
 							}
 						}).result!;
@@ -3629,7 +3632,7 @@ export namespace Creference__type {
 					return resolve(this)
 						.then(context => {
 							const left = resolve(context)
-								.then(context => depend(detach, interface__node_path_tail__has_steps__yes__type__reference__reference_nval))
+								.then(context => interface__node_path_tail__has_steps__yes__type__reference__reference_nval)
 								.then(context => context?.component_root.output.referencer())
 								.then(context => context?.component_root.output.phase()).result;
 							const right = resolve(context)
@@ -3677,7 +3680,7 @@ export namespace Creference_rule {
 					return resolve($this.properties.rule.ref)
 						.then(context => {
 							const left = resolve(context)
-								.then(context => depend(detach, interface__node_path_tail__has_steps__yes__type__reference_rule__rule_nval))
+								.then(context => interface__node_path_tail__has_steps__yes__type__reference_rule__rule_nval)
 								.then(context => context?.properties.evaluation)
 								.then(context => context?.component_root.output.phase()).result;
 							const right = resolve(context)
@@ -3698,7 +3701,7 @@ export namespace Cstate {
 		constructor(data:string, $this:Cstate) {
 			super(data, cache((detach:boolean) => resolve($this)
 				.then(() => $this)
-				.then(context => depend(detach, context?.properties.state_group_step)?.inferences.state_group())
+				.then(context => context?.properties.state_group_step?.inferences.state_group())
 				.then(context => {
 					const entry = context?.properties.states.get(this.entry)!;
 					return resolve(entry).result;
@@ -3723,13 +3726,12 @@ export namespace Cstate {
 				state_group: cache((detach:boolean) => {
 					const interface__node_path_tail__has_steps__yes__type__state__state_group_step_nval = this;
 					return resolve(this)
-						.then(context => depend(detach, interface__node_path_tail__has_steps__yes__type__state__state_group_step_nval))
+						.then(context => interface__node_path_tail__has_steps__yes__type__state__state_group_step_nval)
 						.then(context => context?.component_root.output.property())
 						.then(context => {
 							if (context?.properties.type.state.name === 'state group') {
-								return resolve(depend(detach, context.properties.type.state.node as interface_.Cstate_group)).result;
+								return resolve(context.properties.type.state.node as interface_.Cstate_group).result;
 							} else {
-								depend(detach, context?.properties.type);
 								return undefined;
 							}
 						}).result!;
@@ -3760,7 +3762,7 @@ export namespace Cstate_context_rule {
 					return resolve($this.properties.context_rule.ref)
 						.then(context => {
 							const left = resolve(context)
-								.then(context => depend(detach, interface__node_path_tail__has_steps__yes__type__state_context_rule__context_rule_nval))
+								.then(context => interface__node_path_tail__has_steps__yes__type__state_context_rule__context_rule_nval)
 								.then(context => context?.properties.evaluation)
 								.then(context => context?.component_root.output.phase()).result;
 							const right = resolve(context)
@@ -3786,7 +3788,7 @@ export namespace Cnumber_type {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'no': return finalize_no__decimal_places;
 				case 'yes': return finalize_yes__decimal_places;
@@ -3808,7 +3810,7 @@ export namespace Cnumber_type {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'integer': return finalize_integer__set;
 				case 'natural': return finalize_natural__set;
@@ -3853,7 +3855,7 @@ export namespace Coptional_evaluation_annotation {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'downstream': return finalize_downstream__phase__optional_evaluation_annotation;
 				case 'inherited': return finalize_inherited;
@@ -3884,7 +3886,7 @@ export namespace Cproperty_step {
 										case 'attribute': {
 											const interface__property_step__property___downstream_expressions___attribute_nval = context.cast('attribute');
 											return resolve(context)
-												.then(context => depend(detach, interface__property_step__property___downstream_expressions___attribute_nval))
+												.then(context => interface__property_step__property___downstream_expressions___attribute_nval)
 												.then(context => {
 													const entry = context?.parent.properties.attributes.get(this.entry)!;
 													if (detach) {
@@ -3894,8 +3896,8 @@ export namespace Cproperty_step {
 													}return resolve(entry)
 													.then(context => {
 														if (context?.properties.type.state.name === 'property') {
-															return depend(detach, context.properties.type.state.node as interface_.Cproperty);} else {
-															depend(detach, context?.properties.type);
+															return context.properties.type.state.node as interface_.Cproperty;
+														} else {
 															return undefined;
 														}
 													}).result;
@@ -3904,14 +3906,14 @@ export namespace Cproperty_step {
 										case 'node': {
 											const interface__property_step__property___downstream_expressions___node_nval = context.cast('node');
 											return resolve(context)
-												.then(context => depend(detach, interface__property_step__property___downstream_expressions___node_nval))
+												.then(context => interface__property_step__property___downstream_expressions___node_nval)
 												.then(context => {
 													const entry = context?.properties.attributes.get(this.entry)!;
 													return resolve(entry)
 													.then(context => {
 														if (context?.properties.type.state.name === 'property') {
-															return depend(detach, context.properties.type.state.node as interface_.Cproperty);} else {
-															depend(detach, context?.properties.type);
+															return context.properties.type.state.node as interface_.Cproperty;
+														} else {
 															return undefined;
 														}
 													}).result;
@@ -3931,7 +3933,7 @@ export namespace Cproperty_step {
 										case 'attribute': {
 											const interface__property_step__property___upstream_expressions___attribute_nval = context.cast('attribute');
 											return resolve(context)
-												.then(context => depend(detach, interface__property_step__property___upstream_expressions___attribute_nval))
+												.then(context => interface__property_step__property___upstream_expressions___attribute_nval)
 												.then(context => {
 													const entry = context?.parent.properties.attributes.get(this.entry)!;
 													if (detach) {
@@ -3941,8 +3943,8 @@ export namespace Cproperty_step {
 													}return resolve(entry)
 													.then(context => {
 														if (context?.properties.type.state.name === 'property') {
-															return depend(detach, context.properties.type.state.node as interface_.Cproperty);} else {
-															depend(detach, context?.properties.type);
+															return context.properties.type.state.node as interface_.Cproperty;
+														} else {
 															return undefined;
 														}
 													}).result;
@@ -3951,14 +3953,14 @@ export namespace Cproperty_step {
 										case 'node': {
 											const interface__property_step__property___upstream_expressions___node_nval = context.cast('node');
 											return resolve(context)
-												.then(context => depend(detach, interface__property_step__property___upstream_expressions___node_nval))
+												.then(context => interface__property_step__property___upstream_expressions___node_nval)
 												.then(context => {
 													const entry = context?.properties.attributes.get(this.entry)!;
 													return resolve(entry)
 													.then(context => {
 														if (context?.properties.type.state.name === 'property') {
-															return depend(detach, context.properties.type.state.node as interface_.Cproperty);} else {
-															depend(detach, context?.properties.type);
+															return context.properties.type.state.node as interface_.Cproperty;
+														} else {
 															return undefined;
 														}
 													}).result;
@@ -4000,9 +4002,8 @@ export namespace Creference_property_step {
 						.then(() => parent.properties.property.inferences.reference())
 						.then(context => {
 							if (context?.properties.type.state.name === 'existing') {
-								return resolve(depend(detach, context.properties.type.state.node as interface_.Cexisting)).result;
+								return resolve(context.properties.type.state.node as interface_.Cexisting).result;
 							} else {
-								depend(detach, context?.properties.type);
 								return undefined;
 							}
 						}).result!;
@@ -4014,9 +4015,8 @@ export namespace Creference_property_step {
 						.then(() => parent.properties.property.inferences.text())
 						.then(context => {
 							if (context?.properties.has_constraint.state.name === 'yes') {
-								return resolve(depend(detach, context.properties.has_constraint.state.node as interface_.Cyes__has_constraint)).result;
+								return resolve(context.properties.has_constraint.state.node as interface_.Cyes__has_constraint).result;
 							} else {
-								depend(detach, context?.properties.has_constraint);
 								return undefined;
 							}
 						}).result!;
@@ -4025,13 +4025,12 @@ export namespace Creference_property_step {
 				text: cache((detach:boolean) => {
 					const interface__reference_property_step__property_nval = this;
 					return resolve(this)
-						.then(context => depend(detach, interface__reference_property_step__property_nval))
-						.then(context => depend(detach, context?.properties.property)?.ref)
+						.then(context => interface__reference_property_step__property_nval)
+						.then(context => context?.properties.property?.ref)
 						.then(context => {
 							if (context?.properties.type.state.name === 'text') {
-								return resolve(depend(detach, context.properties.type.state.node as interface_.Ctext)).result;
+								return resolve(context.properties.type.state.node as interface_.Ctext).result;
 							} else {
-								depend(detach, context?.properties.type);
 								return undefined;
 							}
 						}).result!;
@@ -4070,7 +4069,7 @@ export namespace Creferencer {
 			super(data, parent, {
 				context: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
-					.then(context => depend(detach, context?.properties.type)?.state.node.output.collection())
+					.then(context => context?.properties.type?.state.node.output.collection())
 					.then(context => context?.properties.node)
 					.then(context => {
 						const conv_context = resolve(context).result!;
@@ -4100,7 +4099,7 @@ export namespace Creferencer {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'sibling': return finalize_sibling;
 				case 'unrestricted': return finalize_unrestricted;
@@ -4171,7 +4170,7 @@ export namespace Csibling {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'no': return finalize_no__graph_participation;
 				case 'yes': return finalize_yes__graph_participation;
@@ -4187,7 +4186,7 @@ export namespace Csibling {
 export namespace Cyes__graph_participation {
 	export class Dgraphs extends AlanDictionary<{ node:Cgraphs__yes, init:Tgraphs__yes},Cyes__graph_participation> {
 		protected initialize(parent:Cyes__graph_participation, key:string) { return new Cgraphs__yes(key, {}, parent); }
-		protected resolve = finalize_graphs__yes
+		protected finalize = finalize_graphs__yes
 		public get path() { return `${this.parent.path}/graphs`; }
 		constructor(data:Tyes__graph_participation['graphs'], parent:Cyes__graph_participation) {
 			super(data, parent);
@@ -4218,13 +4217,12 @@ export namespace Cunrestricted {
 				collection: cache((detach:boolean) => {
 					const interface__referencer__type__unrestricted__collection_step_nval = this;
 					return resolve(this)
-						.then(context => depend(detach, interface__referencer__type__unrestricted__collection_step_nval))
+						.then(context => interface__referencer__type__unrestricted__collection_step_nval)
 						.then(context => context?.component_root.output.property())
 						.then(context => {
 							if (context?.properties.type.state.name === 'collection') {
-								return resolve(depend(detach, context.properties.type.state.node as interface_.Ccollection)).result;
+								return resolve(context.properties.type.state.node as interface_.Ccollection).result;
 							} else {
-								depend(detach, context?.properties.type);
 								return undefined;
 							}
 						}).result!;
@@ -4245,7 +4243,7 @@ export namespace Cwhere_clause {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'no': return finalize_no__has_rule;
 				case 'yes': return finalize_yes__has_rule;
@@ -4267,7 +4265,7 @@ export namespace Cwhere_clause {
 			'order': []
 		}
 		protected initialize(parent:Cwhere_clause, key:string, entry_init:Trules) { return new Crules(key, entry_init, parent); }
-		protected resolve = finalize_rules
+		protected finalize = finalize_rules
 		public get path() { return `${this.parent.path}/rules`; }
 		constructor(data:Twhere_clause['rules'], parent:Cwhere_clause) {
 			super(data, parent);
@@ -4300,7 +4298,7 @@ export namespace Crules {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'context': return finalize_context;
 				case 'sibling rule': return finalize_sibling_rule;
@@ -4334,7 +4332,7 @@ export namespace Crules {
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
 		}
-		protected resolver(state:T['name']) {
+		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'no': return finalize_no__has_successor;
 				case 'yes': return finalize_yes__has_successor;
@@ -4351,10 +4349,10 @@ export namespace Crules {
 			super(data, parent, {
 				context: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
-					.then(context => depend(detach, context?.properties.context)?.state.node.output.context()).result!),
+					.then(context => context?.properties.context?.state.node.output.context()).result!),
 				context_phase: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
-					.then(context => depend(detach, context?.properties.context)?.state.node.output.phase()).result!),
+					.then(context => context?.properties.context?.state.node.output.phase()).result!),
 				dependency_step: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
 					.then(() => interface_.Cdependency_step.Pallowed).result!),
@@ -4411,7 +4409,7 @@ export namespace Csibling_rule {
 					return resolve($this.properties.rule.ref)
 						.then(context => {
 							const left = resolve(context)
-								.then(context => depend(detach, interface__where_clause__rules__context__sibling_rule__rule_nval))
+								.then(context => interface__where_clause__rules__context__sibling_rule__rule_nval)
 								.then(context => context?.properties.evaluation)
 								.then(context => context?.component_root.output.phase()).result;
 							const right = resolve(context)
@@ -4450,7 +4448,7 @@ export namespace Cyes__has_successor {
 export namespace Cinterface {
 	export class Dcontext_keys extends AlanDictionary<{ node:Ccontext_keys, init:Tcontext_keys},Cinterface> {
 		protected initialize(parent:Cinterface, key:string) { return new Ccontext_keys(key, {}, parent); }
-		protected resolve = finalize_context_keys
+		protected finalize = finalize_context_keys
 		public get path() { return `${this.parent.path}/context keys`; }
 		constructor(data:Tinterface['context keys'], parent:Cinterface) {
 			super(data, parent);
@@ -4458,7 +4456,7 @@ export namespace Cinterface {
 	}
 	export class Dnumerical_types extends AlanDictionary<{ node:Cnumerical_types, init:Tnumerical_types},Cinterface> {
 		protected initialize(parent:Cinterface, key:string) { return new Cnumerical_types(key, {}, parent); }
-		protected resolve = finalize_numerical_types
+		protected finalize = finalize_numerical_types
 		public get path() { return `${this.parent.path}/numerical types`; }
 		constructor(data:Tinterface['numerical types'], parent:Cinterface) {
 			super(data, parent);
@@ -4477,10 +4475,6 @@ export namespace Cinterface {
 			})
 		}
 	}
-}
-/* de(resolution) */
-function auto_defer_validator<T extends (...args:any) => void>(root:Cinterface, callback:T):T {
-	return callback;
 }
 function finalize_dataset_root(obj:Cdataset_root, detach:boolean = false) {
 	assert((<(detach?:boolean) => interface_.Cmember>obj.inferences.accessible_this_context)(detach) !== undefined || detach);
@@ -4955,7 +4949,6 @@ export namespace Cinterface {
 	export function create(init:Tinterface):Cinterface {
 		const instance = new Cinterface(init);
 		finalize_interface(instance);
-		;
 		return instance;
 	};
 }
