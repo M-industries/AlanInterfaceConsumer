@@ -1,6 +1,6 @@
 {
   "name": "@alan-platform/interface-consumer",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "description": "Node module for the consuming end of an interface on alan.",
   "repository": {
     "type": "git",
