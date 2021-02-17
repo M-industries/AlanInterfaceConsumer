@@ -1,4 +1,4 @@
-import * as interface_command from './alan_api';
+import * as interface_event from './alan_api';
 import * as interface_ from '../interface/alan_api';
 
 function isFunction<T>(p:T): p is T & Function {
@@ -246,8 +246,8 @@ export abstract class StateGroup<T extends {name:string, node:AlanNode & {parent
 
 export abstract class AlanCombinator extends AlanObject {}
 export abstract class AlanNode extends AlanStruct {
-	protected _root:Cinterface_command|undefined;
-	public abstract get root():Cinterface_command;
+	protected _root:Cinterface_event|undefined;
+	public abstract get root():Cinterface_event;
 	public abstract get entity():AlanNode;
 	public is(other:AlanNode):boolean {
 		return this === other;
@@ -322,20 +322,20 @@ export abstract class AlanTopology<T extends { node:AlanGraphVertex, init:any },
 }
 
 /* alan objects */
-export type Tnode__interface_command = {
+export type Tnode__interface_event = {
 	'properties':Record<string, Tproperties>;
 };
-export class Cnode__interface_command extends AlanNode {
+export class Cnode__interface_event extends AlanNode {
 	public readonly properties:{
-		readonly properties:Cnode__interface_command.Dproperties
+		readonly properties:Cnode__interface_event.Dproperties
 	};
-	constructor(init:Tnode__interface_command, public location:AlanNode, public input: {
+	constructor(init:Tnode__interface_event, public location:AlanNode, public input: {
 		node_type: () => interface_.Cnode
 	}) {
 		super();
 		const $this = this;
 		this.properties = {
-			properties: new Cnode__interface_command.Dproperties(init['properties'], $this)
+			properties: new Cnode__interface_event.Dproperties(init['properties'], $this)
 		};
 	}
 	public get root() { return this._root ?? (this._root = this.location.root); }
@@ -377,7 +377,7 @@ export class Cproperties extends AlanDictionaryEntry {
 			{ name: 'state group', node:Cstate_group, init:Tstate_group}|
 			{ name: 'text', node:Ctext, init:Ttext}>
 	};
-	constructor(key:string, init:Tproperties, public parent:Cnode__interface_command) {
+	constructor(key:string, init:Tproperties, public parent:Cnode__interface_event) {
 		super();
 		const $this = this;
 		this.key = new Kproperties(key, $this);
@@ -401,7 +401,7 @@ export class Ccollection__type extends AlanNode {
 		collection: () => interface_.Ccollection
 	} = {
 		collection: cache((detach:boolean) => {
-			const interface_command__node__properties__type__collection_nval = this.parent;
+			const interface_event__node__properties__type__collection_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
 				.then(context => context?.key?.ref)
@@ -428,11 +428,11 @@ export class Ccollection__type extends AlanNode {
 	public get entity() { return this.parent.entity; }
 }
 export type Tentries = {
-	'node':Tnode__interface_command;
+	'node':Tnode__interface_event;
 };
 export class Centries extends AlanNode {
 	public readonly properties:{
-		readonly node:Cnode__interface_command
+		readonly node:Cnode__interface_event
 	};
 	constructor(init:Tentries, public parent:Ccollection__type) {
 		super();
@@ -459,7 +459,7 @@ export class Cfile extends AlanNode {
 		file: () => interface_.Cfile
 	} = {
 		file: cache((detach:boolean) => {
-			const interface_command__node__properties__type__file_nval = this.parent;
+			const interface_event__node__properties__type__file_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
 				.then(context => context?.key?.ref)
@@ -487,17 +487,17 @@ export class Cfile extends AlanNode {
 	public get entity() { return this.parent.entity; }
 }
 export type Tgroup = {
-	'node':Tnode__interface_command;
+	'node':Tnode__interface_event;
 };
 export class Cgroup extends AlanNode {
 	public readonly properties:{
-		readonly node:Cnode__interface_command
+		readonly node:Cnode__interface_event
 	};
 	public readonly inferences:{
 		group: () => interface_.Cgroup__type__property
 	} = {
 		group: cache((detach:boolean) => {
-			const interface_command__node__properties__type__group_nval = this.parent;
+			const interface_event__node__properties__type__group_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
 				.then(context => context?.key?.ref)
@@ -534,7 +534,7 @@ export class Cnumber extends AlanNode {
 		number: () => interface_.Cnumber
 	} = {
 		number: cache((detach:boolean) => {
-			const interface_command__node__properties__type__number_nval = this.parent;
+			const interface_event__node__properties__type__number_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
 				.then(context => context?.key?.ref)
@@ -561,19 +561,19 @@ export class Cnumber extends AlanNode {
 	public get entity() { return this.parent.entity; }
 }
 export type Tstate_group = {
-	'node':Tnode__interface_command;
+	'node':Tnode__interface_event;
 	'state':string;
 };
 export class Cstate_group extends AlanNode {
 	public readonly properties:{
-		readonly node:Cnode__interface_command,
+		readonly node:Cnode__interface_event,
 		readonly state:Cstate_group.Dstate
 	};
 	public readonly inferences:{
 		state_group: () => interface_.Cstate_group
 	} = {
 		state_group: cache((detach:boolean) => {
-			const interface_command__node__properties__type__state_group_nval = this.parent;
+			const interface_event__node__properties__type__state_group_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
 				.then(context => context?.key?.ref)
@@ -611,7 +611,7 @@ export class Ctext extends AlanNode {
 		text: () => interface_.Ctext
 	} = {
 		text: cache((detach:boolean) => {
-			const interface_command__node__properties__type__text_nval = this.parent;
+			const interface_event__node__properties__type__text_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
 				.then(context => context?.key?.ref)
@@ -740,7 +740,7 @@ export class Cchoice extends AlanNode {
 		state_group: () => interface_.Cstate_group
 	} = {
 		state_group: cache((detach:boolean) => {
-			const interface_command__id_path__has_steps__yes__value__choice_nval = this.parent;
+			const interface_event__id_path__has_steps__yes__value__choice_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
 				.then(context => context?.properties.property?.ref)
@@ -785,7 +785,7 @@ export class Ccollection__value extends AlanNode {
 		collection: () => interface_.Ccollection
 	} = {
 		collection: cache((detach:boolean) => {
-			const interface_command__id_path__has_steps__yes__value__collection_nval = this.parent;
+			const interface_event__id_path__has_steps__yes__value__collection_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
 				.then(context => context?.properties.property?.ref)
@@ -826,7 +826,7 @@ export class Cnode__value extends AlanNode {
 		group: () => interface_.Cgroup__type__property
 	} = {
 		group: cache((detach:boolean) => {
-			const interface_command__id_path__has_steps__yes__value__node_nval = this.parent;
+			const interface_event__id_path__has_steps__yes__value__node_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
 				.then(context => context?.properties.property?.ref)
@@ -848,84 +848,28 @@ export class Cnode__value extends AlanNode {
 	public get path() { return `${this.parent.path}/value?node`; }
 	public get entity() { return this.parent.entity; }
 }
-export type Tcontext_keys__interface_command = {
-	'context keys':Record<string, Tcontext_keys__context_keys>;
-};
-export class Ccontext_keys__interface_command extends AlanNode {
-	public readonly properties:{
-		readonly context_keys:Ccontext_keys__interface_command.Dcontext_keys
-	};
-	constructor(init:Tcontext_keys__interface_command, public location:AlanNode) {
-		super();
-		const $this = this;
-		this.properties = {
-			context_keys: new Ccontext_keys__interface_command.Dcontext_keys(init['context keys'], $this)
-		};
-	}
-	public get root() { return this._root ?? (this._root = this.location.root); }
-	public get component_root() { return this; }
-	public get path() { return `${this.location.path}/context keys`; }
-	public get entity() { return this.location.entity; }
-}
-export class Kcontext_keys__context_keys extends Reference<interface_.Ccontext_keys, string> {
-	constructor(key:string, $this:Ccontext_keys__context_keys) {
-		super(key, cache((detach:boolean) => resolve($this.parent)
-			.then(() => $this.parent)
-			.then(context => context?.root.input.interface_)
-			.then(context => {
-				const entry = context?.properties.context_keys.get(this.entry)!;
-				return resolve(entry).result;
-			}).result!))
-	}
-	public get path() { return `<unknown>/context keys/key`; }
-}
-export type Tcontext_keys__context_keys = {
-	'value':string;
-};
-export class Ccontext_keys__context_keys extends AlanDictionaryEntry {
-	public key:Kcontext_keys__context_keys;
-	public get key_value() { return this.key.entry; }
-	public readonly properties:{
-		readonly value:string
-	};
-	constructor(key:string, init:Tcontext_keys__context_keys, public parent:Ccontext_keys__interface_command) {
-		super();
-		const $this = this;
-		this.key = new Kcontext_keys__context_keys(key, $this);
-		this.properties = {
-			value: init['value']
-		};
-	}
-	public get root() { return this._root ?? (this._root = this.component_root.root); }
-	public get component_root() { return this.parent; }
-	public get path() { return `${this.parent.path}/context keys[${this.key.entry}]`; }
-	public get entity() { return this; }
-}
 
-export type Tinterface_command = {
-	'arguments':Tnode__interface_command;
-	'command':string;
-	'context keys':Tcontext_keys__interface_command;
+export type Tinterface_event = {
+	'arguments':Tnode__interface_event;
 	'context node':Tid_path;
+	'event':string;
 };
-export class Cinterface_command extends AlanNode {
+export class Cinterface_event extends AlanNode {
 	public key?:string;
 	public get root() { return this; }
 	public readonly properties:{
-		readonly arguments:Cnode__interface_command,
-		readonly command:Cinterface_command.Dcommand,
-		readonly context_keys:Ccontext_keys__interface_command,
-		readonly context_node:Cid_path
+		readonly arguments:Cnode__interface_event,
+		readonly context_node:Cid_path,
+		readonly event:Cinterface_event.Devent
 	};
-	constructor(init:Tinterface_command, public readonly input: {
+	constructor(init:Tinterface_event, public readonly input: {
 	'interface_':interface_.Cinterface}) {
 		super();
 		const $this = this;
 		this.properties = {
-			arguments: new Cinterface_command.Darguments(init['arguments'], $this),
-			command: new Cinterface_command.Dcommand(init['command'], $this),
-			context_keys: new Cinterface_command.Dcontext_keys(init['context keys'], $this),
-			context_node: new Cinterface_command.Dcontext_node(init['context node'], $this)
+			arguments: new Cinterface_event.Darguments(init['arguments'], $this),
+			context_node: new Cinterface_event.Dcontext_node(init['context node'], $this),
+			event: new Cinterface_event.Devent(init['event'], $this)
 		};
 	}
 	public get path() { return ``; }
@@ -933,36 +877,6 @@ export class Cinterface_command extends AlanNode {
 }
 
 /* property classes */
-export namespace Ccontext_keys__interface_command {
-	export class Dcontext_keys extends AlanDictionary<{ node:Ccontext_keys__context_keys, init:Tcontext_keys__context_keys},Ccontext_keys__interface_command> {
-		protected initialize(parent:Ccontext_keys__interface_command, key:string, entry_init:Tcontext_keys__context_keys) { return new Ccontext_keys__context_keys(key, entry_init, parent); }
-		protected finalize = finalize_context_keys__context_keys
-		protected eval_required_keys(detach:boolean = false):void {
-			let this_obj = this.parent;
-			function do_include(interface_command__context_keys__context_keys_key_nval:interface_.Ccontext_keys):boolean {
-				return true;
-			};
-			resolve(this.parent)
-			.then(() => this.parent)
-			.then(context => context?.root.input.interface_)
-			.then(context => {
-				for (let [key,val] of context?.properties.context_keys) {
-					let tail_obj = resolve(val).result;
-					if (tail_obj !== undefined && do_include(tail_obj)) {
-						assert(this.get(key) !== undefined);
-					}
-				}
-				return undefined;
-			});
-		}
-		public get path() { return `${this.parent.path}/context keys`; }
-		constructor(data:Tcontext_keys__interface_command['context keys'], parent:Ccontext_keys__interface_command) {
-			super(data, parent);
-		}
-	}
-}
-export namespace Ccontext_keys__context_keys {
-}
 export namespace Cid_path {
 	export class Dhas_steps<T extends
 		{ name: 'no', node:Cno, init:Tno}|
@@ -1060,13 +974,13 @@ export namespace Cchoice {
 }
 export namespace Ccollection__value {
 }
-export namespace Cnode__interface_command {
-	export class Dproperties extends AlanDictionary<{ node:Cproperties, init:Tproperties},Cnode__interface_command> {
-		protected initialize(parent:Cnode__interface_command, key:string, entry_init:Tproperties) { return new Cproperties(key, entry_init, parent); }
+export namespace Cnode__interface_event {
+	export class Dproperties extends AlanDictionary<{ node:Cproperties, init:Tproperties},Cnode__interface_event> {
+		protected initialize(parent:Cnode__interface_event, key:string, entry_init:Tproperties) { return new Cproperties(key, entry_init, parent); }
 		protected finalize = finalize_properties
 		protected eval_required_keys(detach:boolean = false):void {
 			let this_obj = this.parent;
-			function do_include(interface_command__node__properties_key_nval:interface_.Cproperty):boolean {
+			function do_include(interface_event__node__properties_key_nval:interface_.Cproperty):boolean {
 				return true;
 			};
 			resolve(this.parent)
@@ -1090,7 +1004,7 @@ export namespace Cnode__interface_command {
 			});
 		}
 		public get path() { return `${this.parent.path}/properties`; }
-		constructor(data:Tnode__interface_command['properties'], parent:Cnode__interface_command) {
+		constructor(data:Tnode__interface_event['properties'], parent:Cnode__interface_event) {
 			super(data, parent);
 		}
 	}
@@ -1142,7 +1056,7 @@ export namespace Ccollection__type {
 	}
 }
 export namespace Centries {
-	export class Dnode extends Cnode__interface_command {
+	export class Dnode extends Cnode__interface_event {
 		constructor(data:Tentries['node'], parent:Centries) {
 			super(data, parent, {
 				node_type: cache((detach:boolean) => resolve(this)
@@ -1157,7 +1071,7 @@ export namespace Centries {
 export namespace Cfile {
 }
 export namespace Cgroup {
-	export class Dnode extends Cnode__interface_command {
+	export class Dnode extends Cnode__interface_event {
 		constructor(data:Tgroup['node'], parent:Cgroup) {
 			super(data, parent, {
 				node_type: cache((detach:boolean) => resolve(this)
@@ -1176,11 +1090,11 @@ export namespace Cnumber {
 		constructor(data:Tnumber['value'], parent:Cnumber) {
 			super(data);this.inferences = {
 				set_type: cache((detach:boolean) => {
-					const interface_command__node__properties__type__number__value_nval = this;
+					const interface_event__node__properties__type__number__value_nval = this;
 					return resolve(this)
 						.then(switch_context => { 
 							const value = resolve(switch_context)
-								.then(context => interface_command__node__properties__type__number__value_nval).result.value;
+								.then(context => interface_event__node__properties__type__number__value_nval).result.value;
 							if (value < 0){
 								return resolve(switch_context)
 									.then(() => parent)
@@ -1214,7 +1128,7 @@ export namespace Cnumber {
 	}
 }
 export namespace Cstate_group {
-	export class Dnode extends Cnode__interface_command {
+	export class Dnode extends Cnode__interface_event {
 		constructor(data:Tstate_group['node'], parent:Cstate_group) {
 			super(data, parent, {
 				node_type: cache((detach:boolean) => resolve(this)
@@ -1240,45 +1154,19 @@ export namespace Cstate_group {
 }
 export namespace Ctext {
 }
-export namespace Cinterface_command {
-	export class Darguments extends Cnode__interface_command {
-		constructor(data:Tinterface_command['arguments'], parent:Cinterface_command) {
+export namespace Cinterface_event {
+	export class Darguments extends Cnode__interface_event {
+		constructor(data:Tinterface_event['arguments'], parent:Cinterface_event) {
 			super(data, parent, {
 				node_type: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
-					.then(context => context?.properties.command?.ref)
+					.then(context => context?.properties.event?.ref)
 					.then(context => context?.properties.parameters).result!)
 			})
 		}
 	}
-	export class Dcommand extends Reference<interface_.Ccommand,string> {
-
-		constructor(data:string, $this:Cinterface_command) {
-			super(data, cache((detach:boolean) => resolve($this)
-				.then(() => $this)
-				.then(context => context?.properties.context_node)
-				.then(context => context?.component_root.output.node_type())
-				.then(context => {
-					const entry = context?.properties.attributes.get(this.entry)!;
-					return resolve(entry)
-					.then(context => {
-						if (context?.properties.type.state.name === 'command') {
-							return context.properties.type.state.node as interface_.Ccommand;
-						} else {
-							return undefined;
-						}
-					}).result;
-				}).result!))
-		}
-		public get path() { return `<unknown>/command`; }
-	}
-	export class Dcontext_keys extends Ccontext_keys__interface_command {
-		constructor(data:Tinterface_command['context keys'], parent:Cinterface_command) {
-			super(data, parent)
-		}
-	}
 	export class Dcontext_node extends Cid_path {
-		constructor(data:Tinterface_command['context node'], parent:Cinterface_command) {
+		constructor(data:Tinterface_event['context node'], parent:Cinterface_event) {
 			super(data, parent, {
 				node_type: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
@@ -1287,16 +1175,26 @@ export namespace Cinterface_command {
 			})
 		}
 	}
-}
-function finalize_context_keys__context_keys(obj:Ccontext_keys__context_keys, detach:boolean = false) {
-	assert((<(detach?:boolean) => interface_.Ccontext_keys>(obj.key as any).resolve)(detach) !== undefined || detach);
-}
-function finalize_context_keys__interface_command(obj:Ccontext_keys__interface_command, detach:boolean = false) {
-	for (const [_key, entry] of obj.properties.context_keys) {
-		finalize_context_keys__context_keys(entry, detach);
-	}
-	if (!detach) {
-		(obj.properties.context_keys as any).eval_required_keys(detach);
+	export class Devent extends Reference<interface_.Cevent,string> {
+
+		constructor(data:string, $this:Cinterface_event) {
+			super(data, cache((detach:boolean) => resolve($this)
+				.then(() => $this)
+				.then(context => context?.properties.context_node)
+				.then(context => context?.component_root.output.node_type())
+				.then(context => {
+					const entry = context?.properties.attributes.get(this.entry)!;
+					return resolve(entry)
+					.then(context => {
+						if (context?.properties.type.state.name === 'event') {
+							return context.properties.type.state.node as interface_.Cevent;
+						} else {
+							return undefined;
+						}
+					}).result;
+				}).result!))
+		}
+		public get path() { return `<unknown>/event`; }
 	}
 }
 function finalize_no(obj:Cno, detach:boolean = false) {
@@ -1334,7 +1232,7 @@ function finalize_id_path(obj:Cid_path, detach:boolean = false) {
 	}
 }
 function finalize_entries(obj:Centries, detach:boolean = false) {
-	finalize_node__interface_command(obj.properties.node, detach);
+	finalize_node__interface_event(obj.properties.node, detach);
 }
 function finalize_collection__type(obj:Ccollection__type, detach:boolean = false) {
 	assert((<(detach?:boolean) => interface_.Ccollection>obj.inferences.collection)(detach) !== undefined || detach);
@@ -1349,7 +1247,7 @@ function finalize_file(obj:Cfile, detach:boolean = false) {
 }
 function finalize_group(obj:Cgroup, detach:boolean = false) {
 	assert((<(detach?:boolean) => interface_.Cgroup__type__property>obj.inferences.group)(detach) !== undefined || detach);
-	finalize_node__interface_command(obj.properties.node, detach);
+	finalize_node__interface_event(obj.properties.node, detach);
 }
 function finalize_number(obj:Cnumber, detach:boolean = false) {
 	assert((<(detach?:boolean) => interface_.Cnumber>obj.inferences.number)(detach) !== undefined || detach);
@@ -1357,7 +1255,7 @@ function finalize_number(obj:Cnumber, detach:boolean = false) {
 }
 function finalize_state_group(obj:Cstate_group, detach:boolean = false) {
 	assert((<(detach?:boolean) => interface_.Cstate_group>obj.inferences.state_group)(detach) !== undefined || detach);
-	finalize_node__interface_command(obj.properties.node, detach);
+	finalize_node__interface_event(obj.properties.node, detach);
 	assert((<(detach?:boolean) => interface_.Cstates>(obj.properties.state as any).resolve)(detach) !== undefined || detach);
 }
 function finalize_text(obj:Ctext, detach:boolean = false) {
@@ -1374,7 +1272,7 @@ function finalize_properties(obj:Cproperties, detach:boolean = false) {
 		case 'text': finalize_text(obj.properties.type.state.node, detach); break;
 	}
 }
-function finalize_node__interface_command(obj:Cnode__interface_command, detach:boolean = false) {
+function finalize_node__interface_event(obj:Cnode__interface_event, detach:boolean = false) {
 	assert((<(detach?:boolean) => interface_.Cnode>obj.input.node_type)(detach) !== undefined || detach);
 	for (const [_key, entry] of obj.properties.properties) {
 		finalize_properties(entry, detach);
@@ -1383,18 +1281,17 @@ function finalize_node__interface_command(obj:Cnode__interface_command, detach:b
 		(obj.properties.properties as any).eval_required_keys(detach);
 	}
 }
-function finalize_interface_command(obj:Cinterface_command, detach:boolean = false) {
-	finalize_node__interface_command(obj.properties.arguments, detach);
-	assert((<(detach?:boolean) => interface_.Ccommand>(obj.properties.command as any).resolve)(detach) !== undefined || detach);
-	finalize_context_keys__interface_command(obj.properties.context_keys, detach);
+function finalize_interface_event(obj:Cinterface_event, detach:boolean = false) {
+	finalize_node__interface_event(obj.properties.arguments, detach);
 	finalize_id_path(obj.properties.context_node, detach);
+	assert((<(detach?:boolean) => interface_.Cevent>(obj.properties.event as any).resolve)(detach) !== undefined || detach);
 }
 
-export namespace Cinterface_command {
-	export function create(init:Tinterface_command, input: {
-	'interface_':interface_.Cinterface}):Cinterface_command {
-		const instance = new Cinterface_command(init, input as any);
-		finalize_interface_command(instance);
+export namespace Cinterface_event {
+	export function create(init:Tinterface_event, input: {
+	'interface_':interface_.Cinterface}):Cinterface_event {
+		const instance = new Cinterface_event(init, input as any);
+		finalize_interface_event(instance);
 		return instance;
 	};
 }

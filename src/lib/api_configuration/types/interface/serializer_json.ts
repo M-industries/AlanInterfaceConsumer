@@ -164,6 +164,16 @@ let serialize_node = (
 									}
 								(<any>$_attributes.properties.type.state.node))];
 								break;
+							case 'event':
+								raw_data["type"] = [$_attributes.properties.type.state.name, (
+									function ($:read_api.Cevent) { 
+										let $_event= $;
+										var raw_data:{[key:string]:any} = {};
+										raw_data["parameters"] = serialize_node($_event.properties.parameters);
+										return raw_data;
+									}
+								(<any>$_attributes.properties.type.state.node))];
+								break;
 							case 'property':
 								raw_data["type"] = [$_attributes.properties.type.state.name, (
 									function ($:read_api.Cproperty) { 
@@ -551,6 +561,28 @@ let serialize_referencer = (
 									function ($:read_api.Cno__graph_participation) { 
 										let $_no__graph_participation= $;
 										var raw_data:{[key:string]:any} = {};
+										switch ($_no__graph_participation.properties.support_self_reference.state.name) {
+											case 'no':
+												raw_data["support self reference"] = [$_no__graph_participation.properties.support_self_reference.state.name, (
+													function ($:read_api.Cno__support_self_reference) { 
+														let $_no__support_self_reference= $;
+														var raw_data:{[key:string]:any} = {};
+														return raw_data;
+													}
+												(<any>$_no__graph_participation.properties.support_self_reference.state.node))];
+												break;
+											case 'yes':
+												raw_data["support self reference"] = [$_no__graph_participation.properties.support_self_reference.state.name, (
+													function ($:read_api.Cyes__support_self_reference) { 
+														let $_yes__support_self_reference= $;
+														var raw_data:{[key:string]:any} = {};
+														return raw_data;
+													}
+												(<any>$_no__graph_participation.properties.support_self_reference.state.node))];
+												break;
+											default:
+												throw new Error('Hmmm');
+										}
 										return raw_data;
 									}
 								(<any>$_sibling.properties.graph_participation.state.node))];

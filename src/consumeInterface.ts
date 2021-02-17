@@ -163,6 +163,9 @@ export function consumeInterface(
 						},
 						"unsubscribe": function ($) {
 							//TODO: handle server-initiated unsubscribe msg
+						},
+						"event": function ($) {
+							//TODO: handle event
 						}
 					});
 					break;

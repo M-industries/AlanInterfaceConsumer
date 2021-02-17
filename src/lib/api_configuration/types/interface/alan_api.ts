@@ -468,12 +468,7 @@ export class Csibling_rule extends AlanNode {
 			.then(() => this)
 			.then(context => context?.properties.rule?.ref)
 			.then(context => context?.properties.tail)
-			.then(context => context?.component_root.output.context())
-			.then(context => context?.component_root.output.node())
-			.then(context => {
-				const conv_context = resolve(context).result!;
-				return new Cnavigation_context({name: 'node', definition: conv_context});
-			}).result!),
+			.then(context => context?.component_root.output.context()).result!),
 		phase: cache((detach:boolean) => resolve(this)
 			.then(() => this)
 			.then(context => context?.properties.rule?.inferences.evaluation()).result!)
@@ -561,17 +556,19 @@ export class Cnode_location extends AlanStruct {
 			&& (this.variant.definition === other.variant.definition || this.variant.definition.is(other.variant.definition as any));
 	}
 }
-type Vroot_location = { name: 'command', definition: Ccommand}|{ name: 'dataset', definition: Cinterface}
+type Vroot_location = { name: 'message', definition: Cmessage}|{ name: 'dataset', definition: Cinterface}
 export class Croot_location extends AlanStruct {
 	constructor(
-		public readonly variant:Vroot_location) { super(); }
+		public readonly variant:Vroot_location, public input: {
+			member: () => interface_.Cmember
+		}) { super(); }
 	public definitions:{
 		node_location: Cnode_location;
 	} = {
 		node_location: new Cnode_location({name:'root', definition: this}, {
 			member: cache((detach:boolean) => resolve(this)
 				.then(() => this)
-				.then(() => interface_.Cmember.Proot).result!),
+				.then(context => context?.component_root.input.member()).result!),
 			node: cache((detach:boolean) => resolve(this)
 				.then(() => this)
 				.then(() => interface_.Cnode_parent.Pnone).result!),
@@ -703,7 +700,7 @@ export class Cpath extends AlanNode {
 	public get entity() { return this.parent.entity; }
 }
 export type Tsibling = {
-	'graph participation':'no'|['no', {}]|['yes', Tyes__graph_participation];
+	'graph participation':['no', Tno__graph_participation]|['yes', Tyes__graph_participation];
 };
 export class Csibling extends AlanNode {
 	public readonly properties:{
@@ -747,14 +744,46 @@ export class Csibling extends AlanNode {
 	public get entity() { return this.parent.entity; }
 }
 export type Tno__graph_participation = {
+	'support self reference':'no'|['no', {}]|'yes'|['yes', {}];
 };
 export class Cno__graph_participation extends AlanNode {
+	public readonly properties:{
+		readonly support_self_reference:Cno__graph_participation.Dsupport_self_reference<
+			{ name: 'no', node:Cno__support_self_reference, init:Tno__support_self_reference}|
+			{ name: 'yes', node:Cyes__support_self_reference, init:Tyes__support_self_reference}>
+	};
 	constructor(init:Tno__graph_participation, public parent:Csibling) {
 		super();
+		const $this = this;
+		this.properties = {
+			support_self_reference: new Cno__graph_participation.Dsupport_self_reference(init['support self reference'], $this)
+		};
 	}
 	public get root() { return this._root ?? (this._root = this.component_root.root); }
 	public get component_root() { return this.parent.parent; }
 	public get path() { return `${this.parent.path}/graph participation?no`; }
+	public get entity() { return this.parent.entity; }
+}
+export type Tno__support_self_reference = {
+};
+export class Cno__support_self_reference extends AlanNode {
+	constructor(init:Tno__support_self_reference, public parent:Cno__graph_participation) {
+		super();
+	}
+	public get root() { return this._root ?? (this._root = this.component_root.root); }
+	public get component_root() { return this.parent.parent.parent; }
+	public get path() { return `${this.parent.path}/support self reference?no`; }
+	public get entity() { return this.parent.entity; }
+}
+export type Tyes__support_self_reference = {
+};
+export class Cyes__support_self_reference extends AlanNode {
+	constructor(init:Tyes__support_self_reference, public parent:Cno__graph_participation) {
+		super();
+	}
+	public get root() { return this._root ?? (this._root = this.component_root.root); }
+	public get component_root() { return this.parent.parent.parent; }
+	public get path() { return `${this.parent.path}/support self reference?yes`; }
 	public get entity() { return this.parent.entity; }
 }
 export type Tyes__graph_participation = {
@@ -947,7 +976,7 @@ export class Cparticipation extends AlanStruct {
 }
 export import Cconditional = interface_.Cparticipation;
 export import Csingular = interface_.Cparticipation;
-type Voptional_target_context = { name: 'inaccessible', definition: (typeof Coptional_target_context.Pinaccessible)}|{ name: 'member', definition: Cmember}
+type Voptional_target_context = { name: 'inaccessible', definition: (typeof Coptional_target_context.Pinaccessible)}|{ name: 'attribute', definition: Cattributes}
 export class Coptional_target_context extends AlanStruct {
 	public static Pinaccessible:Coptional_target_context = new class PrimitiveInstance extends Coptional_target_context {
 		constructor () {
@@ -1708,6 +1737,62 @@ export class Cnode_parent extends AlanStruct {
 	}
 }
 export import Cnone__node_parent = interface_.Cnode_parent;
+type Vmessage = { name: 'event', definition: Cevent}|{ name: 'command', definition: Ccommand}
+export class Cmessage extends AlanStruct {
+	constructor(
+		public readonly variant:Vmessage) { super(); }
+	public definitions:{
+		root_location: Croot_location;
+	} = {
+		root_location: new Croot_location({name:'message', definition: this}, {
+			member: cache((detach:boolean) => resolve(this)
+				.then(() => this)
+				.then(context => context?.component_root.output.attribute())
+				.then(context => context?.definitions.member).result!)
+		})
+	}
+	public readonly output:{
+		attribute: () => interface_.Cattributes;
+	} = {
+		attribute: cache((detach:boolean) => resolve(this)
+			.then(() => this)
+			.then(context => {
+				switch (context?.variant.name) {
+					case 'command': {
+						const interface__message_out___attribute___command_nval = context.cast('command');
+						return resolve(context)
+							.then(context => interface__message_out___attribute___command_nval)
+							.then(context => context?.parent).result;
+					}
+					case 'event': {
+						const interface__message_out___attribute___event_nval = context.cast('event');
+						return resolve(context)
+							.then(context => interface__message_out___attribute___event_nval)
+							.then(context => context?.parent).result;
+					}
+					case undefined: return undefined;
+					default: throw new Error(`Unexpected subtype '${(<any>context).variant.name}'`);
+				};
+			}).result!)
+	};
+	public cast<K extends Vmessage['name']>(_variant:K):Extract<Vmessage, {name:K}>['definition'] {
+		return this.variant.definition as any;
+	}
+	switch<TS> (cases:{[K in Vmessage['name']]:(($:Extract<Vmessage, {name:K}>['definition']) => TS) | (() => TS) | Exclude<TS, Function>}):TS {
+		const handler = cases[this.variant.name];
+		if (isFunction(handler)) {
+			return handler(this.variant.definition as any);
+		} else {
+			return handler as Exclude<TS, Function>;
+		}
+	}
+	public get component_root() { return this; }
+	public get path() { return `/message`; }
+	public is(other:Cmessage):boolean {
+		return this.variant.name === other.variant.name
+			&& (this.variant.definition === other.variant.definition || this.variant.definition.is(other.variant.definition as any));
+	}
+}
 type Vmember = { name: 'attribute', definition: Cattributes}|{ name: 'root', definition: (typeof Cmember.Proot)}
 export class Cmember extends AlanStruct {
 	public static Proot:Cmember = new class PrimitiveInstance extends Cmember {
@@ -1817,7 +1902,7 @@ export class Cnode extends AlanNode {
 }
 export type Tattributes = {
 	'has predecessor':'no'|['no', {}]|['yes', Tyes__has_predecessor];
-	'type':['command', Tcommand]|['property', Tproperty];
+	'type':['command', Tcommand]|['event', Tevent]|['property', Tproperty];
 };
 export class Cattributes extends AlanGraphVertex {
 	public key:string;
@@ -1840,10 +1925,11 @@ export class Cattributes extends AlanGraphVertex {
 				.then(context => {
 					switch (context?.variant.name) {
 						case 'attribute': {
-							const interface__node__attributes_var___member_in___context_root_member___attribute_nval = context.cast('attribute');
 							return resolve(context)
-								.then(context => interface__node__attributes_var___member_in___context_root_member___attribute_nval)
-								.then(context => context?.definitions.member).result;
+								.then(() => this)
+								.then(context => context?.component_root.input.location())
+								.then(context => context?.component_root.output.member())
+								.then(context => context?.component_root.output.context_root_member()).result;
 						}
 						case 'root': {
 							return resolve(context)
@@ -1902,6 +1988,7 @@ export class Cattributes extends AlanGraphVertex {
 			{ name: 'yes', node:Cyes__has_predecessor, init:Tyes__has_predecessor}>,
 		readonly type:Cattributes.Dtype<
 			{ name: 'command', node:Ccommand, init:Tcommand}|
+			{ name: 'event', node:Cevent, init:Tevent}|
 			{ name: 'property', node:Cproperty, init:Tproperty}>
 	};
 	constructor(key:string, init:Tattributes, public parent:Cnode) {
@@ -1953,9 +2040,9 @@ export type Tcommand = {
 };
 export class Ccommand extends AlanNode {
 	public definitions:{
-		root_location: Croot_location;
+		message: Cmessage;
 	} = {
-		root_location: new Croot_location({name:'command', definition: this})
+		message: new Cmessage({name:'command', definition: this})
 	}
 	public readonly properties:{
 		readonly parameters:Cnode
@@ -1983,6 +2070,43 @@ export class Ccommand extends AlanNode {
 	public get root() { return this._root ?? (this._root = this.component_root.root); }
 	public get component_root() { return this.parent.parent; }
 	public get path() { return `${this.parent.path}/type?command`; }
+	public get entity() { return this.parent.entity; }
+}
+export type Tevent = {
+	'parameters':Tnode;
+};
+export class Cevent extends AlanNode {
+	public definitions:{
+		message: Cmessage;
+	} = {
+		message: new Cmessage({name:'event', definition: this})
+	}
+	public readonly properties:{
+		readonly parameters:Cnode
+	};
+	public readonly inferences:{
+		dataset_attribute: () => interface_.Cinterface
+	} = {
+		dataset_attribute: cache((detach:boolean) => {
+			const interface__node__attributes__type__event_nval = this.parent;
+			return resolve(this.parent)
+				.then(() => this.parent)
+				.then(context => context?.component_root.input.location())
+				.then(context => context?.component_root.output.root())
+				.then(context => context?.variant.name === 'dataset' ? context.variant.definition as interface_.Cinterface : undefined).result!;
+		})
+
+	}
+	constructor(init:Tevent, public parent:Cattributes) {
+		super();
+		const $this = this;
+		this.properties = {
+			parameters: new Cevent.Dparameters(init['parameters'], $this)
+		};
+	}
+	public get root() { return this._root ?? (this._root = this.component_root.root); }
+	public get component_root() { return this.parent.parent; }
+	public get path() { return `${this.parent.path}/type?event`; }
 	public get entity() { return this.parent.entity; }
 }
 export type Tproperty = {
@@ -2067,18 +2191,9 @@ export type Tdense_map = {
 };
 export class Cdense_map extends AlanNode {
 	public readonly inferences:{
-		command_parameter: () => interface_.Ccommand,
-		key_constraint: () => interface_.Cyes__has_constraint
+		key_constraint: () => interface_.Cyes__has_constraint,
+		message_parameter: () => interface_.Cmessage
 	} = {
-		command_parameter: cache((detach:boolean) => {
-			const interface__node__attributes__type__property__type__collection__type__dense_map_nval = this.parent;
-			return resolve(this.parent)
-				.then(() => this.parent)
-				.then(context => context?.component_root.input.location())
-				.then(context => context?.component_root.output.root())
-				.then(context => context?.variant.name === 'command' ? context.variant.definition as interface_.Ccommand : undefined).result!;
-		})
-		,
 		key_constraint: cache((detach:boolean) => {
 			const interface__node__attributes__type__property__type__collection__type__dense_map_nval = this.parent;
 			return resolve(this.parent)
@@ -2091,6 +2206,15 @@ export class Cdense_map extends AlanNode {
 						return undefined;
 					}
 				}).result!;
+		})
+		,
+		message_parameter: cache((detach:boolean) => {
+			const interface__node__attributes__type__property__type__collection__type__dense_map_nval = this.parent;
+			return resolve(this.parent)
+				.then(() => this.parent)
+				.then(context => context?.component_root.input.location())
+				.then(context => context?.component_root.output.root())
+				.then(context => context?.variant.name === 'message' ? context.variant.definition as interface_.Cmessage : undefined).result!;
 		})
 
 	}
@@ -2344,6 +2468,7 @@ export class Cnonexisting extends AlanNode {
 				.then(() => this.parent)
 				.then(context => context?.component_root.input.location())
 				.then(context => context?.component_root.output.root())
+				.then(context => context?.variant.name === 'message' ? context.variant.definition as interface_.Cmessage : undefined)
 				.then(context => context?.variant.name === 'command' ? context.variant.definition as interface_.Ccommand : undefined).result!;
 		})
 
@@ -2718,7 +2843,8 @@ export class Cdataset_root extends AlanNode {
 			return resolve(this.parent)
 				.then(() => this.parent)
 				.then(context => context?.component_root.input.this_())
-				.then(context => context?.variant.name === 'member' ? context.variant.definition as interface_.Cmember : undefined).result!;
+				.then(context => context?.variant.name === 'attribute' ? context.variant.definition as interface_.Cattributes : undefined)
+				.then(context => context?.definitions.member).result!;
 		})
 		,
 		root_context: cache((detach:boolean) => {
@@ -2823,7 +2949,6 @@ export class Cthis_dataset_node extends AlanNode {
 			return resolve(this.parent)
 				.then(() => this.parent)
 				.then(context => context?.component_root.input.this_())
-				.then(context => context?.variant.name === 'member' ? context.variant.definition as interface_.Cmember : undefined)
 				.then(context => context?.variant.name === 'attribute' ? context.variant.definition as interface_.Cattributes : undefined).result!;
 		})
 		,
@@ -2835,15 +2960,15 @@ export class Cthis_dataset_node extends AlanNode {
 				.then(context => context?.component_root.output.root())
 				.then(context => {
 					switch (context?.variant.name) {
-						case 'command': {
-							const interface__context_node_path__context__this_dataset_node_inf___data_attribute___command_nval = context.cast('command');
-							return resolve(context)
-								.then(context => interface__context_node_path__context__this_dataset_node_inf___data_attribute___command_nval)
-								.then(context => context?.parent).result;
-						}
 						case 'dataset': {
 							return resolve(context)
 								.then(() => this.inferences.accessible_this_context()).result;
+						}
+						case 'message': {
+							const interface__context_node_path__context__this_dataset_node_inf___data_attribute___message_nval = context.cast('message');
+							return resolve(context)
+								.then(context => interface__context_node_path__context__this_dataset_node_inf___data_attribute___message_nval)
+								.then(context => context?.component_root.output.attribute()).result;
 						}
 						case undefined: return undefined;
 						default: throw new Error(`Unexpected subtype '${(<any>context).variant.name}'`);
@@ -2880,24 +3005,23 @@ export class Cthis_parameter_node extends AlanNode {
 	}
 	public readonly inferences:{
 		accessible_this_context: () => interface_.Cattributes,
-		command: () => interface_.Ccommand
+		parameter_node: () => interface_.Cmessage
 	} = {
 		accessible_this_context: cache((detach:boolean) => {
 			const interface__context_node_path__context__this_parameter_node_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.parent)
 				.then(context => context?.component_root.input.this_())
-				.then(context => context?.variant.name === 'member' ? context.variant.definition as interface_.Cmember : undefined)
 				.then(context => context?.variant.name === 'attribute' ? context.variant.definition as interface_.Cattributes : undefined).result!;
 		})
 		,
-		command: cache((detach:boolean) => {
+		parameter_node: cache((detach:boolean) => {
 			const interface__context_node_path__context__this_parameter_node_nval = this.parent;
 			return resolve(this.parent)
 				.then(() => this.inferences.accessible_this_context())
 				.then(context => context?.component_root.output.location())
 				.then(context => context?.component_root.output.root())
-				.then(context => context?.variant.name === 'command' ? context.variant.definition as interface_.Ccommand : undefined).result!;
+				.then(context => context?.variant.name === 'message' ? context.variant.definition as interface_.Cmessage : undefined).result!;
 		})
 
 	}
@@ -2923,7 +3047,11 @@ export class Cinterface extends AlanNode {
 		root_location: Croot_location;
 	} = {
 		entity: new Centity({name:'root', definition: this}),
-		root_location: new Croot_location({name:'dataset', definition: this})
+		root_location: new Croot_location({name:'dataset', definition: this}, {
+			member: cache((detach:boolean) => resolve(this)
+				.then(() => this)
+				.then(() => interface_.Cmember.Proot).result!)
+		})
 	}
 	public readonly properties:{
 		readonly context_keys:Cinterface.Dcontext_keys,
@@ -3213,10 +3341,12 @@ export namespace Cattributes {
 	}
 	export class Dtype<T extends
 		{ name: 'command', node:Ccommand, init:Tcommand}|
+		{ name: 'event', node:Cevent, init:Tevent}|
 		{ name: 'property', node:Cproperty, init:Tproperty}> extends StateGroup<T> {
 		protected initializer(state:T['name']) {
 			switch (state) {
 				case 'command': return (init:Tcommand, parent:Cattributes) => new Ccommand(init, parent);
+				case 'event': return (init:Tevent, parent:Cattributes) => new Cevent(init, parent);
 				case 'property': return (init:Tproperty, parent:Cattributes) => new Cproperty(init, parent);
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
@@ -3224,6 +3354,7 @@ export namespace Cattributes {
 		protected finalizer(state:T['name']) {
 			switch (state) {
 				case 'command': return finalize_command;
+				case 'event': return finalize_event;
 				case 'property': return finalize_property;
 				default: throw new Error(`Unexpected state ${state}.`);
 			}
@@ -3262,6 +3393,23 @@ export namespace Ccommand {
 					.then(context => context?.component_root.input.entity()).result!),
 				location: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
+					.then(context => context?.definitions.message)
+					.then(context => context?.definitions.root_location)
+					.then(context => context?.definitions.node_location).result!)
+			})
+		}
+	}
+}
+export namespace Cevent {
+	export class Dparameters extends Cnode {
+		constructor(data:Tevent['parameters'], parent:Cevent) {
+			super(data, parent, {
+				entity: cache((detach:boolean) => resolve(this)
+					.then(() => parent)
+					.then(context => context?.component_root.input.entity()).result!),
+				location: cache((detach:boolean) => resolve(this)
+					.then(() => parent)
+					.then(context => context?.definitions.message)
 					.then(context => context?.definitions.root_location)
 					.then(context => context?.definitions.node_location).result!)
 			})
@@ -3422,9 +3570,8 @@ export namespace Cstates {
 					.then(context => context?.parent)
 					.then(context => context?.parent)
 					.then(context => {
-						const conv_context = resolve(context)
-							.then(context => context?.definitions.member).result!;
-						return new Coptional_target_context({name: 'member', definition: conv_context});
+						const conv_context = resolve(context).result!;
+						return new Coptional_target_context({name: 'attribute', definition: conv_context});
 					}).result!)
 			})
 		}
@@ -4126,9 +4273,8 @@ export namespace Cpath {
 					.then(() => parent)
 					.then(context => context?.component_root.input.this_())
 					.then(context => {
-						const conv_context = resolve(context)
-							.then(context => context?.definitions.member).result!;
-						return new Coptional_target_context({name: 'member', definition: conv_context});
+						const conv_context = resolve(context).result!;
+						return new Coptional_target_context({name: 'attribute', definition: conv_context});
 					}).result!),
 				this_phase: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
@@ -4181,6 +4327,30 @@ export namespace Csibling {
 			super(data, parent);
 		}
 		public get path() { return `<unknown>/graph participation`; }
+	}
+}
+export namespace Cno__graph_participation {
+	export class Dsupport_self_reference<T extends
+		{ name: 'no', node:Cno__support_self_reference, init:Tno__support_self_reference}|
+		{ name: 'yes', node:Cyes__support_self_reference, init:Tyes__support_self_reference}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'no': return (init:Tno__support_self_reference, parent:Cno__graph_participation) => new Cno__support_self_reference(init, parent);
+				case 'yes': return (init:Tyes__support_self_reference, parent:Cno__graph_participation) => new Cyes__support_self_reference(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected finalizer(state:T['name']) {
+			switch (state) {
+				case 'no': return finalize_no__support_self_reference;
+				case 'yes': return finalize_yes__support_self_reference;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Tno__graph_participation['support self reference'], parent:Cno__graph_participation) {
+			super(data, parent);
+		}
+		public get path() { return `<unknown>/support self reference`; }
 	}
 }
 export namespace Cyes__graph_participation {
@@ -4495,7 +4665,7 @@ function finalize_this_dataset_node(obj:Cthis_dataset_node, detach:boolean = fal
 }
 function finalize_this_parameter_node(obj:Cthis_parameter_node, detach:boolean = false) {
 	assert((<(detach?:boolean) => interface_.Cattributes>obj.inferences.accessible_this_context)(detach) !== undefined || detach);
-	assert((<(detach?:boolean) => interface_.Ccommand>obj.inferences.command)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cmessage>obj.inferences.parameter_node)(detach) !== undefined || detach);
 	assert((<(detach?:boolean) => interface_.Cnavigation_context>obj.output.context)(detach) !== undefined || detach);
 	assert((<(detach?:boolean) => interface_.Cevaluation_phase>obj.output.phase)(detach) !== undefined || detach);
 }
@@ -4563,6 +4733,10 @@ function finalize_member(obj:Cmember, detach:boolean = false) {
 }
 function finalize_member_type(obj:Cmember_type, detach:boolean = false) {
 }
+function finalize_message(obj:Cmessage, detach:boolean = false) {
+	assert((<(detach?:boolean) => interface_.Cattributes>obj.output.attribute)(detach) !== undefined || detach);
+	finalize_root_location(obj.definitions.root_location, detach);
+}
 function finalize_navigation_context(obj:Cnavigation_context, detach:boolean = false) {
 	assert((<(detach?:boolean) => interface_.Cnode>obj.output.node)(detach) !== undefined || detach);
 	finalize_optional_navigation_context(obj.definitions.optional_navigation_context, detach);
@@ -4574,12 +4748,17 @@ function finalize_yes__has_predecessor(obj:Cyes__has_predecessor, detach:boolean
 }
 function finalize_command(obj:Ccommand, detach:boolean = false) {
 	assert((<(detach?:boolean) => interface_.Cinterface>obj.inferences.dataset_attribute)(detach) !== undefined || detach);
-	finalize_root_location(obj.definitions.root_location, detach);
+	finalize_message(obj.definitions.message, detach);
+	finalize_node(obj.properties.parameters, detach);
+}
+function finalize_event(obj:Cevent, detach:boolean = false) {
+	assert((<(detach?:boolean) => interface_.Cinterface>obj.inferences.dataset_attribute)(detach) !== undefined || detach);
+	finalize_message(obj.definitions.message, detach);
 	finalize_node(obj.properties.parameters, detach);
 }
 function finalize_dense_map(obj:Cdense_map, detach:boolean = false) {
-	assert((<(detach?:boolean) => interface_.Ccommand>obj.inferences.command_parameter)(detach) !== undefined || detach);
 	assert((<(detach?:boolean) => interface_.Cyes__has_constraint>obj.inferences.key_constraint)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cmessage>obj.inferences.message_parameter)(detach) !== undefined || detach);
 }
 function finalize_simple__type(obj:Csimple__type, detach:boolean = false) {
 }
@@ -4658,6 +4837,7 @@ function finalize_attributes(obj:Cattributes, detach:boolean = false) {
 	}
 	switch (obj.properties.type.state.name) {
 		case 'command': finalize_command(obj.properties.type.state.node, detach); break;
+		case 'event': finalize_event(obj.properties.type.state.node, detach); break;
 		case 'property': finalize_property(obj.properties.type.state.node, detach); break;
 	}
 }
@@ -4829,7 +5009,15 @@ function finalize_path(obj:Cpath, detach:boolean = false) {
 	finalize_context_node_path(obj.properties.head, detach);
 	finalize_node_path_tail(obj.properties.tail, detach);
 }
+function finalize_no__support_self_reference(obj:Cno__support_self_reference, detach:boolean = false) {
+}
+function finalize_yes__support_self_reference(obj:Cyes__support_self_reference, detach:boolean = false) {
+}
 function finalize_no__graph_participation(obj:Cno__graph_participation, detach:boolean = false) {
+	switch (obj.properties.support_self_reference.state.name) {
+		case 'no': finalize_no__support_self_reference(obj.properties.support_self_reference.state.node, detach); break;
+		case 'yes': finalize_yes__support_self_reference(obj.properties.support_self_reference.state.node, detach); break;
+	}
 }
 function finalize_graphs__yes(obj:Cgraphs__yes, detach:boolean = false) {
 	assert((<(detach?:boolean) => interface_.Cgraphs__graphs_definition>(obj.key as any).resolve)(detach) !== undefined || detach);
@@ -4873,6 +5061,7 @@ function finalize_referencer(obj:Creferencer, detach:boolean = false) {
 	}
 }
 function finalize_root_location(obj:Croot_location, detach:boolean = false) {
+	assert((<(detach?:boolean) => interface_.Cmember>obj.input.member)(detach) !== undefined || detach);
 	finalize_node_location(obj.definitions.node_location, detach);
 }
 function finalize_no__has_rule(obj:Cno__has_rule, detach:boolean = false) {

@@ -1,25 +1,4 @@
 import * as read_api from "./alan_api";
-let serialize_context_keys = (
-	function ($:read_api.Ccontext_keys__interface_command) { 
-		let $_context_keys__interface_command= $;
-		var raw_data:{[key:string]:any} = {};
-		raw_data["context keys"] = (function ($) {
-			var object:{[key:string]:any} = {};
-			for (let [k,v] of $_context_keys__interface_command.properties.context_keys) {
-				object[k] = (
-					function ($:read_api.Ccontext_keys__context_keys) { 
-						let $_context_keys__context_keys= $;
-						var raw_data:{[key:string]:any} = {};
-						raw_data["value"] = $_context_keys__context_keys.properties.value;
-						return raw_data;
-					}
-				(v));
-			}
-			return object;
-		}($));
-		return raw_data;
-	}
-);
 let serialize_id_path = (
 	function ($:read_api.Cid_path) { 
 		let $_id_path= $;
@@ -85,12 +64,12 @@ let serialize_id_path = (
 	}
 );
 let serialize_node = (
-	function ($:read_api.Cnode__interface_command) { 
-		let $_node__interface_command= $;
+	function ($:read_api.Cnode__interface_event) { 
+		let $_node__interface_event= $;
 		var raw_data:{[key:string]:any} = {};
 		raw_data["properties"] = (function ($) {
 			var object:{[key:string]:any} = {};
-			for (let [k,v] of $_node__interface_command.properties.properties) {
+			for (let [k,v] of $_node__interface_event.properties.properties) {
 				object[k] = (
 					function ($:read_api.Cproperties) { 
 						let $_properties= $;
@@ -179,13 +158,12 @@ let serialize_node = (
 	}
 );
 export var serialize = (
-	function ($:read_api.Cinterface_command) { 
-		let $_interface_command= $;
+	function ($:read_api.Cinterface_event) { 
+		let $_interface_event= $;
 		var raw_data:{[key:string]:any} = {};
-		raw_data["arguments"] = serialize_node($_interface_command.properties.arguments);
-		raw_data["command"] = $_interface_command.properties.command.entry;
-		raw_data["context keys"] = serialize_context_keys($_interface_command.properties.context_keys);
-		raw_data["context node"] = serialize_id_path($_interface_command.properties.context_node);
+		raw_data["arguments"] = serialize_node($_interface_event.properties.arguments);
+		raw_data["context node"] = serialize_id_path($_interface_event.properties.context_node);
+		raw_data["event"] = $_interface_event.properties.event.entry;
 		return raw_data;
 	}
 );

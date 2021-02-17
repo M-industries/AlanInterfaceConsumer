@@ -6,7 +6,7 @@
 		"noImplicitAny": true,
 		"noFallthroughCasesInSwitch": true,
 		"noImplicitReturns": true,
-		"target": "es6",
+		"target": "es2018",
 		"rootDir": ".",
 		"outDir": "../build/js",
 		"declaration": true

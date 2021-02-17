@@ -4,6 +4,17 @@ export var serialize = (
 		let $_application_protocol_notify= $;
 		var raw_data:{[key:string]:any} = {};
 		switch ($_application_protocol_notify.properties.result.state.name) {
+			case 'event':
+				raw_data["result"] = [$_application_protocol_notify.properties.result.state.name, (
+					function ($:read_api.Cevent) { 
+						let $_event= $;
+						var raw_data:{[key:string]:any} = {};
+						raw_data["event"] = $_event.properties.event;
+						raw_data["id"] = $_event.properties.id;
+						return raw_data;
+					}
+				(<any>$_application_protocol_notify.properties.result.state.node))];
+				break;
 			case 'notification':
 				raw_data["result"] = [$_application_protocol_notify.properties.result.state.name, (
 					function ($:read_api.Cnotification) { 

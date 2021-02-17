@@ -330,7 +330,7 @@ export class Cupdate_node extends AlanNode {
 		readonly properties:Cupdate_node.Dproperties
 	};
 	constructor(init:Tupdate_node, public location:AlanNode, public input: {
-		context_node: () => interface_.Cnode
+		node_type: () => interface_.Cnode
 	}) {
 		super();
 		const $this = this;
@@ -347,7 +347,7 @@ export class Kproperties__update_node extends Reference<interface_.Cproperty, st
 	constructor(key:string, $this:Cproperties__update_node) {
 		super(key, cache((detach:boolean) => resolve($this.parent)
 			.then(() => $this.parent)
-			.then(context => context?.component_root.input.context_node())
+			.then(context => context?.component_root.input.node_type())
 			.then(context => {
 				const entry = context?.properties.attributes.get(this.entry)!;
 				return resolve(entry)
@@ -587,13 +587,11 @@ export class Cgroup__type__properties__update_node extends AlanNode {
 	public get entity() { return this.parent.entity; }
 }
 export type Tnumber__type__properties__update_node = {
-	'type':['integer', Tinteger__type__number__type__properties__update_node]|['natural', Tnatural__type__number__type__properties__update_node];
+	'new value':number;
 };
 export class Cnumber__type__properties__update_node extends AlanNode {
 	public readonly properties:{
-		readonly type:Cnumber__type__properties__update_node.Dtype<
-			{ name: 'integer', node:Cinteger__type__number__type__properties__update_node, init:Tinteger__type__number__type__properties__update_node}|
-			{ name: 'natural', node:Cnatural__type__number__type__properties__update_node, init:Tnatural__type__number__type__properties__update_node}>
+		readonly new_value:Cnumber__type__properties__update_node.Dnew_value
 	};
 	public readonly inferences:{
 		number: () => interface_.Cnumber
@@ -617,88 +615,12 @@ export class Cnumber__type__properties__update_node extends AlanNode {
 		super();
 		const $this = this;
 		this.properties = {
-			type: new Cnumber__type__properties__update_node.Dtype(init['type'], $this)
+			new_value: new Cnumber__type__properties__update_node.Dnew_value(init['new value'], $this)
 		};
 	}
 	public get root() { return this._root ?? (this._root = this.component_root.root); }
 	public get component_root() { return this.parent.parent; }
 	public get path() { return `${this.parent.path}/type?number`; }
-	public get entity() { return this.parent.entity; }
-}
-export type Tinteger__type__number__type__properties__update_node = {
-	'new value':number;
-};
-export class Cinteger__type__number__type__properties__update_node extends AlanNode {
-	public readonly properties:{
-		readonly new_value:Cinteger__type__number__type__properties__update_node.Dnew_value
-	};
-	public readonly inferences:{
-		integer_type: () => interface_.Cinteger__set
-	} = {
-		integer_type: cache((detach:boolean) => {
-			const interface_notification__update_node__properties__type__number__type__integer_nval = this.parent;
-			return resolve(this.parent)
-				.then(() => this.parent)
-				.then(context => context?.inferences.number())
-				.then(context => context?.properties.type)
-				.then(context => {
-					if (context?.properties.set.state.name === 'integer') {
-						return resolve(context.properties.set.state.node as interface_.Cinteger__set).result;
-					} else {
-						return undefined;
-					}
-				}).result!;
-		})
-
-	}
-	constructor(init:Tinteger__type__number__type__properties__update_node, public parent:Cnumber__type__properties__update_node) {
-		super();
-		const $this = this;
-		this.properties = {
-			new_value: new Cinteger__type__number__type__properties__update_node.Dnew_value(init['new value'], $this)
-		};
-	}
-	public get root() { return this._root ?? (this._root = this.component_root.root); }
-	public get component_root() { return this.parent.parent.parent; }
-	public get path() { return `${this.parent.path}/type?integer`; }
-	public get entity() { return this.parent.entity; }
-}
-export type Tnatural__type__number__type__properties__update_node = {
-	'new value':number;
-};
-export class Cnatural__type__number__type__properties__update_node extends AlanNode {
-	public readonly properties:{
-		readonly new_value:Cnatural__type__number__type__properties__update_node.Dnew_value
-	};
-	public readonly inferences:{
-		natural_type: () => interface_.Cnatural__set
-	} = {
-		natural_type: cache((detach:boolean) => {
-			const interface_notification__update_node__properties__type__number__type__natural_nval = this.parent;
-			return resolve(this.parent)
-				.then(() => this.parent)
-				.then(context => context?.inferences.number())
-				.then(context => context?.properties.type)
-				.then(context => {
-					if (context?.properties.set.state.name === 'natural') {
-						return resolve(context.properties.set.state.node as interface_.Cnatural__set).result;
-					} else {
-						return undefined;
-					}
-				}).result!;
-		})
-
-	}
-	constructor(init:Tnatural__type__number__type__properties__update_node, public parent:Cnumber__type__properties__update_node) {
-		super();
-		const $this = this;
-		this.properties = {
-			new_value: new Cnatural__type__number__type__properties__update_node.Dnew_value(init['new value'], $this)
-		};
-	}
-	public get root() { return this._root ?? (this._root = this.component_root.root); }
-	public get component_root() { return this.parent.parent.parent; }
-	public get path() { return `${this.parent.path}/type?natural`; }
 	public get entity() { return this.parent.entity; }
 }
 export type Tstate_group__type__properties__update_node = {
@@ -826,7 +748,7 @@ export class Cinitialize_node extends AlanNode {
 		readonly properties:Cinitialize_node.Dproperties
 	};
 	constructor(init:Tinitialize_node, public location:AlanNode, public input: {
-		context_node: () => interface_.Cnode
+		node_type: () => interface_.Cnode
 	}) {
 		super();
 		const $this = this;
@@ -843,7 +765,7 @@ export class Kproperties__initialize_node extends Reference<interface_.Cproperty
 	constructor(key:string, $this:Cproperties__initialize_node) {
 		super(key, cache((detach:boolean) => resolve($this.parent)
 			.then(() => $this.parent)
-			.then(context => context?.component_root.input.context_node())
+			.then(context => context?.component_root.input.node_type())
 			.then(context => {
 				const entry = context?.properties.attributes.get(this.entry)!;
 				return resolve(entry)
@@ -1020,13 +942,11 @@ export class Cgroup__type__properties__initialize_node extends AlanNode {
 	public get entity() { return this.parent.entity; }
 }
 export type Tnumber__type__properties__initialize_node = {
-	'type':['integer', Tinteger__type__number__type__properties__initialize_node]|['natural', Tnatural__type__number__type__properties__initialize_node];
+	'value':number;
 };
 export class Cnumber__type__properties__initialize_node extends AlanNode {
 	public readonly properties:{
-		readonly type:Cnumber__type__properties__initialize_node.Dtype<
-			{ name: 'integer', node:Cinteger__type__number__type__properties__initialize_node, init:Tinteger__type__number__type__properties__initialize_node}|
-			{ name: 'natural', node:Cnatural__type__number__type__properties__initialize_node, init:Tnatural__type__number__type__properties__initialize_node}>
+		readonly value:Cnumber__type__properties__initialize_node.Dvalue
 	};
 	public readonly inferences:{
 		number: () => interface_.Cnumber
@@ -1050,88 +970,12 @@ export class Cnumber__type__properties__initialize_node extends AlanNode {
 		super();
 		const $this = this;
 		this.properties = {
-			type: new Cnumber__type__properties__initialize_node.Dtype(init['type'], $this)
+			value: new Cnumber__type__properties__initialize_node.Dvalue(init['value'], $this)
 		};
 	}
 	public get root() { return this._root ?? (this._root = this.component_root.root); }
 	public get component_root() { return this.parent.parent; }
 	public get path() { return `${this.parent.path}/type?number`; }
-	public get entity() { return this.parent.entity; }
-}
-export type Tinteger__type__number__type__properties__initialize_node = {
-	'value':number;
-};
-export class Cinteger__type__number__type__properties__initialize_node extends AlanNode {
-	public readonly properties:{
-		readonly value:Cinteger__type__number__type__properties__initialize_node.Dvalue
-	};
-	public readonly inferences:{
-		integer_type: () => interface_.Cinteger__set
-	} = {
-		integer_type: cache((detach:boolean) => {
-			const interface_notification__initialize_node__properties__type__number__type__integer_nval = this.parent;
-			return resolve(this.parent)
-				.then(() => this.parent)
-				.then(context => context?.inferences.number())
-				.then(context => context?.properties.type)
-				.then(context => {
-					if (context?.properties.set.state.name === 'integer') {
-						return resolve(context.properties.set.state.node as interface_.Cinteger__set).result;
-					} else {
-						return undefined;
-					}
-				}).result!;
-		})
-
-	}
-	constructor(init:Tinteger__type__number__type__properties__initialize_node, public parent:Cnumber__type__properties__initialize_node) {
-		super();
-		const $this = this;
-		this.properties = {
-			value: new Cinteger__type__number__type__properties__initialize_node.Dvalue(init['value'], $this)
-		};
-	}
-	public get root() { return this._root ?? (this._root = this.component_root.root); }
-	public get component_root() { return this.parent.parent.parent; }
-	public get path() { return `${this.parent.path}/type?integer`; }
-	public get entity() { return this.parent.entity; }
-}
-export type Tnatural__type__number__type__properties__initialize_node = {
-	'value':number;
-};
-export class Cnatural__type__number__type__properties__initialize_node extends AlanNode {
-	public readonly properties:{
-		readonly value:Cnatural__type__number__type__properties__initialize_node.Dvalue
-	};
-	public readonly inferences:{
-		natural_type: () => interface_.Cnatural__set
-	} = {
-		natural_type: cache((detach:boolean) => {
-			const interface_notification__initialize_node__properties__type__number__type__natural_nval = this.parent;
-			return resolve(this.parent)
-				.then(() => this.parent)
-				.then(context => context?.inferences.number())
-				.then(context => context?.properties.type)
-				.then(context => {
-					if (context?.properties.set.state.name === 'natural') {
-						return resolve(context.properties.set.state.node as interface_.Cnatural__set).result;
-					} else {
-						return undefined;
-					}
-				}).result!;
-		})
-
-	}
-	constructor(init:Tnatural__type__number__type__properties__initialize_node, public parent:Cnumber__type__properties__initialize_node) {
-		super();
-		const $this = this;
-		this.properties = {
-			value: new Cnatural__type__number__type__properties__initialize_node.Dvalue(init['value'], $this)
-		};
-	}
-	public get root() { return this._root ?? (this._root = this.component_root.root); }
-	public get component_root() { return this.parent.parent.parent; }
-	public get path() { return `${this.parent.path}/type?natural`; }
 	public get entity() { return this.parent.entity; }
 }
 export type Tstate_group__type__properties__initialize_node = {
@@ -1297,7 +1141,7 @@ export namespace Cinitialize_node {
 			};
 			resolve(this.parent)
 			.then(() => this.parent)
-			.then(context => context?.component_root.input.context_node())
+			.then(context => context?.component_root.input.node_type())
 			.then(context => {
 				for (let [key,val] of context?.properties.attributes) {
 					let tail_obj = resolve(val)
@@ -1371,7 +1215,7 @@ export namespace Centries__collection__type__properties__initialize_node {
 	export class Dnode extends Cinitialize_node {
 		constructor(data:Tentries__collection__type__properties__initialize_node['node'], parent:Centries__collection__type__properties__initialize_node) {
 			super(data, parent, {
-				context_node: cache((detach:boolean) => resolve(this)
+				node_type: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
 					.then(context => context?.parent)
 					.then(context => context?.inferences.collection())
@@ -1386,7 +1230,7 @@ export namespace Cgroup__type__properties__initialize_node {
 	export class Dnode extends Cinitialize_node {
 		constructor(data:Tgroup__type__properties__initialize_node['node'], parent:Cgroup__type__properties__initialize_node) {
 			super(data, parent, {
-				context_node: cache((detach:boolean) => resolve(this)
+				node_type: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
 					.then(context => context?.inferences.group())
 					.then(context => context?.properties.node).result!)
@@ -1395,41 +1239,47 @@ export namespace Cgroup__type__properties__initialize_node {
 	}
 }
 export namespace Cnumber__type__properties__initialize_node {
-	export class Dtype<T extends
-		{ name: 'integer', node:Cinteger__type__number__type__properties__initialize_node, init:Tinteger__type__number__type__properties__initialize_node}|
-		{ name: 'natural', node:Cnatural__type__number__type__properties__initialize_node, init:Tnatural__type__number__type__properties__initialize_node}> extends StateGroup<T> {
-		protected initializer(state:T['name']) {
-			switch (state) {
-				case 'integer': return (init:Tinteger__type__number__type__properties__initialize_node, parent:Cnumber__type__properties__initialize_node) => new Cinteger__type__number__type__properties__initialize_node(init, parent);
-				case 'natural': return (init:Tnatural__type__number__type__properties__initialize_node, parent:Cnumber__type__properties__initialize_node) => new Cnatural__type__number__type__properties__initialize_node(init, parent);
-				default: throw new Error(`Unexpected state ${state}.`);
+	export class Dvalue extends AlanInteger {
+		public readonly inferences:{
+			set_type: () => interface_.Cnumber_set_type
+		}
+		constructor(data:Tnumber__type__properties__initialize_node['value'], parent:Cnumber__type__properties__initialize_node) {
+			super(data);this.inferences = {
+				set_type: cache((detach:boolean) => {
+					const interface_notification__initialize_node__properties__type__number__value_nval = this;
+					return resolve(this)
+						.then(switch_context => { 
+							const value = resolve(switch_context)
+								.then(context => interface_notification__initialize_node__properties__type__number__value_nval).result.value;
+							if (value < 0){
+								return resolve(switch_context)
+									.then(() => parent)
+									.then(context => context?.inferences.number())
+									.then(context => context?.properties.type)
+									.then(context => context?.properties.set?.state.node.output.set_type())
+									.then(context => context?.variant.name === 'integer' ? context.variant.definition as interface_.Cinteger__number_set_type : undefined).result;
+							}
+							else if (value > 0){
+								return resolve(switch_context)
+									.then(() => parent)
+									.then(() => interface_.Cnumber_set_type.Pnatural).result;
+							}
+							else if (value == 0){
+								return resolve(switch_context)
+									.then(() => parent)
+									.then(context => context?.inferences.number())
+									.then(context => context?.properties.type)
+									.then(context => context?.properties.set?.state.node.output.set_type())
+									.then(context => context?.variant.name === 'integer' ? context.variant.definition as interface_.Cinteger__number_set_type : undefined).result;
+							}
+							else {
+								throw new Error(`Missing case handler.`);
+							}
+						}).result!;
+				})
+
 			}
 		}
-		protected finalizer(state:T['name']) {
-			switch (state) {
-				case 'integer': return finalize_integer__type__number__type__properties__initialize_node;
-				case 'natural': return finalize_natural__type__number__type__properties__initialize_node;
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		constructor(data:Tnumber__type__properties__initialize_node['type'], parent:Cnumber__type__properties__initialize_node) {
-			super(data, parent);
-		}
-		public get path() { return `<unknown>/type`; }
-	}
-}
-export namespace Cinteger__type__number__type__properties__initialize_node {
-	export class Dvalue extends AlanInteger {
-		constructor(data:Tinteger__type__number__type__properties__initialize_node['value'], parent:Cinteger__type__number__type__properties__initialize_node) {
-			super(data);}
-		public get path() { return `<unknown>/value`; }
-	}
-}
-export namespace Cnatural__type__number__type__properties__initialize_node {
-	export class Dvalue extends AlanInteger {
-		constructor(data:Tnatural__type__number__type__properties__initialize_node['value'], parent:Cnatural__type__number__type__properties__initialize_node) {
-			number__is_positive(data);
-			super(data);}
 		public get path() { return `<unknown>/value`; }
 	}
 }
@@ -1437,7 +1287,7 @@ export namespace Cstate_group__type__properties__initialize_node {
 	export class Dnode extends Cinitialize_node {
 		constructor(data:Tstate_group__type__properties__initialize_node['node'], parent:Cstate_group__type__properties__initialize_node) {
 			super(data, parent, {
-				context_node: cache((detach:boolean) => resolve(this)
+				node_type: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
 					.then(context => context?.properties.state?.ref)
 					.then(context => context?.properties.node).result!)
@@ -1547,7 +1397,7 @@ export namespace Ccreate__type__entries {
 	export class Dnode extends Cinitialize_node {
 		constructor(data:Tcreate__type__entries['node'], parent:Ccreate__type__entries) {
 			super(data, parent, {
-				context_node: cache((detach:boolean) => resolve(this)
+				node_type: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
 					.then(context => context?.parent)
 					.then(context => context?.parent)
@@ -1563,7 +1413,7 @@ export namespace Cupdate__type__entries {
 	export class Dupdate_node extends Cupdate_node {
 		constructor(data:Tupdate__type__entries['update node'], parent:Cupdate__type__entries) {
 			super(data, parent, {
-				context_node: cache((detach:boolean) => resolve(this)
+				node_type: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
 					.then(context => context?.parent)
 					.then(context => context?.parent)
@@ -1579,7 +1429,7 @@ export namespace Cgroup__type__properties__update_node {
 	export class Dupdate_node extends Cupdate_node {
 		constructor(data:Tgroup__type__properties__update_node['update node'], parent:Cgroup__type__properties__update_node) {
 			super(data, parent, {
-				context_node: cache((detach:boolean) => resolve(this)
+				node_type: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
 					.then(context => context?.inferences.group())
 					.then(context => context?.properties.node).result!)
@@ -1588,41 +1438,47 @@ export namespace Cgroup__type__properties__update_node {
 	}
 }
 export namespace Cnumber__type__properties__update_node {
-	export class Dtype<T extends
-		{ name: 'integer', node:Cinteger__type__number__type__properties__update_node, init:Tinteger__type__number__type__properties__update_node}|
-		{ name: 'natural', node:Cnatural__type__number__type__properties__update_node, init:Tnatural__type__number__type__properties__update_node}> extends StateGroup<T> {
-		protected initializer(state:T['name']) {
-			switch (state) {
-				case 'integer': return (init:Tinteger__type__number__type__properties__update_node, parent:Cnumber__type__properties__update_node) => new Cinteger__type__number__type__properties__update_node(init, parent);
-				case 'natural': return (init:Tnatural__type__number__type__properties__update_node, parent:Cnumber__type__properties__update_node) => new Cnatural__type__number__type__properties__update_node(init, parent);
-				default: throw new Error(`Unexpected state ${state}.`);
+	export class Dnew_value extends AlanInteger {
+		public readonly inferences:{
+			set_type: () => interface_.Cnumber_set_type
+		}
+		constructor(data:Tnumber__type__properties__update_node['new value'], parent:Cnumber__type__properties__update_node) {
+			super(data);this.inferences = {
+				set_type: cache((detach:boolean) => {
+					const interface_notification__update_node__properties__type__number__new_value_nval = this;
+					return resolve(this)
+						.then(switch_context => { 
+							const value = resolve(switch_context)
+								.then(context => interface_notification__update_node__properties__type__number__new_value_nval).result.value;
+							if (value < 0){
+								return resolve(switch_context)
+									.then(() => parent)
+									.then(context => context?.inferences.number())
+									.then(context => context?.properties.type)
+									.then(context => context?.properties.set?.state.node.output.set_type())
+									.then(context => context?.variant.name === 'integer' ? context.variant.definition as interface_.Cinteger__number_set_type : undefined).result;
+							}
+							else if (value > 0){
+								return resolve(switch_context)
+									.then(() => parent)
+									.then(() => interface_.Cnumber_set_type.Pnatural).result;
+							}
+							else if (value == 0){
+								return resolve(switch_context)
+									.then(() => parent)
+									.then(context => context?.inferences.number())
+									.then(context => context?.properties.type)
+									.then(context => context?.properties.set?.state.node.output.set_type())
+									.then(context => context?.variant.name === 'integer' ? context.variant.definition as interface_.Cinteger__number_set_type : undefined).result;
+							}
+							else {
+								throw new Error(`Missing case handler.`);
+							}
+						}).result!;
+				})
+
 			}
 		}
-		protected finalizer(state:T['name']) {
-			switch (state) {
-				case 'integer': return finalize_integer__type__number__type__properties__update_node;
-				case 'natural': return finalize_natural__type__number__type__properties__update_node;
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		constructor(data:Tnumber__type__properties__update_node['type'], parent:Cnumber__type__properties__update_node) {
-			super(data, parent);
-		}
-		public get path() { return `<unknown>/type`; }
-	}
-}
-export namespace Cinteger__type__number__type__properties__update_node {
-	export class Dnew_value extends AlanInteger {
-		constructor(data:Tinteger__type__number__type__properties__update_node['new value'], parent:Cinteger__type__number__type__properties__update_node) {
-			super(data);}
-		public get path() { return `<unknown>/new value`; }
-	}
-}
-export namespace Cnatural__type__number__type__properties__update_node {
-	export class Dnew_value extends AlanInteger {
-		constructor(data:Tnatural__type__number__type__properties__update_node['new value'], parent:Cnatural__type__number__type__properties__update_node) {
-			number__is_positive(data);
-			super(data);}
 		public get path() { return `<unknown>/new value`; }
 	}
 }
@@ -1667,7 +1523,7 @@ export namespace Cset {
 	export class Dnode extends Cinitialize_node {
 		constructor(data:Tset['node'], parent:Cset) {
 			super(data, parent, {
-				context_node: cache((detach:boolean) => resolve(this)
+				node_type: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
 					.then(context => context?.parent)
 					.then(context => context?.properties.state?.ref)
@@ -1680,7 +1536,7 @@ export namespace Cupdate__type__state_group {
 	export class Dupdate_node extends Cupdate_node {
 		constructor(data:Tupdate__type__state_group['update node'], parent:Cupdate__type__state_group) {
 			super(data, parent, {
-				context_node: cache((detach:boolean) => resolve(this)
+				node_type: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
 					.then(context => context?.parent)
 					.then(context => context?.properties.state?.ref)
@@ -1722,7 +1578,7 @@ export namespace Ccreate__type__interface_notification {
 	export class Dinitialize_node extends Cinitialize_node {
 		constructor(data:Tcreate__type__interface_notification['initialize node'], parent:Ccreate__type__interface_notification) {
 			super(data, parent, {
-				context_node: cache((detach:boolean) => resolve(this)
+				node_type: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
 					.then(context => context?.root.input.interface_)
 					.then(context => context?.properties.root).result!)
@@ -1734,7 +1590,7 @@ export namespace Cupdate__type__interface_notification {
 	export class Dupdate_node extends Cupdate_node {
 		constructor(data:Tupdate__type__interface_notification['update node'], parent:Cupdate__type__interface_notification) {
 			super(data, parent, {
-				context_node: cache((detach:boolean) => resolve(this)
+				node_type: cache((detach:boolean) => resolve(this)
 					.then(() => parent)
 					.then(context => context?.root.input.interface_)
 					.then(context => context?.properties.root).result!)
@@ -1760,18 +1616,9 @@ function finalize_group__type__properties__initialize_node(obj:Cgroup__type__pro
 	assert((<(detach?:boolean) => interface_.Cgroup__type__property>obj.inferences.group)(detach) !== undefined || detach);
 	finalize_initialize_node(obj.properties.node, detach);
 }
-function finalize_integer__type__number__type__properties__initialize_node(obj:Cinteger__type__number__type__properties__initialize_node, detach:boolean = false) {
-	assert((<(detach?:boolean) => interface_.Cinteger__set>obj.inferences.integer_type)(detach) !== undefined || detach);
-}
-function finalize_natural__type__number__type__properties__initialize_node(obj:Cnatural__type__number__type__properties__initialize_node, detach:boolean = false) {
-	assert((<(detach?:boolean) => interface_.Cnatural__set>obj.inferences.natural_type)(detach) !== undefined || detach);
-}
 function finalize_number__type__properties__initialize_node(obj:Cnumber__type__properties__initialize_node, detach:boolean = false) {
 	assert((<(detach?:boolean) => interface_.Cnumber>obj.inferences.number)(detach) !== undefined || detach);
-	switch (obj.properties.type.state.name) {
-		case 'integer': finalize_integer__type__number__type__properties__initialize_node(obj.properties.type.state.node, detach); break;
-		case 'natural': finalize_natural__type__number__type__properties__initialize_node(obj.properties.type.state.node, detach); break;
-	}
+	assert((<(detach?:boolean) => interface_.Cnumber_set_type>obj.properties.value.inferences.set_type)(detach) !== undefined || detach);
 }
 function finalize_state_group__type__properties__initialize_node(obj:Cstate_group__type__properties__initialize_node, detach:boolean = false) {
 	assert((<(detach?:boolean) => interface_.Cstate_group>obj.inferences.state_group)(detach) !== undefined || detach);
@@ -1793,7 +1640,7 @@ function finalize_properties__initialize_node(obj:Cproperties__initialize_node, 
 	}
 }
 function finalize_initialize_node(obj:Cinitialize_node, detach:boolean = false) {
-	assert((<(detach?:boolean) => interface_.Cnode>obj.input.context_node)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cnode>obj.input.node_type)(detach) !== undefined || detach);
 	for (const [_key, entry] of obj.properties.properties) {
 		finalize_properties__initialize_node(entry, detach);
 	}
@@ -1831,18 +1678,9 @@ function finalize_group__type__properties__update_node(obj:Cgroup__type__propert
 	assert((<(detach?:boolean) => interface_.Cgroup__type__property>obj.inferences.group)(detach) !== undefined || detach);
 	finalize_update_node(obj.properties.update_node, detach);
 }
-function finalize_integer__type__number__type__properties__update_node(obj:Cinteger__type__number__type__properties__update_node, detach:boolean = false) {
-	assert((<(detach?:boolean) => interface_.Cinteger__set>obj.inferences.integer_type)(detach) !== undefined || detach);
-}
-function finalize_natural__type__number__type__properties__update_node(obj:Cnatural__type__number__type__properties__update_node, detach:boolean = false) {
-	assert((<(detach?:boolean) => interface_.Cnatural__set>obj.inferences.natural_type)(detach) !== undefined || detach);
-}
 function finalize_number__type__properties__update_node(obj:Cnumber__type__properties__update_node, detach:boolean = false) {
 	assert((<(detach?:boolean) => interface_.Cnumber>obj.inferences.number)(detach) !== undefined || detach);
-	switch (obj.properties.type.state.name) {
-		case 'integer': finalize_integer__type__number__type__properties__update_node(obj.properties.type.state.node, detach); break;
-		case 'natural': finalize_natural__type__number__type__properties__update_node(obj.properties.type.state.node, detach); break;
-	}
+	assert((<(detach?:boolean) => interface_.Cnumber_set_type>obj.properties.new_value.inferences.set_type)(detach) !== undefined || detach);
 }
 function finalize_set(obj:Cset, detach:boolean = false) {
 	finalize_initialize_node(obj.properties.node, detach);
@@ -1873,7 +1711,7 @@ function finalize_properties__update_node(obj:Cproperties__update_node, detach:b
 	}
 }
 function finalize_update_node(obj:Cupdate_node, detach:boolean = false) {
-	assert((<(detach?:boolean) => interface_.Cnode>obj.input.context_node)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cnode>obj.input.node_type)(detach) !== undefined || detach);
 	for (const [_key, entry] of obj.properties.properties) {
 		finalize_properties__update_node(entry, detach);
 	}

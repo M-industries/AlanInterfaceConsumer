@@ -55,30 +55,7 @@ let serialize_initialize_node = (
 									function ($:read_api.Cnumber__type__properties__initialize_node) { 
 										let $_number__type__properties__initialize_node= $;
 										var raw_data:{[key:string]:any} = {};
-										switch ($_number__type__properties__initialize_node.properties.type.state.name) {
-											case 'integer':
-												raw_data["type"] = [$_number__type__properties__initialize_node.properties.type.state.name, (
-													function ($:read_api.Cinteger__type__number__type__properties__initialize_node) { 
-														let $_integer__type__number__type__properties__initialize_node= $;
-														var raw_data:{[key:string]:any} = {};
-														raw_data["value"] = $_integer__type__number__type__properties__initialize_node.properties.value.value;
-														return raw_data;
-													}
-												(<any>$_number__type__properties__initialize_node.properties.type.state.node))];
-												break;
-											case 'natural':
-												raw_data["type"] = [$_number__type__properties__initialize_node.properties.type.state.name, (
-													function ($:read_api.Cnatural__type__number__type__properties__initialize_node) { 
-														let $_natural__type__number__type__properties__initialize_node= $;
-														var raw_data:{[key:string]:any} = {};
-														raw_data["value"] = $_natural__type__number__type__properties__initialize_node.properties.value.value;
-														return raw_data;
-													}
-												(<any>$_number__type__properties__initialize_node.properties.type.state.node))];
-												break;
-											default:
-												throw new Error('Hmmm');
-										}
+										raw_data["value"] = $_number__type__properties__initialize_node.properties.value.value;
 										return raw_data;
 									}
 								(<any>$_properties__initialize_node.properties.type.state.node))];
@@ -206,30 +183,7 @@ let serialize_update_node = (
 									function ($:read_api.Cnumber__type__properties__update_node) { 
 										let $_number__type__properties__update_node= $;
 										var raw_data:{[key:string]:any} = {};
-										switch ($_number__type__properties__update_node.properties.type.state.name) {
-											case 'integer':
-												raw_data["type"] = [$_number__type__properties__update_node.properties.type.state.name, (
-													function ($:read_api.Cinteger__type__number__type__properties__update_node) { 
-														let $_integer__type__number__type__properties__update_node= $;
-														var raw_data:{[key:string]:any} = {};
-														raw_data["new value"] = $_integer__type__number__type__properties__update_node.properties.new_value.value;
-														return raw_data;
-													}
-												(<any>$_number__type__properties__update_node.properties.type.state.node))];
-												break;
-											case 'natural':
-												raw_data["type"] = [$_number__type__properties__update_node.properties.type.state.name, (
-													function ($:read_api.Cnatural__type__number__type__properties__update_node) { 
-														let $_natural__type__number__type__properties__update_node= $;
-														var raw_data:{[key:string]:any} = {};
-														raw_data["new value"] = $_natural__type__number__type__properties__update_node.properties.new_value.value;
-														return raw_data;
-													}
-												(<any>$_number__type__properties__update_node.properties.type.state.node))];
-												break;
-											default:
-												throw new Error('Hmmm');
-										}
+										raw_data["new value"] = $_number__type__properties__update_node.properties.new_value.value;
 										return raw_data;
 									}
 								(<any>$_properties__update_node.properties.type.state.node))];

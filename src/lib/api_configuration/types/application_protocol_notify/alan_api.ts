@@ -323,13 +323,14 @@ export abstract class AlanTopology<T extends { node:AlanGraphVertex, init:any },
 /* alan objects */
 
 export type Tapplication_protocol_notify = {
-	'result':['notification', Tnotification]|['unsubscribe', Tunsubscribe];
+	'result':['event', Tevent]|['notification', Tnotification]|['unsubscribe', Tunsubscribe];
 };
 export class Capplication_protocol_notify extends AlanNode {
 	public key?:string;
 	public get root() { return this; }
 	public readonly properties:{
 		readonly result:Capplication_protocol_notify.Dresult<
+			{ name: 'event', node:Cevent, init:Tevent}|
 			{ name: 'notification', node:Cnotification, init:Tnotification}|
 			{ name: 'unsubscribe', node:Cunsubscribe, init:Tunsubscribe}>
 	};
@@ -342,6 +343,28 @@ export class Capplication_protocol_notify extends AlanNode {
 	}
 	public get path() { return ``; }
 	public get entity() { return this; }
+}
+export type Tevent = {
+	'event':string;
+	'id':string;
+};
+export class Cevent extends AlanNode {
+	public readonly properties:{
+		readonly event:string,
+		readonly id:string
+	};
+	constructor(init:Tevent, public parent:Capplication_protocol_notify) {
+		super();
+		const $this = this;
+		this.properties = {
+			event: init['event'],
+			id: init['id']
+		};
+	}
+	public get root() { return this._root ?? (this._root = this.component_root.root); }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/result?event`; }
+	public get entity() { return this.parent.entity; }
 }
 export type Tnotification = {
 	'id':string;
@@ -388,10 +411,12 @@ export class Cunsubscribe extends AlanNode {
 /* property classes */
 export namespace Capplication_protocol_notify {
 	export class Dresult<T extends
+		{ name: 'event', node:Cevent, init:Tevent}|
 		{ name: 'notification', node:Cnotification, init:Tnotification}|
 		{ name: 'unsubscribe', node:Cunsubscribe, init:Tunsubscribe}> extends StateGroup<T> {
 		protected initializer(state:T['name']) {
 			switch (state) {
+				case 'event': return (init:Tevent, parent:Capplication_protocol_notify) => new Cevent(init, parent);
 				case 'notification': return (init:Tnotification, parent:Capplication_protocol_notify) => new Cnotification(init, parent);
 				case 'unsubscribe': return (init:Tunsubscribe, parent:Capplication_protocol_notify) => new Cunsubscribe(init, parent);
 				default: throw new Error(`Unexpected state ${state}.`);
@@ -399,6 +424,7 @@ export namespace Capplication_protocol_notify {
 		}
 		protected finalizer(state:T['name']) {
 			switch (state) {
+				case 'event': return finalize_event;
 				case 'notification': return finalize_notification;
 				case 'unsubscribe': return finalize_unsubscribe;
 				default: throw new Error(`Unexpected state ${state}.`);
@@ -410,9 +436,13 @@ export namespace Capplication_protocol_notify {
 		public get path() { return `<unknown>/result`; }
 	}
 }
+export namespace Cevent {
+}
 export namespace Cnotification {
 }
 export namespace Cunsubscribe {
+}
+function finalize_event(obj:Cevent, detach:boolean = false) {
 }
 function finalize_notification(obj:Cnotification, detach:boolean = false) {
 }
@@ -420,6 +450,7 @@ function finalize_unsubscribe(obj:Cunsubscribe, detach:boolean = false) {
 }
 function finalize_application_protocol_notify(obj:Capplication_protocol_notify, detach:boolean = false) {
 	switch (obj.properties.result.state.name) {
+		case 'event': finalize_event(obj.properties.result.state.node, detach); break;
 		case 'notification': finalize_notification(obj.properties.result.state.node, detach); break;
 		case 'unsubscribe': finalize_unsubscribe(obj.properties.result.state.node, detach); break;
 	}
