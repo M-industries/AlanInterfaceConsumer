@@ -1241,11 +1241,11 @@ export namespace Cgroup__type__properties__initialize_node {
 export namespace Cnumber__type__properties__initialize_node {
 	export class Dvalue extends AlanInteger {
 		public readonly inferences:{
-			set_type: () => interface_.Cnumber_set_type
+			sign: () => interface_.Cyes__number_sign_inclusion
 		}
 		constructor(data:Tnumber__type__properties__initialize_node['value'], parent:Cnumber__type__properties__initialize_node) {
 			super(data);this.inferences = {
-				set_type: cache((detach:boolean) => {
+				sign: cache((detach:boolean) => {
 					const interface_notification__initialize_node__properties__type__number__value_nval = this;
 					return resolve(this)
 						.then(switch_context => { 
@@ -1256,21 +1256,24 @@ export namespace Cnumber__type__properties__initialize_node {
 									.then(() => parent)
 									.then(context => context?.inferences.number())
 									.then(context => context?.properties.type)
-									.then(context => context?.properties.set?.state.node.output.set_type())
-									.then(context => context?.variant.name === 'integer' ? context.variant.definition as interface_.Cinteger__number_set_type : undefined).result;
+									.then(context => context?.properties.type?.state.node.output.can_be_negative())
+									.then(context => context?.variant.name === 'yes' ? context.variant.definition as interface_.Cyes__number_sign_inclusion : undefined).result;
 							}
 							else if (value > 0){
 								return resolve(switch_context)
 									.then(() => parent)
-									.then(() => interface_.Cnumber_set_type.Pnatural).result;
+									.then(context => context?.inferences.number())
+									.then(context => context?.properties.type)
+									.then(context => context?.properties.type?.state.node.output.can_be_positive())
+									.then(context => context?.variant.name === 'yes' ? context.variant.definition as interface_.Cyes__number_sign_inclusion : undefined).result;
 							}
 							else if (value == 0){
 								return resolve(switch_context)
 									.then(() => parent)
 									.then(context => context?.inferences.number())
 									.then(context => context?.properties.type)
-									.then(context => context?.properties.set?.state.node.output.set_type())
-									.then(context => context?.variant.name === 'integer' ? context.variant.definition as interface_.Cinteger__number_set_type : undefined).result;
+									.then(context => context?.properties.type?.state.node.output.can_be_zero())
+									.then(context => context?.variant.name === 'yes' ? context.variant.definition as interface_.Cyes__number_sign_inclusion : undefined).result;
 							}
 							else {
 								throw new Error(`Missing case handler.`);
@@ -1440,7 +1443,7 @@ export namespace Cgroup__type__properties__update_node {
 export namespace Cnumber__type__properties__update_node {
 	export class Dnew_value extends AlanInteger {
 		public readonly inferences:{
-			set_type: () => interface_.Cnumber_set_type
+			set_type: () => interface_.Cyes__number_sign_inclusion
 		}
 		constructor(data:Tnumber__type__properties__update_node['new value'], parent:Cnumber__type__properties__update_node) {
 			super(data);this.inferences = {
@@ -1455,21 +1458,24 @@ export namespace Cnumber__type__properties__update_node {
 									.then(() => parent)
 									.then(context => context?.inferences.number())
 									.then(context => context?.properties.type)
-									.then(context => context?.properties.set?.state.node.output.set_type())
-									.then(context => context?.variant.name === 'integer' ? context.variant.definition as interface_.Cinteger__number_set_type : undefined).result;
+									.then(context => context?.properties.type?.state.node.output.can_be_negative())
+									.then(context => context?.variant.name === 'yes' ? context.variant.definition as interface_.Cyes__number_sign_inclusion : undefined).result;
 							}
 							else if (value > 0){
 								return resolve(switch_context)
 									.then(() => parent)
-									.then(() => interface_.Cnumber_set_type.Pnatural).result;
+									.then(context => context?.inferences.number())
+									.then(context => context?.properties.type)
+									.then(context => context?.properties.type?.state.node.output.can_be_positive())
+									.then(context => context?.variant.name === 'yes' ? context.variant.definition as interface_.Cyes__number_sign_inclusion : undefined).result;
 							}
 							else if (value == 0){
 								return resolve(switch_context)
 									.then(() => parent)
 									.then(context => context?.inferences.number())
 									.then(context => context?.properties.type)
-									.then(context => context?.properties.set?.state.node.output.set_type())
-									.then(context => context?.variant.name === 'integer' ? context.variant.definition as interface_.Cinteger__number_set_type : undefined).result;
+									.then(context => context?.properties.type?.state.node.output.can_be_zero())
+									.then(context => context?.variant.name === 'yes' ? context.variant.definition as interface_.Cyes__number_sign_inclusion : undefined).result;
 							}
 							else {
 								throw new Error(`Missing case handler.`);
@@ -1618,7 +1624,7 @@ function finalize_group__type__properties__initialize_node(obj:Cgroup__type__pro
 }
 function finalize_number__type__properties__initialize_node(obj:Cnumber__type__properties__initialize_node, detach:boolean = false) {
 	assert((<(detach?:boolean) => interface_.Cnumber>obj.inferences.number)(detach) !== undefined || detach);
-	assert((<(detach?:boolean) => interface_.Cnumber_set_type>obj.properties.value.inferences.set_type)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cyes__number_sign_inclusion>obj.properties.value.inferences.sign)(detach) !== undefined || detach);
 }
 function finalize_state_group__type__properties__initialize_node(obj:Cstate_group__type__properties__initialize_node, detach:boolean = false) {
 	assert((<(detach?:boolean) => interface_.Cstate_group>obj.inferences.state_group)(detach) !== undefined || detach);
@@ -1680,7 +1686,7 @@ function finalize_group__type__properties__update_node(obj:Cgroup__type__propert
 }
 function finalize_number__type__properties__update_node(obj:Cnumber__type__properties__update_node, detach:boolean = false) {
 	assert((<(detach?:boolean) => interface_.Cnumber>obj.inferences.number)(detach) !== undefined || detach);
-	assert((<(detach?:boolean) => interface_.Cnumber_set_type>obj.properties.new_value.inferences.set_type)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cyes__number_sign_inclusion>obj.properties.new_value.inferences.set_type)(detach) !== undefined || detach);
 }
 function finalize_set(obj:Cset, detach:boolean = false) {
 	finalize_initialize_node(obj.properties.node, detach);

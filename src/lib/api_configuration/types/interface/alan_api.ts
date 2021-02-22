@@ -1115,25 +1115,25 @@ export class Cinherited extends AlanNode {
 }
 export type Tnumber_type = {
 	'decimal places':'no'|['no', {}]|['yes', Tyes__decimal_places];
-	'set':'integer'|['integer', {}]|'natural'|['natural', {}];
-	'type':string;
+	'numerical type':string;
+	'type':['bounded', Tbounded]|'unbounded'|['unbounded', {}];
 };
 export class Cnumber_type extends AlanNode {
 	public readonly properties:{
 		readonly decimal_places:Cnumber_type.Ddecimal_places<
 			{ name: 'no', node:Cno__decimal_places, init:Tno__decimal_places}|
 			{ name: 'yes', node:Cyes__decimal_places, init:Tyes__decimal_places}>,
-		readonly set:Cnumber_type.Dset<
-			{ name: 'integer', node:Cinteger__set, init:Tinteger__set}|
-			{ name: 'natural', node:Cnatural__set, init:Tnatural__set}>,
-		readonly type:Cnumber_type.Dtype
+		readonly numerical_type:Cnumber_type.Dnumerical_type,
+		readonly type:Cnumber_type.Dtype<
+			{ name: 'bounded', node:Cbounded, init:Tbounded}|
+			{ name: 'unbounded', node:Cunbounded, init:Tunbounded}>
 	};
 	constructor(init:Tnumber_type, public location:AlanNode) {
 		super();
 		const $this = this;
 		this.properties = {
 			decimal_places: new Cnumber_type.Ddecimal_places(init['decimal places'], $this),
-			set: new Cnumber_type.Dset(init['set'], $this),
+			numerical_type: new Cnumber_type.Dnumerical_type(init['numerical type'], $this),
 			type: new Cnumber_type.Dtype(init['type'], $this)
 		};
 	}
@@ -1172,62 +1172,359 @@ export class Cyes__decimal_places extends AlanNode {
 	public get path() { return `${this.parent.path}/decimal places?yes`; }
 	public get entity() { return this.parent.entity; }
 }
-export type Tinteger__set = {
+export type Tbounded = {
+	'invert sign':'no'|['no', {}]|'yes'|['yes', {}];
+	'sign':'negative'|['negative', {}]|'positive'|['positive', {}]|'zero'|['zero', {}];
 };
-export class Cinteger__set extends AlanNode {
+export class Cbounded extends AlanNode {
+	public readonly properties:{
+		readonly invert_sign:Cbounded.Dinvert_sign<
+			{ name: 'no', node:Cno__invert_sign, init:Tno__invert_sign}|
+			{ name: 'yes', node:Cyes__invert_sign, init:Tyes__invert_sign}>,
+		readonly sign:Cbounded.Dsign<
+			{ name: 'negative', node:Cnegative, init:Tnegative}|
+			{ name: 'positive', node:Cpositive, init:Tpositive}|
+			{ name: 'zero', node:Czero, init:Tzero}>
+	};
 	public readonly output:{
-		set_type: () => interface_.Cnumber_set_type;
+		can_be_negative: () => interface_.Cnumber_sign_inclusion;
+		can_be_positive: () => interface_.Cnumber_sign_inclusion;
+		can_be_zero: () => interface_.Cnumber_sign_inclusion;
 	} = {
-		set_type: cache((detach:boolean) => resolve(this)
+		can_be_negative: cache((detach:boolean) => resolve(this)
 			.then(() => this)
-			.then(() => interface_.Cnumber_set_type.Pinteger).result!)
+			.then(context => context?.properties.invert_sign?.state.node.output.can_be_negative()).result!),
+		can_be_positive: cache((detach:boolean) => resolve(this)
+			.then(() => this)
+			.then(context => context?.properties.invert_sign?.state.node.output.can_be_positive()).result!),
+		can_be_zero: cache((detach:boolean) => resolve(this)
+			.then(() => this)
+			.then(context => context?.properties.invert_sign?.state.node.output.can_be_zero()).result!)
 	}
-	constructor(init:Tinteger__set, public parent:Cnumber_type) {
+	constructor(init:Tbounded, public parent:Cnumber_type) {
+		super();
+		const $this = this;
+		this.properties = {
+			invert_sign: new Cbounded.Dinvert_sign(init['invert sign'], $this),
+			sign: new Cbounded.Dsign(init['sign'], $this)
+		};
+	}
+	public get root() { return this._root ?? (this._root = this.component_root.root); }
+	public get component_root() { return this.parent; }
+	public get path() { return `${this.parent.path}/type?bounded`; }
+	public get entity() { return this.parent.entity; }
+}
+export type Tno__invert_sign = {
+};
+export class Cno__invert_sign extends AlanNode {
+	public readonly output:{
+		can_be_negative: () => interface_.Cnumber_sign_inclusion;
+		can_be_positive: () => interface_.Cnumber_sign_inclusion;
+		can_be_zero: () => interface_.Cnumber_sign_inclusion;
+	} = {
+		can_be_negative: cache((detach:boolean) => resolve(this)
+			.then(() => this)
+			.then(context => context?.inferences.can_be_negative()).result!),
+		can_be_positive: cache((detach:boolean) => resolve(this)
+			.then(() => this)
+			.then(context => context?.inferences.can_be_positive()).result!),
+		can_be_zero: cache((detach:boolean) => resolve(this)
+			.then(() => this)
+			.then(context => context?.inferences.can_be_zero()).result!)
+	}
+	public readonly inferences:{
+		can_be_negative: () => interface_.Cnumber_sign_inclusion,
+		can_be_positive: () => interface_.Cnumber_sign_inclusion,
+		can_be_zero: () => interface_.Cnumber_sign_inclusion
+	} = {
+		can_be_negative: cache((detach:boolean) => {
+			const interface__number_type__type__bounded__invert_sign__no_nval = this.parent;
+			return resolve(this.parent)
+				.then(() => this.parent)
+				.then(context => context?.properties.sign)
+				.then(context => {
+					const state_group = context;
+					switch (state_group?.state.name) {
+						case 'negative': {
+							return resolve(context)
+								.then(() => this.parent)
+								.then(() => interface_.Cnumber_sign_inclusion.Pyes).result;
+						}
+						case 'positive': {
+							return resolve(context)
+								.then(() => this.parent)
+								.then(() => interface_.Cnumber_sign_inclusion.Pno).result;
+						}
+						case 'zero': {
+							return resolve(context)
+								.then(() => this.parent)
+								.then(() => interface_.Cnumber_sign_inclusion.Pno).result;
+						}
+						case undefined: return undefined;
+						default: throw new Error(`Unexpected state '${(state_group!.state as any).name}'`);
+					};}).result!;
+		})
+		,
+		can_be_positive: cache((detach:boolean) => {
+			const interface__number_type__type__bounded__invert_sign__no_nval = this.parent;
+			return resolve(this.parent)
+				.then(() => this.parent)
+				.then(context => context?.properties.sign)
+				.then(context => {
+					const state_group = context;
+					switch (state_group?.state.name) {
+						case 'negative': {
+							return resolve(context)
+								.then(() => this.parent)
+								.then(() => interface_.Cnumber_sign_inclusion.Pno).result;
+						}
+						case 'positive': {
+							return resolve(context)
+								.then(() => this.parent)
+								.then(() => interface_.Cnumber_sign_inclusion.Pyes).result;
+						}
+						case 'zero': {
+							return resolve(context)
+								.then(() => this.parent)
+								.then(() => interface_.Cnumber_sign_inclusion.Pno).result;
+						}
+						case undefined: return undefined;
+						default: throw new Error(`Unexpected state '${(state_group!.state as any).name}'`);
+					};}).result!;
+		})
+		,
+		can_be_zero: cache((detach:boolean) => {
+			const interface__number_type__type__bounded__invert_sign__no_nval = this.parent;
+			return resolve(this.parent)
+				.then(() => this.parent)
+				.then(context => context?.properties.sign)
+				.then(context => {
+					const state_group = context;
+					switch (state_group?.state.name) {
+						case 'negative': {
+							return resolve(context)
+								.then(() => this.parent)
+								.then(() => interface_.Cnumber_sign_inclusion.Pno).result;
+						}
+						case 'positive': {
+							return resolve(context)
+								.then(() => this.parent)
+								.then(() => interface_.Cnumber_sign_inclusion.Pno).result;
+						}
+						case 'zero': {
+							return resolve(context)
+								.then(() => this.parent)
+								.then(() => interface_.Cnumber_sign_inclusion.Pyes).result;
+						}
+						case undefined: return undefined;
+						default: throw new Error(`Unexpected state '${(state_group!.state as any).name}'`);
+					};}).result!;
+		})
+
+	}
+	constructor(init:Tno__invert_sign, public parent:Cbounded) {
+		super();
+	}
+	public get root() { return this._root ?? (this._root = this.component_root.root); }
+	public get component_root() { return this.parent.parent; }
+	public get path() { return `${this.parent.path}/invert sign?no`; }
+	public get entity() { return this.parent.entity; }
+}
+export type Tyes__invert_sign = {
+};
+export class Cyes__invert_sign extends AlanNode {
+	public readonly output:{
+		can_be_negative: () => interface_.Cnumber_sign_inclusion;
+		can_be_positive: () => interface_.Cnumber_sign_inclusion;
+		can_be_zero: () => interface_.Cnumber_sign_inclusion;
+	} = {
+		can_be_negative: cache((detach:boolean) => resolve(this)
+			.then(() => this)
+			.then(context => context?.inferences.can_be_negative()).result!),
+		can_be_positive: cache((detach:boolean) => resolve(this)
+			.then(() => this)
+			.then(context => context?.inferences.can_be_positive()).result!),
+		can_be_zero: cache((detach:boolean) => resolve(this)
+			.then(() => this)
+			.then(context => context?.inferences.can_be_zero()).result!)
+	}
+	public readonly inferences:{
+		can_be_negative: () => interface_.Cnumber_sign_inclusion,
+		can_be_positive: () => interface_.Cnumber_sign_inclusion,
+		can_be_zero: () => interface_.Cnumber_sign_inclusion
+	} = {
+		can_be_negative: cache((detach:boolean) => {
+			const interface__number_type__type__bounded__invert_sign__yes_nval = this.parent;
+			return resolve(this.parent)
+				.then(() => this.parent)
+				.then(context => context?.properties.sign)
+				.then(context => {
+					const state_group = context;
+					switch (state_group?.state.name) {
+						case 'negative': {
+							return resolve(context)
+								.then(() => this.parent)
+								.then(() => interface_.Cnumber_sign_inclusion.Pno).result;
+						}
+						case 'positive': {
+							return resolve(context)
+								.then(() => this.parent)
+								.then(() => interface_.Cnumber_sign_inclusion.Pyes).result;
+						}
+						case 'zero': {
+							return resolve(context)
+								.then(() => this.parent)
+								.then(() => interface_.Cnumber_sign_inclusion.Pyes).result;
+						}
+						case undefined: return undefined;
+						default: throw new Error(`Unexpected state '${(state_group!.state as any).name}'`);
+					};}).result!;
+		})
+		,
+		can_be_positive: cache((detach:boolean) => {
+			const interface__number_type__type__bounded__invert_sign__yes_nval = this.parent;
+			return resolve(this.parent)
+				.then(() => this.parent)
+				.then(context => context?.properties.sign)
+				.then(context => {
+					const state_group = context;
+					switch (state_group?.state.name) {
+						case 'negative': {
+							return resolve(context)
+								.then(() => this.parent)
+								.then(() => interface_.Cnumber_sign_inclusion.Pyes).result;
+						}
+						case 'positive': {
+							return resolve(context)
+								.then(() => this.parent)
+								.then(() => interface_.Cnumber_sign_inclusion.Pno).result;
+						}
+						case 'zero': {
+							return resolve(context)
+								.then(() => this.parent)
+								.then(() => interface_.Cnumber_sign_inclusion.Pyes).result;
+						}
+						case undefined: return undefined;
+						default: throw new Error(`Unexpected state '${(state_group!.state as any).name}'`);
+					};}).result!;
+		})
+		,
+		can_be_zero: cache((detach:boolean) => {
+			const interface__number_type__type__bounded__invert_sign__yes_nval = this.parent;
+			return resolve(this.parent)
+				.then(() => this.parent)
+				.then(context => context?.properties.sign)
+				.then(context => {
+					const state_group = context;
+					switch (state_group?.state.name) {
+						case 'negative': {
+							return resolve(context)
+								.then(() => this.parent)
+								.then(() => interface_.Cnumber_sign_inclusion.Pyes).result;
+						}
+						case 'positive': {
+							return resolve(context)
+								.then(() => this.parent)
+								.then(() => interface_.Cnumber_sign_inclusion.Pyes).result;
+						}
+						case 'zero': {
+							return resolve(context)
+								.then(() => this.parent)
+								.then(() => interface_.Cnumber_sign_inclusion.Pno).result;
+						}
+						case undefined: return undefined;
+						default: throw new Error(`Unexpected state '${(state_group!.state as any).name}'`);
+					};}).result!;
+		})
+
+	}
+	constructor(init:Tyes__invert_sign, public parent:Cbounded) {
+		super();
+	}
+	public get root() { return this._root ?? (this._root = this.component_root.root); }
+	public get component_root() { return this.parent.parent; }
+	public get path() { return `${this.parent.path}/invert sign?yes`; }
+	public get entity() { return this.parent.entity; }
+}
+export type Tnegative = {
+};
+export class Cnegative extends AlanNode {
+	constructor(init:Tnegative, public parent:Cbounded) {
+		super();
+	}
+	public get root() { return this._root ?? (this._root = this.component_root.root); }
+	public get component_root() { return this.parent.parent; }
+	public get path() { return `${this.parent.path}/sign?negative`; }
+	public get entity() { return this.parent.entity; }
+}
+export type Tpositive = {
+};
+export class Cpositive extends AlanNode {
+	constructor(init:Tpositive, public parent:Cbounded) {
+		super();
+	}
+	public get root() { return this._root ?? (this._root = this.component_root.root); }
+	public get component_root() { return this.parent.parent; }
+	public get path() { return `${this.parent.path}/sign?positive`; }
+	public get entity() { return this.parent.entity; }
+}
+export type Tzero = {
+};
+export class Czero extends AlanNode {
+	constructor(init:Tzero, public parent:Cbounded) {
+		super();
+	}
+	public get root() { return this._root ?? (this._root = this.component_root.root); }
+	public get component_root() { return this.parent.parent; }
+	public get path() { return `${this.parent.path}/sign?zero`; }
+	public get entity() { return this.parent.entity; }
+}
+export type Tunbounded = {
+};
+export class Cunbounded extends AlanNode {
+	public readonly output:{
+		can_be_negative: () => interface_.Cnumber_sign_inclusion;
+		can_be_positive: () => interface_.Cnumber_sign_inclusion;
+		can_be_zero: () => interface_.Cnumber_sign_inclusion;
+	} = {
+		can_be_negative: cache((detach:boolean) => resolve(this)
+			.then(() => this)
+			.then(() => interface_.Cnumber_sign_inclusion.Pyes).result!),
+		can_be_positive: cache((detach:boolean) => resolve(this)
+			.then(() => this)
+			.then(() => interface_.Cnumber_sign_inclusion.Pyes).result!),
+		can_be_zero: cache((detach:boolean) => resolve(this)
+			.then(() => this)
+			.then(() => interface_.Cnumber_sign_inclusion.Pyes).result!)
+	}
+	constructor(init:Tunbounded, public parent:Cnumber_type) {
 		super();
 	}
 	public get root() { return this._root ?? (this._root = this.component_root.root); }
 	public get component_root() { return this.parent; }
-	public get path() { return `${this.parent.path}/set?integer`; }
+	public get path() { return `${this.parent.path}/type?unbounded`; }
 	public get entity() { return this.parent.entity; }
 }
-export type Tnatural__set = {
-};
-export class Cnatural__set extends AlanNode {
-	public readonly output:{
-		set_type: () => interface_.Cnumber_set_type;
-	} = {
-		set_type: cache((detach:boolean) => resolve(this)
-			.then(() => this)
-			.then(() => interface_.Cnumber_set_type.Pnatural).result!)
-	}
-	constructor(init:Tnatural__set, public parent:Cnumber_type) {
-		super();
-	}
-	public get root() { return this._root ?? (this._root = this.component_root.root); }
-	public get component_root() { return this.parent; }
-	public get path() { return `${this.parent.path}/set?natural`; }
-	public get entity() { return this.parent.entity; }
-}
-type Vnumber_set_type = { name: 'natural', definition: (typeof Cnumber_set_type.Pnatural)}|{ name: 'integer', definition: (typeof Cnumber_set_type.Pinteger)}
-export class Cnumber_set_type extends AlanStruct {
-	public static Pnatural:Cnumber_set_type = new class PrimitiveInstance extends Cnumber_set_type {
+type Vnumber_sign_inclusion = { name: 'yes', definition: (typeof Cnumber_sign_inclusion.Pyes)}|{ name: 'no', definition: (typeof Cnumber_sign_inclusion.Pno)}
+export class Cnumber_sign_inclusion extends AlanStruct {
+	public static Pyes:Cnumber_sign_inclusion = new class PrimitiveInstance extends Cnumber_sign_inclusion {
 		constructor () {
-			super({name: 'natural', definition: undefined as unknown as Cnumber_set_type})
+			super({name: 'yes', definition: undefined as unknown as Cnumber_sign_inclusion})
 			this.variant.definition = this;
 		}
 	}
-	public static Pinteger:Cnumber_set_type = new class PrimitiveInstance extends Cnumber_set_type {
+	public static Pno:Cnumber_sign_inclusion = new class PrimitiveInstance extends Cnumber_sign_inclusion {
 		constructor () {
-			super({name: 'integer', definition: undefined as unknown as Cnumber_set_type})
+			super({name: 'no', definition: undefined as unknown as Cnumber_sign_inclusion})
 			this.variant.definition = this;
 		}
 	}
 	constructor(
-		public readonly variant:Vnumber_set_type) { super(); }
-	public cast<K extends Vnumber_set_type['name']>(_variant:K):Extract<Vnumber_set_type, {name:K}>['definition'] {
+		public readonly variant:Vnumber_sign_inclusion) { super(); }
+	public cast<K extends Vnumber_sign_inclusion['name']>(_variant:K):Extract<Vnumber_sign_inclusion, {name:K}>['definition'] {
 		return this.variant.definition as any;
 	}
-	switch<TS> (cases:{[K in Vnumber_set_type['name']]:(($:Extract<Vnumber_set_type, {name:K}>['definition']) => TS) | (() => TS) | Exclude<TS, Function>}):TS {
+	switch<TS> (cases:{[K in Vnumber_sign_inclusion['name']]:(($:Extract<Vnumber_sign_inclusion, {name:K}>['definition']) => TS) | (() => TS) | Exclude<TS, Function>}):TS {
 		const handler = cases[this.variant.name];
 		if (isFunction(handler)) {
 			return handler(this.variant.definition as any);
@@ -1236,14 +1533,14 @@ export class Cnumber_set_type extends AlanStruct {
 		}
 	}
 	public get component_root() { return this; }
-	public get path() { return `/number set type`; }
-	public is(other:Cnumber_set_type):boolean {
+	public get path() { return `/number sign inclusion`; }
+	public is(other:Cnumber_sign_inclusion):boolean {
 		return this.variant.name === other.variant.name
 			&& (this.variant.definition === other.variant.definition || this.variant.definition.is(other.variant.definition as any));
 	}
 }
-export import Cinteger__number_set_type = interface_.Cnumber_set_type;
-export import Cnatural__number_set_type = interface_.Cnumber_set_type;
+export import Cno__number_sign_inclusion = interface_.Cnumber_sign_inclusion;
+export import Cyes__number_sign_inclusion = interface_.Cnumber_sign_inclusion;
 export type Tnode_path_tail = {
 	'has steps':'no'|['no', {}]|['yes', Tyes__has_steps];
 };
@@ -3947,29 +4244,7 @@ export namespace Cnumber_type {
 		}
 		public get path() { return `<unknown>/decimal places`; }
 	}
-	export class Dset<T extends
-		{ name: 'integer', node:Cinteger__set, init:Tinteger__set}|
-		{ name: 'natural', node:Cnatural__set, init:Tnatural__set}> extends StateGroup<T> {
-		protected initializer(state:T['name']) {
-			switch (state) {
-				case 'integer': return (init:Tinteger__set, parent:Cnumber_type) => new Cinteger__set(init, parent);
-				case 'natural': return (init:Tnatural__set, parent:Cnumber_type) => new Cnatural__set(init, parent);
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		protected finalizer(state:T['name']) {
-			switch (state) {
-				case 'integer': return finalize_integer__set;
-				case 'natural': return finalize_natural__set;
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		constructor(data:Tnumber_type['set'], parent:Cnumber_type) {
-			super(data, parent);
-		}
-		public get path() { return `<unknown>/set`; }
-	}
-	export class Dtype extends Reference<interface_.Cnumerical_types,string> {
+	export class Dnumerical_type extends Reference<interface_.Cnumerical_types,string> {
 
 		constructor(data:string, $this:Cnumber_type) {
 			super(data, cache((detach:boolean) => resolve($this)
@@ -3980,6 +4255,28 @@ export namespace Cnumber_type {
 					return resolve(entry).result;
 				}).result!))
 		}
+		public get path() { return `<unknown>/numerical type`; }
+	}
+	export class Dtype<T extends
+		{ name: 'bounded', node:Cbounded, init:Tbounded}|
+		{ name: 'unbounded', node:Cunbounded, init:Tunbounded}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'bounded': return (init:Tbounded, parent:Cnumber_type) => new Cbounded(init, parent);
+				case 'unbounded': return (init:Tunbounded, parent:Cnumber_type) => new Cunbounded(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected finalizer(state:T['name']) {
+			switch (state) {
+				case 'bounded': return finalize_bounded;
+				case 'unbounded': return finalize_unbounded;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Tnumber_type['type'], parent:Cnumber_type) {
+			super(data, parent);
+		}
 		public get path() { return `<unknown>/type`; }
 	}
 }
@@ -3989,6 +4286,55 @@ export namespace Cyes__decimal_places {
 			number__is_positive(data);
 			super(data);}
 		public get path() { return `<unknown>/places`; }
+	}
+}
+export namespace Cbounded {
+	export class Dinvert_sign<T extends
+		{ name: 'no', node:Cno__invert_sign, init:Tno__invert_sign}|
+		{ name: 'yes', node:Cyes__invert_sign, init:Tyes__invert_sign}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'no': return (init:Tno__invert_sign, parent:Cbounded) => new Cno__invert_sign(init, parent);
+				case 'yes': return (init:Tyes__invert_sign, parent:Cbounded) => new Cyes__invert_sign(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected finalizer(state:T['name']) {
+			switch (state) {
+				case 'no': return finalize_no__invert_sign;
+				case 'yes': return finalize_yes__invert_sign;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Tbounded['invert sign'], parent:Cbounded) {
+			super(data, parent);
+		}
+		public get path() { return `<unknown>/invert sign`; }
+	}
+	export class Dsign<T extends
+		{ name: 'negative', node:Cnegative, init:Tnegative}|
+		{ name: 'positive', node:Cpositive, init:Tpositive}|
+		{ name: 'zero', node:Czero, init:Tzero}> extends StateGroup<T> {
+		protected initializer(state:T['name']) {
+			switch (state) {
+				case 'negative': return (init:Tnegative, parent:Cbounded) => new Cnegative(init, parent);
+				case 'positive': return (init:Tpositive, parent:Cbounded) => new Cpositive(init, parent);
+				case 'zero': return (init:Tzero, parent:Cbounded) => new Czero(init, parent);
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		protected finalizer(state:T['name']) {
+			switch (state) {
+				case 'negative': return finalize_negative;
+				case 'positive': return finalize_positive;
+				case 'zero': return finalize_zero;
+				default: throw new Error(`Unexpected state ${state}.`);
+			}
+		}
+		constructor(data:Tbounded['sign'], parent:Cbounded) {
+			super(data, parent);
+		}
+		public get path() { return `<unknown>/sign`; }
 	}
 }
 export namespace Coptional_evaluation_annotation {
@@ -4943,28 +5289,63 @@ function finalize_node_path_tail(obj:Cnode_path_tail, detach:boolean = false) {
 		case 'yes': finalize_yes__has_steps(obj.properties.has_steps.state.node, detach); break;
 	}
 }
-function finalize_number_set_type(obj:Cnumber_set_type, detach:boolean = false) {
+function finalize_number_sign_inclusion(obj:Cnumber_sign_inclusion, detach:boolean = false) {
 }
 function finalize_no__decimal_places(obj:Cno__decimal_places, detach:boolean = false) {
 }
 function finalize_yes__decimal_places(obj:Cyes__decimal_places, detach:boolean = false) {
 }
-function finalize_integer__set(obj:Cinteger__set, detach:boolean = false) {
-	assert((<(detach?:boolean) => interface_.Cnumber_set_type>obj.output.set_type)(detach) !== undefined || detach);
+function finalize_no__invert_sign(obj:Cno__invert_sign, detach:boolean = false) {
+	assert((<(detach?:boolean) => interface_.Cnumber_sign_inclusion>obj.inferences.can_be_negative)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cnumber_sign_inclusion>obj.inferences.can_be_positive)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cnumber_sign_inclusion>obj.inferences.can_be_zero)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cnumber_sign_inclusion>obj.output.can_be_negative)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cnumber_sign_inclusion>obj.output.can_be_positive)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cnumber_sign_inclusion>obj.output.can_be_zero)(detach) !== undefined || detach);
 }
-function finalize_natural__set(obj:Cnatural__set, detach:boolean = false) {
-	assert((<(detach?:boolean) => interface_.Cnumber_set_type>obj.output.set_type)(detach) !== undefined || detach);
+function finalize_yes__invert_sign(obj:Cyes__invert_sign, detach:boolean = false) {
+	assert((<(detach?:boolean) => interface_.Cnumber_sign_inclusion>obj.inferences.can_be_negative)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cnumber_sign_inclusion>obj.inferences.can_be_positive)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cnumber_sign_inclusion>obj.inferences.can_be_zero)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cnumber_sign_inclusion>obj.output.can_be_negative)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cnumber_sign_inclusion>obj.output.can_be_positive)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cnumber_sign_inclusion>obj.output.can_be_zero)(detach) !== undefined || detach);
+}
+function finalize_negative(obj:Cnegative, detach:boolean = false) {
+}
+function finalize_positive(obj:Cpositive, detach:boolean = false) {
+}
+function finalize_zero(obj:Czero, detach:boolean = false) {
+}
+function finalize_bounded(obj:Cbounded, detach:boolean = false) {
+	assert((<(detach?:boolean) => interface_.Cnumber_sign_inclusion>obj.output.can_be_negative)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cnumber_sign_inclusion>obj.output.can_be_positive)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cnumber_sign_inclusion>obj.output.can_be_zero)(detach) !== undefined || detach);
+	switch (obj.properties.invert_sign.state.name) {
+		case 'no': finalize_no__invert_sign(obj.properties.invert_sign.state.node, detach); break;
+		case 'yes': finalize_yes__invert_sign(obj.properties.invert_sign.state.node, detach); break;
+	}
+	switch (obj.properties.sign.state.name) {
+		case 'negative': finalize_negative(obj.properties.sign.state.node, detach); break;
+		case 'positive': finalize_positive(obj.properties.sign.state.node, detach); break;
+		case 'zero': finalize_zero(obj.properties.sign.state.node, detach); break;
+	}
+}
+function finalize_unbounded(obj:Cunbounded, detach:boolean = false) {
+	assert((<(detach?:boolean) => interface_.Cnumber_sign_inclusion>obj.output.can_be_negative)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cnumber_sign_inclusion>obj.output.can_be_positive)(detach) !== undefined || detach);
+	assert((<(detach?:boolean) => interface_.Cnumber_sign_inclusion>obj.output.can_be_zero)(detach) !== undefined || detach);
 }
 function finalize_number_type(obj:Cnumber_type, detach:boolean = false) {
 	switch (obj.properties.decimal_places.state.name) {
 		case 'no': finalize_no__decimal_places(obj.properties.decimal_places.state.node, detach); break;
 		case 'yes': finalize_yes__decimal_places(obj.properties.decimal_places.state.node, detach); break;
 	}
-	switch (obj.properties.set.state.name) {
-		case 'integer': finalize_integer__set(obj.properties.set.state.node, detach); break;
-		case 'natural': finalize_natural__set(obj.properties.set.state.node, detach); break;
+	assert((<(detach?:boolean) => interface_.Cnumerical_types>(obj.properties.numerical_type as any).resolve)(detach) !== undefined || detach);
+	switch (obj.properties.type.state.name) {
+		case 'bounded': finalize_bounded(obj.properties.type.state.node, detach); break;
+		case 'unbounded': finalize_unbounded(obj.properties.type.state.node, detach); break;
 	}
-	assert((<(detach?:boolean) => interface_.Cnumerical_types>(obj.properties.type as any).resolve)(detach) !== undefined || detach);
 }
 function finalize_downstream__phase__optional_evaluation_annotation(obj:Cdownstream__phase__optional_evaluation_annotation, detach:boolean = false) {
 	assert((<(detach?:boolean) => interface_.Cnone__optional_navigation_context>obj.inferences.no_referenced_context)(detach) !== undefined || detach);

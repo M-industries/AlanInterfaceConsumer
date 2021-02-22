@@ -25,28 +25,6 @@ export var serialize = (
 		let $_interface_subscription= $;
 		var raw_data:{[key:string]:any} = {};
 		raw_data["context keys"] = serialize_context_keys($_interface_subscription.properties.context_keys);
-		switch ($_interface_subscription.properties.send_initialization_data.state.name) {
-			case 'no':
-				raw_data["send initialization data"] = [$_interface_subscription.properties.send_initialization_data.state.name, (
-					function ($:read_api.Cno) { 
-						let $_no= $;
-						var raw_data:{[key:string]:any} = {};
-						return raw_data;
-					}
-				(<any>$_interface_subscription.properties.send_initialization_data.state.node))];
-				break;
-			case 'yes':
-				raw_data["send initialization data"] = [$_interface_subscription.properties.send_initialization_data.state.name, (
-					function ($:read_api.Cyes) { 
-						let $_yes= $;
-						var raw_data:{[key:string]:any} = {};
-						return raw_data;
-					}
-				(<any>$_interface_subscription.properties.send_initialization_data.state.node))];
-				break;
-			default:
-				throw new Error('Hmmm');
-		}
 		return raw_data;
 	}
 );

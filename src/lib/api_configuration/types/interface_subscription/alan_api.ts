@@ -378,50 +378,23 @@ export class Ccontext_keys__context_keys extends AlanDictionaryEntry {
 
 export type Tinterface_subscription = {
 	'context keys':Tcontext_keys__interface_subscription;
-	'send initialization data':'no'|['no', {}]|'yes'|['yes', {}];
 };
 export class Cinterface_subscription extends AlanNode {
 	public key?:string;
 	public get root() { return this; }
 	public readonly properties:{
-		readonly context_keys:Ccontext_keys__interface_subscription,
-		readonly send_initialization_data:Cinterface_subscription.Dsend_initialization_data<
-			{ name: 'no', node:Cno, init:Tno}|
-			{ name: 'yes', node:Cyes, init:Tyes}>
+		readonly context_keys:Ccontext_keys__interface_subscription
 	};
 	constructor(init:Tinterface_subscription, public readonly input: {
 	'interface_':interface_.Cinterface}) {
 		super();
 		const $this = this;
 		this.properties = {
-			context_keys: new Cinterface_subscription.Dcontext_keys(init['context keys'], $this),
-			send_initialization_data: new Cinterface_subscription.Dsend_initialization_data(init['send initialization data'], $this)
+			context_keys: new Cinterface_subscription.Dcontext_keys(init['context keys'], $this)
 		};
 	}
 	public get path() { return ``; }
 	public get entity() { return this; }
-}
-export type Tno = {
-};
-export class Cno extends AlanNode {
-	constructor(init:Tno, public parent:Cinterface_subscription) {
-		super();
-	}
-	public get root() { return this._root ?? (this._root = this.component_root.root); }
-	public get component_root() { return this.parent; }
-	public get path() { return `${this.parent.path}/send initialization data?no`; }
-	public get entity() { return this.parent.entity; }
-}
-export type Tyes = {
-};
-export class Cyes extends AlanNode {
-	constructor(init:Tyes, public parent:Cinterface_subscription) {
-		super();
-	}
-	public get root() { return this._root ?? (this._root = this.component_root.root); }
-	public get component_root() { return this.parent; }
-	public get path() { return `${this.parent.path}/send initialization data?yes`; }
-	public get entity() { return this.parent.entity; }
 }
 
 /* property classes */
@@ -461,28 +434,6 @@ export namespace Cinterface_subscription {
 			super(data, parent)
 		}
 	}
-	export class Dsend_initialization_data<T extends
-		{ name: 'no', node:Cno, init:Tno}|
-		{ name: 'yes', node:Cyes, init:Tyes}> extends StateGroup<T> {
-		protected initializer(state:T['name']) {
-			switch (state) {
-				case 'no': return (init:Tno, parent:Cinterface_subscription) => new Cno(init, parent);
-				case 'yes': return (init:Tyes, parent:Cinterface_subscription) => new Cyes(init, parent);
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		protected finalizer(state:T['name']) {
-			switch (state) {
-				case 'no': return finalize_no;
-				case 'yes': return finalize_yes;
-				default: throw new Error(`Unexpected state ${state}.`);
-			}
-		}
-		constructor(data:Tinterface_subscription['send initialization data'], parent:Cinterface_subscription) {
-			super(data, parent);
-		}
-		public get path() { return `<unknown>/send initialization data`; }
-	}
 }
 function finalize_context_keys__context_keys(obj:Ccontext_keys__context_keys, detach:boolean = false) {
 	assert((<(detach?:boolean) => interface_.Ccontext_keys>(obj.key as any).resolve)(detach) !== undefined || detach);
@@ -495,16 +446,8 @@ function finalize_context_keys__interface_subscription(obj:Ccontext_keys__interf
 		(obj.properties.context_keys as any).eval_required_keys(detach);
 	}
 }
-function finalize_no(obj:Cno, detach:boolean = false) {
-}
-function finalize_yes(obj:Cyes, detach:boolean = false) {
-}
 function finalize_interface_subscription(obj:Cinterface_subscription, detach:boolean = false) {
 	finalize_context_keys__interface_subscription(obj.properties.context_keys, detach);
-	switch (obj.properties.send_initialization_data.state.name) {
-		case 'no': finalize_no(obj.properties.send_initialization_data.state.node, detach); break;
-		case 'yes': finalize_yes(obj.properties.send_initialization_data.state.node, detach); break;
-	}
 }
 
 export namespace Cinterface_subscription {

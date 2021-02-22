@@ -14,6 +14,7 @@ Major versions introduce breaking changes. Here is an overview of the changes be
 
 | Version | Alan interface | Connection method |
 | ------- | -------------- | ----------------- |
+| v7.x    | v20            | routed            |
 | v6.x    | v18            | routed            |
 | v5.x    | v14            | routed            |
 | v4.x    | v12            | routed            |

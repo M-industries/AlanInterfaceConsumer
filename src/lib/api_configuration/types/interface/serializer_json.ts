@@ -462,29 +462,82 @@ let serialize_number_type = (
 			default:
 				throw new Error('Hmmm');
 		}
-		switch ($_number_type.properties.set.state.name) {
-			case 'integer':
-				raw_data["set"] = [$_number_type.properties.set.state.name, (
-					function ($:read_api.Cinteger__set) { 
-						let $_integer__set= $;
+		raw_data["numerical type"] = $_number_type.properties.numerical_type.entry;
+		switch ($_number_type.properties.type.state.name) {
+			case 'bounded':
+				raw_data["type"] = [$_number_type.properties.type.state.name, (
+					function ($:read_api.Cbounded) { 
+						let $_bounded= $;
 						var raw_data:{[key:string]:any} = {};
+						switch ($_bounded.properties.invert_sign.state.name) {
+							case 'no':
+								raw_data["invert sign"] = [$_bounded.properties.invert_sign.state.name, (
+									function ($:read_api.Cno__invert_sign) { 
+										let $_no__invert_sign= $;
+										var raw_data:{[key:string]:any} = {};
+										return raw_data;
+									}
+								(<any>$_bounded.properties.invert_sign.state.node))];
+								break;
+							case 'yes':
+								raw_data["invert sign"] = [$_bounded.properties.invert_sign.state.name, (
+									function ($:read_api.Cyes__invert_sign) { 
+										let $_yes__invert_sign= $;
+										var raw_data:{[key:string]:any} = {};
+										return raw_data;
+									}
+								(<any>$_bounded.properties.invert_sign.state.node))];
+								break;
+							default:
+								throw new Error('Hmmm');
+						}
+						switch ($_bounded.properties.sign.state.name) {
+							case 'negative':
+								raw_data["sign"] = [$_bounded.properties.sign.state.name, (
+									function ($:read_api.Cnegative) { 
+										let $_negative= $;
+										var raw_data:{[key:string]:any} = {};
+										return raw_data;
+									}
+								(<any>$_bounded.properties.sign.state.node))];
+								break;
+							case 'positive':
+								raw_data["sign"] = [$_bounded.properties.sign.state.name, (
+									function ($:read_api.Cpositive) { 
+										let $_positive= $;
+										var raw_data:{[key:string]:any} = {};
+										return raw_data;
+									}
+								(<any>$_bounded.properties.sign.state.node))];
+								break;
+							case 'zero':
+								raw_data["sign"] = [$_bounded.properties.sign.state.name, (
+									function ($:read_api.Czero) { 
+										let $_zero= $;
+										var raw_data:{[key:string]:any} = {};
+										return raw_data;
+									}
+								(<any>$_bounded.properties.sign.state.node))];
+								break;
+							default:
+								throw new Error('Hmmm');
+						}
 						return raw_data;
 					}
-				(<any>$_number_type.properties.set.state.node))];
+				(<any>$_number_type.properties.type.state.node))];
 				break;
-			case 'natural':
-				raw_data["set"] = [$_number_type.properties.set.state.name, (
-					function ($:read_api.Cnatural__set) { 
-						let $_natural__set= $;
+			case 'unbounded':
+				raw_data["type"] = [$_number_type.properties.type.state.name, (
+					function ($:read_api.Cunbounded) { 
+						let $_unbounded= $;
 						var raw_data:{[key:string]:any} = {};
 						return raw_data;
 					}
-				(<any>$_number_type.properties.set.state.node))];
+				(<any>$_number_type.properties.type.state.node))];
 				break;
 			default:
 				throw new Error('Hmmm');
 		}
-		raw_data["type"] = $_number_type.properties.type.entry;
 		return raw_data;
 	}
 );
