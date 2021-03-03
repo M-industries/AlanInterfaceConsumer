@@ -8,6 +8,7 @@ import * as api_application_protocol_shake from "./lib/api_configuration/types/a
 import * as api_interface from "./lib/api_configuration/types/interface/alan_api";
 import * as api_interface_notification from "./lib/api_configuration/types/interface_notification/alan_api";
 import * as api_interface_subscription from "./lib/api_configuration/types/interface_subscription/alan_api";
+import * as api_interface_command from "./lib/api_configuration/types/interface_command/alan_api";
 import * as api_manifest from "./lib/api_configuration-manifest/types/manifest/alan_api";
 import * as serializer_application_protocol_hand from "./lib/api_configuration/types/application_protocol_hand/serializer_json";
 import * as serializer_application_protocol_request from "./lib/api_configuration/types/application_protocol_request/serializer_json";
@@ -27,25 +28,25 @@ export function consumeInterface(
 	custom_project_package_path:string,
 	onInterfaceLoaded:(consuming_interface:{
 		createSubscriptionConnection:(
-			subscription_request_jso:any,
+			subscription_request_jso:api_interface_subscription.Tinterface_subscription,
 			replyHandler:(reply:api_interface_notification.Cinterface_notification) => void,
 			onError:(error:string) => void
 		) => {
-			invokeCommand(command_jso:any):void,
+			invokeCommand(command_jso:api_interface_command.Tinterface_command):void,
 			close():void
 		},
 		createRawSubscriptionConnection:(
-			subscription_request_jso:any,
+			subscription_request_jso:api_interface_subscription.Tinterface_subscription,
 			replyHandler:(reply:string) => void,
 			onError:(error:string) => void
 		) => {
-			invokeCommand(command_jso:any):void,
+			invokeCommand(command_jso:api_interface_command.Tinterface_command):void,
 			close():void
 		},
 		createSubscriptionLessConnection:(
 			onError:(error:string) => void
 		) => {
-			invokeCommand(command_jso:any):void,
+			invokeCommand(command_jso:api_interface_command.Tinterface_command):void,
 			close():void
 		},
 		$interface:api_interface.Cinterface
@@ -75,12 +76,12 @@ export function consumeInterface(
 	});
 
 	consumeInterface = function (
-		subscription_request_jso:any,
+		subscription_request_jso:api_interface_subscription.Tinterface_subscription,
 		validate_subscription_requests_replies:boolean,
 		notifyHandler:(reply:api_interface_notification.Cinterface_notification|string) => void,
 		onError:(error_message:string) => void
 	):{
-		invokeCommand(command_jso:any):void,
+		invokeCommand(command_jso:api_interface_command.Tinterface_command):void,
 		close():void
 	} {
 		var subscription_request_decorated: api_interface_subscription.Cinterface_subscription | undefined,
