@@ -163,7 +163,8 @@ export function consumeInterface(
 							);
 						},
 						"unsubscribe": function ($) {
-							//TODO: handle server-initiated unsubscribe msg
+							//TODO: pass $.properties.id to event handler
+							onError("Received unsubscribe");
 						},
 						"event": function ($) {
 							//TODO: handle event
